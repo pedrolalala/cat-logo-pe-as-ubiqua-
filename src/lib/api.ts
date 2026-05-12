@@ -75,6 +75,33 @@ export interface QuoteData {
   valor_total: number
 }
 
+export async function sendQuoteEmail(email: string, pdfBase64: string, quoteData: QuoteData) {
+  const url = import.meta.env.VITE_SUPABASE_URL
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    // Fallback to mock save se não houver variáveis de ambiente para testar o fluxo completo
+    return new Promise((resolve) => setTimeout(resolve, 1500))
+  }
+
+  const response = await fetch(`${url}/functions/v1/enviar-orcamento-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      email,
+      pdfBase64,
+      quoteData,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Falha ao enviar o e-mail')
+  }
+}
+
 export async function saveQuoteToSupabase(data: QuoteData) {
   const url = import.meta.env.VITE_SUPABASE_URL
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY

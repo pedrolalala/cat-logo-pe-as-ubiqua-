@@ -11,17 +11,42 @@ import {
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
-import { saveQuoteToSupabase } from '@/lib/api'
+import { saveQuoteToSupabase, sendQuoteEmail, QuoteData } from '@/lib/api'
 import { toast } from 'sonner'
-import { Trash2, ShoppingCart, ArrowLeft, Loader2, AlertCircle } from 'lucide-react'
+import {
+  Trash2,
+  ShoppingCart,
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
+  Download,
+  Mail,
+  CheckCircle,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { generateQuotePDFBase64, downloadMockPDF } from '@/lib/pdf'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 
 export default function NewQuote() {
   const { items, clearCart, removeFromCart, updateQuantity } = useCart()
   const [observacoes, setObservacoes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [savedQuote, setSavedQuote] = useState<QuoteData | null>(null)
+
+  // Estados para geração de PDF e envio de E-mail
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [emailRecipient, setEmailRecipient] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
 
   const totalGeral = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
 
@@ -32,12 +57,13 @@ export default function NewQuote() {
     setIsSaving(true)
     setSaveError(false)
     try {
-      await saveQuoteToSupabase({
+      const quoteData = {
         items,
         observacoes,
         valor_total: totalGeral,
-      })
-      setIsSuccess(true)
+      }
+      await saveQuoteToSupabase(quoteData)
+      setSavedQuote(quoteData)
       clearCart()
       toast.success('Orçamento salvo com sucesso!')
     } catch (e) {
@@ -48,19 +74,120 @@ export default function NewQuote() {
     }
   }
 
-  if (isSuccess) {
+  const handleDownloadPDF = async () => {
+    if (!savedQuote) return
+    setIsGeneratingPDF(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      await downloadMockPDF(savedQuote)
+      toast.success('Documento gerado com sucesso.')
+    } catch (error) {
+      toast.error('Erro ao gerar o documento.')
+    } finally {
+      setIsGeneratingPDF(false)
+    }
+  }
+
+  const handleSendEmail = async () => {
+    if (!savedQuote || !emailRecipient) return
+    setIsSendingEmail(true)
+    try {
+      // 1. Gera o documento em memória (base64)
+      const pdfBase64 = await generateQuotePDFBase64(savedQuote)
+
+      // 2. Dispara requisição para a Edge Function
+      await sendQuoteEmail(emailRecipient, pdfBase64, savedQuote)
+
+      toast.success('PDF enviado com sucesso')
+      setIsEmailModalOpen(false)
+      setEmailRecipient('')
+    } catch (error) {
+      toast.error('Falha ao enviar o e-mail. Tente novamente.')
+    } finally {
+      setIsSendingEmail(false)
+    }
+  }
+
+  if (savedQuote) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
         <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-          <ShoppingCart className="w-10 h-10 text-primary" />
+          <CheckCircle className="w-10 h-10 text-primary" />
         </div>
         <h2 className="text-3xl font-bold mb-4">Orçamento Salvo!</h2>
         <p className="text-muted-foreground mb-8 max-w-md text-lg">
           O seu orçamento foi registrado com sucesso e já está disponível no sistema.
         </p>
-        <Button asChild size="lg">
+
+        <div className="flex flex-col sm:flex-row gap-4 mb-10 w-full max-w-md justify-center">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPDF}
+            className="w-full sm:w-auto"
+          >
+            {isGeneratingPDF ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Baixar PDF
+          </Button>
+          <Button size="lg" onClick={() => setIsEmailModalOpen(true)} className="w-full sm:w-auto">
+            <Mail className="w-4 h-4 mr-2" />
+            Enviar por E-mail
+          </Button>
+        </div>
+
+        <Button variant="ghost" asChild size="lg">
           <Link to="/">Voltar ao Catálogo</Link>
         </Button>
+
+        <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Enviar por E-mail</DialogTitle>
+              <DialogDescription>
+                Insira o endereço de e-mail do destinatário para enviar este orçamento com o PDF em
+                anexo.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="email">E-mail do destinatário</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="cliente@exemplo.com"
+                  value={emailRecipient}
+                  onChange={(e) => setEmailRecipient(e.target.value)}
+                  disabled={isSendingEmail}
+                  className="w-full"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsEmailModalOpen(false)}
+                disabled={isSendingEmail}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleSendEmail} disabled={isSendingEmail || !emailRecipient}>
+                {isSendingEmail ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar E-mail'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     )
   }
