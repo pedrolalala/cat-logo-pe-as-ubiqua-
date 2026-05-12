@@ -6,6 +6,7 @@ import Index from './pages/Index'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import NewQuote from './pages/NewQuote'
+import AdminPage from './pages/admin/AdminPage'
 import { CartProvider } from './hooks/use-cart'
 
 const App = () => (
@@ -18,6 +19,7 @@ const App = () => (
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
             <Route path="/novo-orcamento" element={<NewQuote />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

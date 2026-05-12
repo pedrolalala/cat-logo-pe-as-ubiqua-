@@ -1,5 +1,5 @@
 import { Outlet, useSearchParams, Link } from 'react-router-dom'
-import { Search, Wrench, ShoppingCart } from 'lucide-react'
+import { Search, Wrench, ShoppingCart, LayoutDashboard } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
 import { useCart } from '@/hooks/use-cart'
@@ -60,6 +60,13 @@ export default function Layout() {
             />
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              to="/admin"
+              className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
+              title="Painel Administrativo"
+            >
+              <LayoutDashboard className="w-5 h-5" />
+            </Link>
             <CartButton />
           </div>
         </div>
