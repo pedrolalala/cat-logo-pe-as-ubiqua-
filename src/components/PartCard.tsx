@@ -28,7 +28,7 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
   const lampName = extractName(part.descricao)
 
   // Imagem de referência
-  const imageUrl = `https://img.usecurling.com/p/400/400?q=${encodeURIComponent('table lamp')}&color=orange`
+  const imageUrl = `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(lampName + ' lamp')}&color=orange`
 
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-border/50">

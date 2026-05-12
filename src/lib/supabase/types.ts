@@ -2903,6 +2903,71 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_history: {
+        Row: {
+          acao: string
+          created_at: string
+          created_by: string | null
+          id: string
+          quote_id: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          quote_id: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'quote_history_quote_id_fkey'
+            columns: ['quote_id']
+            isOneToOne: false
+            referencedRelation: 'quotes'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          created_at: string
+          data_aprovacao: string | null
+          empresa: string | null
+          id: string
+          items: Json
+          observacoes: string | null
+          status: string
+          valor_total: number
+        }
+        Insert: {
+          created_at?: string
+          data_aprovacao?: string | null
+          empresa?: string | null
+          id?: string
+          items?: Json
+          observacoes?: string | null
+          status?: string
+          valor_total?: number
+        }
+        Update: {
+          created_at?: string
+          data_aprovacao?: string | null
+          empresa?: string | null
+          id?: string
+          items?: Json
+          observacoes?: string | null
+          status?: string
+          valor_total?: number
+        }
+        Relationships: []
+      }
       separacao_arquivos: {
         Row: {
           created_at: string
@@ -5646,6 +5711,21 @@ export const Constants = {
 //   valor_fechado: numeric (nullable)
 //   data_fechamento: date (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: quote_history
+//   id: uuid (not null, default: gen_random_uuid())
+//   quote_id: uuid (not null)
+//   acao: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
+//   created_by: uuid (nullable)
+// Table: quotes
+//   id: uuid (not null, default: gen_random_uuid())
+//   empresa: text (nullable)
+//   valor_total: numeric (not null, default: 0)
+//   status: text (not null, default: 'aberto'::text)
+//   observacoes: text (nullable)
+//   items: jsonb (not null, default: '[]'::jsonb)
+//   data_aprovacao: timestamp with time zone (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: separacao_arquivos
 //   id: uuid (not null, default: gen_random_uuid())
 //   separacao_id: uuid (not null)
@@ -6428,6 +6508,12 @@ export const Constants = {
 //   FOREIGN KEY projetos_responsavel_obra_id_fkey: FOREIGN KEY (responsavel_obra_id) REFERENCES contatos(id) ON DELETE SET NULL
 // Table: projetos_fechados
 //   PRIMARY KEY projetos_fechados_pkey: PRIMARY KEY (id)
+// Table: quote_history
+//   FOREIGN KEY quote_history_created_by_fkey: FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL
+//   PRIMARY KEY quote_history_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY quote_history_quote_id_fkey: FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE
+// Table: quotes
+//   PRIMARY KEY quotes_pkey: PRIMARY KEY (id)
 // Table: separacao_arquivos
 //   PRIMARY KEY separacao_arquivos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY separacao_arquivos_separacao_id_fkey: FOREIGN KEY (separacao_id) REFERENCES separacoes(id) ON DELETE CASCADE
@@ -6764,6 +6850,12 @@ export const Constants = {
 //   Policy "projetos_fechados_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //     WITH CHECK: true
+// Table: quote_history
+//   Policy "all_quote_history_auth" (ALL, PERMISSIVE) roles={public}
+//     USING: true
+// Table: quotes
+//   Policy "all_quotes_auth" (ALL, PERMISSIVE) roles={public}
+//     USING: true
 // Table: separacao_arquivos
 //   Policy "sep_arq_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
