@@ -44,11 +44,12 @@ export default function Layout() {
       <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-background/80 border-b shadow-sm transition-all duration-300">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-semibold text-lg text-primary shrink-0">
-            <Wrench className="w-6 h-6" />
-            <span className="hidden sm:inline-block tracking-tight text-foreground">
-              Catálogo Ubiqua
+            <span className="hidden sm:inline-block font-extrabold text-2xl tracking-tighter uppercase text-primary">
+              Ubìqua
             </span>
-            <span className="sm:hidden tracking-tight text-foreground">Ubiqua</span>
+            <span className="sm:hidden font-extrabold text-xl tracking-tighter uppercase text-primary">
+              Ubìqua
+            </span>
           </div>
           <div className="flex-1 max-w-md relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />

@@ -1,6 +1,6 @@
 /* Global styles - Theme, font, utilities, animations and global components */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,17 +8,18 @@
 
 @layer base {
   :root {
-    /* Design System Colors */
-    --background: 210 40% 98%; /* #f8fafc */
-    --foreground: 222 47% 11%; /* #0f172a */
+    /* Design System Colors - Orange Theme Ubiqua */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
-    --card: 0 0% 100%; /* #ffffff */
+    --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 200 98% 39%; /* #0284c7 Sky Blue */
+    /* Orange from the "Price List 2026" image */
+    --primary: 28 89% 54%; /* #f38220 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 214 32% 91%;
@@ -35,7 +36,7 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 200 98% 39%;
+    --ring: 28 89% 54%;
 
     --radius: 0.5rem;
   }
@@ -50,7 +51,7 @@
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 200 98% 39%;
+    --primary: 28 89% 54%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217 32% 17%;
@@ -67,7 +68,7 @@
 
     --border: 217 32% 17%;
     --input: 217 32% 17%;
-    --ring: 212 96% 48%;
+    --ring: 28 89% 54%;
   }
 
   * {

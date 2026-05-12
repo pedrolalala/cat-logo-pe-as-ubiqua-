@@ -2,7 +2,7 @@ import { Part } from '@/lib/api'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, ShoppingCart } from 'lucide-react'
+import { ShoppingCart } from 'lucide-react'
 
 interface PartCardProps {
   part: Part
@@ -15,28 +15,50 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
     currency: 'BRL',
   }).format(part.valor_revenda)
 
+  // Extrair nome da luminária
+  const extractName = (desc: string) => {
+    const match = desc.match(/^(?:IS\s*-\s*)?([A-Z0-9\s]+?)\s+(?:LUM|LED|MINI|LUMIN)/i)
+    if (match && match[1]) {
+      return match[1].trim()
+    }
+    const words = desc.split(' ')
+    return words.slice(0, 2).join(' ')
+  }
+
+  const lampName = extractName(part.descricao)
+
+  // Imagem de referência
+  const imageUrl = `https://img.usecurling.com/p/400/400?q=${encodeURIComponent('table lamp')}&color=orange`
+
   return (
-    <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-md hover:-translate-y-1 group bg-card">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
+    <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-border/50">
+      <div className="relative w-full pt-[80%] bg-muted/20 overflow-hidden">
+        <img
+          src={imageUrl}
+          alt={lampName}
+          className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute top-3 left-3">
           <Badge
             variant="secondary"
-            className="font-mono font-bold text-xs bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
+            className="font-mono font-bold text-xs bg-background/90 backdrop-blur-sm text-foreground shadow-sm"
           >
             {part.referencia}
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-2">
-        <h3
-          className="font-semibold text-foreground text-lg leading-tight line-clamp-2"
-          title={part.descricao}
-        >
-          {part.descricao}
+      </div>
+      <CardHeader className="pb-2 pt-4">
+        <h3 className="font-extrabold text-foreground text-xl leading-tight line-clamp-1 uppercase tracking-tight">
+          {lampName}
         </h3>
-        <p className="text-2xl font-bold text-primary mt-auto pt-2">{formattedPrice}</p>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col gap-1 pb-4">
+        <p className="text-sm text-muted-foreground line-clamp-2" title={part.descricao}>
+          {part.descricao}
+        </p>
+        <p className="text-2xl font-bold text-primary mt-auto pt-3">{formattedPrice}</p>
       </CardContent>
-      <CardFooter className="flex flex-col gap-3 pt-0">
+      <CardFooter className="flex flex-col gap-2 pt-0">
         <Button
           variant="default"
           className="w-full shadow-sm transition-transform active:scale-95"
@@ -44,16 +66,6 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
           Adicionar ao Orçamento
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-colors"
-          asChild
-        >
-          <a href={part.url_produto} target="_blank" rel="noopener noreferrer">
-            Ver no site
-            <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
-          </a>
         </Button>
       </CardFooter>
     </Card>
