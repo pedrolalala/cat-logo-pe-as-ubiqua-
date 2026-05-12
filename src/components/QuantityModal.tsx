@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Minus, Plus } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { useCart } from '@/hooks/use-cart'
+import { useNavigate } from 'react-router-dom'
 
 interface QuantityModalProps {
   part: Part | null
@@ -21,6 +23,8 @@ interface QuantityModalProps {
 
 export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
   const [quantity, setQuantity] = useState(1)
+  const { addToCart } = useCart()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (isOpen) {
@@ -29,9 +33,16 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
   }, [isOpen])
 
   const handleConfirm = () => {
-    toast.success('Item adicionado ao orçamento com sucesso!', {
-      description: `${quantity}x ${part?.referencia} adicionado.`,
-    })
+    if (part) {
+      addToCart(part, quantity)
+      toast.success('Item adicionado ao orçamento!', {
+        description: `${quantity}x ${part.referencia} adicionado ao carrinho.`,
+        action: {
+          label: 'Ver Carrinho',
+          onClick: () => navigate('/novo-orcamento'),
+        },
+      })
+    }
     onClose()
   }
 

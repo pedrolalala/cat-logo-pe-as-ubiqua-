@@ -1,7 +1,27 @@
-import { Outlet, useSearchParams } from 'react-router-dom'
-import { Search, Wrench } from 'lucide-react'
+import { Outlet, useSearchParams, Link } from 'react-router-dom'
+import { Search, Wrench, ShoppingCart } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
+import { useCart } from '@/hooks/use-cart'
+
+function CartButton() {
+  const { items } = useCart()
+  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0)
+
+  return (
+    <Link
+      to="/novo-orcamento"
+      className="relative p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
+    >
+      <ShoppingCart className="w-5 h-5" />
+      {itemCount > 0 && (
+        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center rounded-full border-2 border-background">
+          {itemCount}
+        </span>
+      )}
+    </Link>
+  )
+}
 
 export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -38,6 +58,9 @@ export default function Layout() {
               placeholder="Buscar por referência ou descrição..."
               className="pl-9 w-full bg-background/50 border-muted focus-visible:ring-primary shadow-sm"
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <CartButton />
           </div>
         </div>
       </header>

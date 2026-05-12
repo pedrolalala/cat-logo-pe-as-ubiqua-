@@ -65,6 +65,52 @@ const MOCK_PARTS: Part[] = [
   },
 ]
 
+export interface CartItem extends Part {
+  quantity: number
+}
+
+export interface QuoteData {
+  items: CartItem[]
+  observacoes: string
+  valor_total: number
+}
+
+export async function saveQuoteToSupabase(data: QuoteData) {
+  const url = import.meta.env.VITE_SUPABASE_URL
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    // Fallback to mock save se não houver variáveis de ambiente para testar o fluxo completo
+    return new Promise((resolve) => setTimeout(resolve, 1500))
+  }
+
+  const response = await fetch(`${url}/rest/v1/quotes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
+      status: 'aberto',
+      observacoes: data.observacoes,
+      valor_total: data.valor_total,
+      items: data.items.map((item) => ({
+        part_id: item.id,
+        referencia: item.referencia,
+        quantidade: item.quantity,
+        preco_unitario: item.valor_revenda,
+        subtotal: item.valor_revenda * item.quantity,
+      })),
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Falha ao salvar o orçamento')
+  }
+}
+
 export async function fetchParts(): Promise<Part[]> {
   const url = import.meta.env.VITE_SUPABASE_URL
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY
