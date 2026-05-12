@@ -8,6 +8,7 @@
     "welcome-email": 3,
     "generate-report": 1,
     "sync-sharepoint": 1,
-    "sync-teams": 1
+    "sync-teams": 1,
+    "enviar-confirmacao-email": 1
   }
 }
