@@ -1,162 +1,24 @@
+import { supabase } from '@/lib/supabase/client'
+
 export interface Part {
-  id: string
+  id: number
   referencia: string
   descricao: string
   valor_revenda: number
-  url_produto: string
-}
-
-const MOCK_PARTS: Part[] = [
-  {
-    id: '1',
-    referencia: 'UBQ-1001',
-    descricao: 'Filtro de Óleo Industrial Alta Pressão',
-    valor_revenda: 1250.0,
-    url_produto: 'https://example.com',
-  },
-  {
-    id: '2',
-    referencia: 'UBQ-2042',
-    descricao: 'Válvula Solenoide 24V Aço Inox',
-    valor_revenda: 450.5,
-    url_produto: 'https://example.com',
-  },
-  {
-    id: '3',
-    referencia: 'UBQ-3099',
-    descricao: 'Bomba Hidráulica de Engrenagem',
-    valor_revenda: 3420.0,
-    url_produto: 'https://example.com',
-  },
-  {
-    id: '4',
-    referencia: 'UBQ-1055',
-    descricao: 'Mangueira de Sucção 2 Polegadas',
-    valor_revenda: 120.0,
-    url_produto: 'https://example.com',
-  },
-  {
-    id: '5',
-    referencia: 'UBQ-4001',
-    descricao: 'Painel de Controle Eletrônico V2',
-    valor_revenda: 5600.0,
-    url_produto: 'https://example.com',
-  },
-  {
-    id: '6',
-    referencia: 'UBQ-2088',
-    descricao: 'Cilindro Pneumático Dupla Ação',
-    valor_revenda: 890.75,
-    url_produto: 'https://example.com',
-  },
-  {
-    id: '7',
-    referencia: 'UBQ-5510',
-    descricao: 'Rolamento de Esferas Vedação Dupla',
-    valor_revenda: 85.9,
-    url_produto: 'https://example.com',
-  },
-  {
-    id: '8',
-    referencia: 'UBQ-8991',
-    descricao: 'Correia de Transmissão Sincronizada',
-    valor_revenda: 230.15,
-    url_produto: 'https://example.com',
-  },
-]
-
-export interface CartItem extends Part {
-  quantity: number
-}
-
-export interface QuoteData {
-  items: CartItem[]
-  observacoes: string
-  valor_total: number
-}
-
-export async function sendQuoteEmail(email: string, pdfBase64: string, quoteData: QuoteData) {
-  const url = import.meta.env.VITE_SUPABASE_URL
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-  if (!url || !key) {
-    // Fallback to mock save se não houver variáveis de ambiente para testar o fluxo completo
-    return new Promise((resolve) => setTimeout(resolve, 1500))
-  }
-
-  const response = await fetch(`${url}/functions/v1/enviar-orcamento-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      email,
-      pdfBase64,
-      quoteData,
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error('Falha ao enviar o e-mail')
-  }
-}
-
-export async function saveQuoteToSupabase(data: QuoteData) {
-  const url = import.meta.env.VITE_SUPABASE_URL
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-  if (!url || !key) {
-    // Fallback to mock save se não houver variáveis de ambiente para testar o fluxo completo
-    return new Promise((resolve) => setTimeout(resolve, 1500))
-  }
-
-  const response = await fetch(`${url}/rest/v1/quotes`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      Prefer: 'return=minimal',
-    },
-    body: JSON.stringify({
-      status: 'aberto',
-      observacoes: data.observacoes,
-      valor_total: data.valor_total,
-      items: data.items.map((item) => ({
-        part_id: item.id,
-        referencia: item.referencia,
-        quantidade: item.quantity,
-        preco_unitario: item.valor_revenda,
-        subtotal: item.valor_revenda * item.quantity,
-      })),
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error('Falha ao salvar o orçamento')
-  }
+  disponivel: number
+  imagem_catalogo_url?: string | null
 }
 
 export async function fetchParts(): Promise<Part[]> {
-  const url = import.meta.env.VITE_SUPABASE_URL
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+  const { data, error } = await supabase
+    .from('revenda_ubiqua')
+    .select('id, referencia, descricao, valor_revenda, disponivel, imagem_catalogo_url')
+    .order('referencia', { ascending: true })
 
-  if (!url || !key) {
-    // Fallback to mock data if env vars are not set to ensure app runs end-to-end
-    return new Promise((resolve) => setTimeout(() => resolve(MOCK_PARTS), 800))
+  if (error) {
+    console.error('Error fetching parts:', error)
+    return []
   }
 
-  const response = await fetch(`${url}/rest/v1/ubiqua_revenda?select=*`, {
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error('Falha ao buscar dados do catálogo')
-  }
-
-  return response.json()
+  return (data || []) as Part[]
 }

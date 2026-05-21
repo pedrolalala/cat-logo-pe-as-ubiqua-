@@ -9,122 +9,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      avaliacoes: {
-        Row: {
-          avaliador_id: string | null
-          comentarios: string | null
-          created_at: string
-          funcionario_id: string
-          id: string
-          nota: number | null
-          periodo: string
-        }
-        Insert: {
-          avaliador_id?: string | null
-          comentarios?: string | null
-          created_at?: string
-          funcionario_id: string
-          id?: string
-          nota?: number | null
-          periodo: string
-        }
-        Update: {
-          avaliador_id?: string | null
-          comentarios?: string | null
-          created_at?: string
-          funcionario_id?: string
-          id?: string
-          nota?: number | null
-          periodo?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'avaliacoes_avaliador_id_fkey'
-            columns: ['avaliador_id']
-            isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'avaliacoes_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
-            referencedRelation: 'funcionarios'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'avaliacoes_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
-            referencedRelation: 'vw_calculo_vt_mensal'
-            referencedColumns: ['funcionario_id']
-          },
-          {
-            foreignKeyName: 'avaliacoes_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
-            referencedRelation: 'vw_historico_faltas'
-            referencedColumns: ['funcionario_id']
-          },
-          {
-            foreignKeyName: 'avaliacoes_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
-            referencedRelation: 'vw_transacoes_completas'
-            referencedColumns: ['funcionario_id']
-          },
-        ]
-      }
-      candidatos: {
-        Row: {
-          cargo_pretendido: string | null
-          created_at: string
-          curriculo_url: string | null
-          departamento_id: string | null
-          email: string | null
-          id: string
-          nome: string
-          observacoes: string | null
-          status: string
-          telefone: string | null
-          updated_at: string
-        }
-        Insert: {
-          cargo_pretendido?: string | null
-          created_at?: string
-          curriculo_url?: string | null
-          departamento_id?: string | null
-          email?: string | null
-          id?: string
-          nome: string
-          observacoes?: string | null
-          status?: string
-          telefone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          cargo_pretendido?: string | null
-          created_at?: string
-          curriculo_url?: string | null
-          departamento_id?: string | null
-          email?: string | null
-          id?: string
-          nome?: string
-          observacoes?: string | null
-          status?: string
-          telefone?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'candidatos_departamento_id_fkey'
-            columns: ['departamento_id']
-            isOneToOne: false
-            referencedRelation: 'departamentos'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       categorias_financeiras: {
         Row: {
           ativo: boolean
@@ -178,357 +62,6 @@ export type Database = {
           nome?: string
         }
         Relationships: []
-      }
-      conta_pagar: {
-        Row: {
-          cod_duplicata: number | null
-          cod_empresa: number | null
-          cod_pessoa: number | null
-          cod_venda: number | null
-          created_at: string | null
-          data_baixa: string | null
-          data_emissao: string | null
-          data_pagamento: string | null
-          data_ultimo_pagamento: string | null
-          data_vencimento: string | null
-          desc_apropriacao: string | null
-          id: string
-          lancamento: number | null
-          layout_boleto: number | null
-          nome_empresa: string | null
-          nome_pessoa: string
-          nosso_numero: number | null
-          num_nota: string | null
-          numero_parcela: number | null
-          observacao: string | null
-          pago: number | null
-          projeto_id: string | null
-          status_pagamento: Database['public']['Enums']['status_pagamento'] | null
-          tipo_operacao: Database['public']['Enums']['tipo_operacao'] | null
-          tipo_pagamento: string | null
-          total_parcelas: number | null
-          updated_at: string | null
-          valor_desconto: number | null
-          valor_duplicata: number
-          valor_frete: number | null
-          valor_ipi: number | null
-          valor_juros: number | null
-          valor_pago: number | null
-          valor_parcela: number
-          valor_st: number | null
-          venda_id: string | null
-        }
-        Insert: {
-          cod_duplicata?: number | null
-          cod_empresa?: number | null
-          cod_pessoa?: number | null
-          cod_venda?: number | null
-          created_at?: string | null
-          data_baixa?: string | null
-          data_emissao?: string | null
-          data_pagamento?: string | null
-          data_ultimo_pagamento?: string | null
-          data_vencimento?: string | null
-          desc_apropriacao?: string | null
-          id?: string
-          lancamento?: number | null
-          layout_boleto?: number | null
-          nome_empresa?: string | null
-          nome_pessoa: string
-          nosso_numero?: number | null
-          num_nota?: string | null
-          numero_parcela?: number | null
-          observacao?: string | null
-          pago?: number | null
-          projeto_id?: string | null
-          status_pagamento?: Database['public']['Enums']['status_pagamento'] | null
-          tipo_operacao?: Database['public']['Enums']['tipo_operacao'] | null
-          tipo_pagamento?: string | null
-          total_parcelas?: number | null
-          updated_at?: string | null
-          valor_desconto?: number | null
-          valor_duplicata?: number
-          valor_frete?: number | null
-          valor_ipi?: number | null
-          valor_juros?: number | null
-          valor_pago?: number | null
-          valor_parcela?: number
-          valor_st?: number | null
-          venda_id?: string | null
-        }
-        Update: {
-          cod_duplicata?: number | null
-          cod_empresa?: number | null
-          cod_pessoa?: number | null
-          cod_venda?: number | null
-          created_at?: string | null
-          data_baixa?: string | null
-          data_emissao?: string | null
-          data_pagamento?: string | null
-          data_ultimo_pagamento?: string | null
-          data_vencimento?: string | null
-          desc_apropriacao?: string | null
-          id?: string
-          lancamento?: number | null
-          layout_boleto?: number | null
-          nome_empresa?: string | null
-          nome_pessoa?: string
-          nosso_numero?: number | null
-          num_nota?: string | null
-          numero_parcela?: number | null
-          observacao?: string | null
-          pago?: number | null
-          projeto_id?: string | null
-          status_pagamento?: Database['public']['Enums']['status_pagamento'] | null
-          tipo_operacao?: Database['public']['Enums']['tipo_operacao'] | null
-          tipo_pagamento?: string | null
-          total_parcelas?: number | null
-          updated_at?: string | null
-          valor_desconto?: number | null
-          valor_duplicata?: number
-          valor_frete?: number | null
-          valor_ipi?: number | null
-          valor_juros?: number | null
-          valor_pago?: number | null
-          valor_parcela?: number
-          valor_st?: number | null
-          venda_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'conta_pagar_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'projetos'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'conta_pagar_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_financeiro_projetos'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'conta_pagar_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_projetos_pipeline'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'conta_pagar_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_projetos_resumo'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'conta_pagar_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_separacoes_agenda'
-            referencedColumns: ['projeto_id']
-          },
-          {
-            foreignKeyName: 'conta_pagar_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_transacoes_completas'
-            referencedColumns: ['projeto_id']
-          },
-          {
-            foreignKeyName: 'conta_pagar_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_vendas_por_projeto'
-            referencedColumns: ['projeto_id']
-          },
-          {
-            foreignKeyName: 'conta_pagar_venda_id_fkey'
-            columns: ['venda_id']
-            isOneToOne: false
-            referencedRelation: 'vendas'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      conta_receber: {
-        Row: {
-          cod_duplicata: number | null
-          cod_empresa: number | null
-          cod_pessoa: number | null
-          cod_venda: number | null
-          created_at: string | null
-          data_baixa: string | null
-          data_emissao: string | null
-          data_pagamento: string | null
-          data_ultimo_pagamento: string | null
-          data_vencimento: string | null
-          desc_apropriacao: string | null
-          id: string
-          lancamento: number | null
-          layout_boleto: number | null
-          nome_empresa: string | null
-          nome_funcionario: string | null
-          nome_pessoa: string
-          nosso_numero: number | null
-          num_nota: string | null
-          numero_parcela: number | null
-          observacao: string | null
-          pago: number | null
-          projeto_id: string | null
-          status_pagamento: Database['public']['Enums']['status_pagamento'] | null
-          tipo_operacao: Database['public']['Enums']['tipo_operacao'] | null
-          tipo_pagamento: string | null
-          total_parcelas: number | null
-          updated_at: string | null
-          valor_desconto: number | null
-          valor_duplicata: number
-          valor_frete: number | null
-          valor_ipi: number | null
-          valor_juros: number | null
-          valor_pago: number | null
-          valor_parcela: number
-          valor_st: number | null
-          venda_id: string | null
-        }
-        Insert: {
-          cod_duplicata?: number | null
-          cod_empresa?: number | null
-          cod_pessoa?: number | null
-          cod_venda?: number | null
-          created_at?: string | null
-          data_baixa?: string | null
-          data_emissao?: string | null
-          data_pagamento?: string | null
-          data_ultimo_pagamento?: string | null
-          data_vencimento?: string | null
-          desc_apropriacao?: string | null
-          id?: string
-          lancamento?: number | null
-          layout_boleto?: number | null
-          nome_empresa?: string | null
-          nome_funcionario?: string | null
-          nome_pessoa: string
-          nosso_numero?: number | null
-          num_nota?: string | null
-          numero_parcela?: number | null
-          observacao?: string | null
-          pago?: number | null
-          projeto_id?: string | null
-          status_pagamento?: Database['public']['Enums']['status_pagamento'] | null
-          tipo_operacao?: Database['public']['Enums']['tipo_operacao'] | null
-          tipo_pagamento?: string | null
-          total_parcelas?: number | null
-          updated_at?: string | null
-          valor_desconto?: number | null
-          valor_duplicata?: number
-          valor_frete?: number | null
-          valor_ipi?: number | null
-          valor_juros?: number | null
-          valor_pago?: number | null
-          valor_parcela?: number
-          valor_st?: number | null
-          venda_id?: string | null
-        }
-        Update: {
-          cod_duplicata?: number | null
-          cod_empresa?: number | null
-          cod_pessoa?: number | null
-          cod_venda?: number | null
-          created_at?: string | null
-          data_baixa?: string | null
-          data_emissao?: string | null
-          data_pagamento?: string | null
-          data_ultimo_pagamento?: string | null
-          data_vencimento?: string | null
-          desc_apropriacao?: string | null
-          id?: string
-          lancamento?: number | null
-          layout_boleto?: number | null
-          nome_empresa?: string | null
-          nome_funcionario?: string | null
-          nome_pessoa?: string
-          nosso_numero?: number | null
-          num_nota?: string | null
-          numero_parcela?: number | null
-          observacao?: string | null
-          pago?: number | null
-          projeto_id?: string | null
-          status_pagamento?: Database['public']['Enums']['status_pagamento'] | null
-          tipo_operacao?: Database['public']['Enums']['tipo_operacao'] | null
-          tipo_pagamento?: string | null
-          total_parcelas?: number | null
-          updated_at?: string | null
-          valor_desconto?: number | null
-          valor_duplicata?: number
-          valor_frete?: number | null
-          valor_ipi?: number | null
-          valor_juros?: number | null
-          valor_pago?: number | null
-          valor_parcela?: number
-          valor_st?: number | null
-          venda_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'conta_receber_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'projetos'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'conta_receber_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_financeiro_projetos'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'conta_receber_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_projetos_pipeline'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'conta_receber_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_projetos_resumo'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'conta_receber_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_separacoes_agenda'
-            referencedColumns: ['projeto_id']
-          },
-          {
-            foreignKeyName: 'conta_receber_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_transacoes_completas'
-            referencedColumns: ['projeto_id']
-          },
-          {
-            foreignKeyName: 'conta_receber_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_vendas_por_projeto'
-            referencedColumns: ['projeto_id']
-          },
-          {
-            foreignKeyName: 'conta_receber_venda_id_fkey'
-            columns: ['venda_id']
-            isOneToOne: false
-            referencedRelation: 'vendas'
-            referencedColumns: ['id']
-          },
-        ]
       }
       contas_bancarias: {
         Row: {
@@ -1145,38 +678,62 @@ export type Database = {
       empresas: {
         Row: {
           ativo: boolean
+          bairro: string | null
+          cep: string | null
           cidade: string
           cnpj: string | null
           codigo: number
+          complemento: string | null
+          cor_hex: string | null
           created_at: string
           estado: string
           id: string
+          inscricao_estadual: string | null
+          logradouro: string | null
           nome: string
+          numero: string | null
           razao_social: string | null
+          regime_tributario: string | null
           updated_at: string
         }
         Insert: {
           ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
           cidade?: string
           cnpj?: string | null
           codigo: number
+          complemento?: string | null
+          cor_hex?: string | null
           created_at?: string
           estado?: string
           id?: string
+          inscricao_estadual?: string | null
+          logradouro?: string | null
           nome: string
+          numero?: string | null
           razao_social?: string | null
+          regime_tributario?: string | null
           updated_at?: string
         }
         Update: {
           ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
           cidade?: string
           cnpj?: string | null
           codigo?: number
+          complemento?: string | null
+          cor_hex?: string | null
           created_at?: string
           estado?: string
           id?: string
+          inscricao_estadual?: string | null
+          logradouro?: string | null
           nome?: string
+          numero?: string | null
           razao_social?: string | null
+          regime_tributario?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1600,7 +1157,6 @@ export type Database = {
           tipo_contratacao: string | null
           updated_at: string
           usuario_id: string | null
-          valor_vr: number | null
           valor_vt: number | null
           valor_vt_dia: number | null
         }
@@ -1631,7 +1187,6 @@ export type Database = {
           tipo_contratacao?: string | null
           updated_at?: string
           usuario_id?: string | null
-          valor_vr?: number | null
           valor_vt?: number | null
           valor_vt_dia?: number | null
         }
@@ -1662,7 +1217,6 @@ export type Database = {
           tipo_contratacao?: string | null
           updated_at?: string
           usuario_id?: string | null
-          valor_vr?: number | null
           valor_vt?: number | null
           valor_vt_dia?: number | null
         }
@@ -1889,6 +1443,213 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'vw_vendas_por_projeto'
             referencedColumns: ['projeto_id']
+          },
+        ]
+      }
+      orcamento_itens: {
+        Row: {
+          created_at: string | null
+          custom_id: string | null
+          desconto: number | null
+          descricao: string | null
+          id: string
+          item_pai_id: string | null
+          orcamento_id: string
+          preco_unitario: number | null
+          produto_id: string | null
+          quantidade: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_id?: string | null
+          desconto?: number | null
+          descricao?: string | null
+          id?: string
+          item_pai_id?: string | null
+          orcamento_id: string
+          preco_unitario?: number | null
+          produto_id?: string | null
+          quantidade?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_id?: string | null
+          desconto?: number | null
+          descricao?: string | null
+          id?: string
+          item_pai_id?: string | null
+          orcamento_id?: string
+          preco_unitario?: number | null
+          produto_id?: string | null
+          quantidade?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'orcamento_itens_item_pai_id_fkey'
+            columns: ['item_pai_id']
+            isOneToOne: false
+            referencedRelation: 'orcamento_itens'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'orcamento_itens_orcamento_id_fkey'
+            columns: ['orcamento_id']
+            isOneToOne: false
+            referencedRelation: 'orcamentos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'orcamento_itens_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'produtos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'orcamento_itens_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_estoque_liquido'
+            referencedColumns: ['produto_id']
+          },
+          {
+            foreignKeyName: 'orcamento_itens_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_vendas_loja'
+            referencedColumns: ['produto_id']
+          },
+          {
+            foreignKeyName: 'orcamento_itens_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_vendas_por_projeto'
+            referencedColumns: ['produto_id']
+          },
+        ]
+      }
+      orcamentos: {
+        Row: {
+          arquiteto_id: string | null
+          cliente_id: string | null
+          condicoes_pagamento: string | null
+          created_at: string | null
+          data_emissao: string | null
+          desconto_global: number | null
+          empresa_id: string
+          forma_pagamento: Database['public']['Enums']['pagamento_forma'] | null
+          id: string
+          numero: string | null
+          observacoes: string | null
+          status: string | null
+          validade: string | null
+          valor_total: number | null
+          vendedor_id: string | null
+        }
+        Insert: {
+          arquiteto_id?: string | null
+          cliente_id?: string | null
+          condicoes_pagamento?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          desconto_global?: number | null
+          empresa_id: string
+          forma_pagamento?: Database['public']['Enums']['pagamento_forma'] | null
+          id?: string
+          numero?: string | null
+          observacoes?: string | null
+          status?: string | null
+          validade?: string | null
+          valor_total?: number | null
+          vendedor_id?: string | null
+        }
+        Update: {
+          arquiteto_id?: string | null
+          cliente_id?: string | null
+          condicoes_pagamento?: string | null
+          created_at?: string | null
+          data_emissao?: string | null
+          desconto_global?: number | null
+          empresa_id?: string
+          forma_pagamento?: Database['public']['Enums']['pagamento_forma'] | null
+          id?: string
+          numero?: string | null
+          observacoes?: string | null
+          status?: string | null
+          validade?: string | null
+          valor_total?: number | null
+          vendedor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'orcamentos_arquiteto_id_fkey'
+            columns: ['arquiteto_id']
+            isOneToOne: false
+            referencedRelation: 'contatos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'orcamentos_arquiteto_id_fkey'
+            columns: ['arquiteto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['contato_id']
+          },
+          {
+            foreignKeyName: 'orcamentos_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'contatos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'orcamentos_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['contato_id']
+          },
+          {
+            foreignKeyName: 'orcamentos_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'empresas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'orcamentos_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['empresa_id']
+          },
+          {
+            foreignKeyName: 'orcamentos_vendedor_id_fkey'
+            columns: ['vendedor_id']
+            isOneToOne: false
+            referencedRelation: 'funcionarios'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'orcamentos_vendedor_id_fkey'
+            columns: ['vendedor_id']
+            isOneToOne: false
+            referencedRelation: 'vw_calculo_vt_mensal'
+            referencedColumns: ['funcionario_id']
+          },
+          {
+            foreignKeyName: 'orcamentos_vendedor_id_fkey'
+            columns: ['vendedor_id']
+            isOneToOne: false
+            referencedRelation: 'vw_historico_faltas'
+            referencedColumns: ['funcionario_id']
+          },
+          {
+            foreignKeyName: 'orcamentos_vendedor_id_fkey'
+            columns: ['vendedor_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['funcionario_id']
           },
         ]
       }
@@ -2174,30 +1935,6 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          full_name: string | null
-          id: string
-          role: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          full_name?: string | null
-          id: string
-          role?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          full_name?: string | null
-          id?: string
-          role?: string
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       projeto_itens: {
         Row: {
@@ -2968,64 +2705,83 @@ export type Database = {
         }
         Relationships: []
       }
-      separacao_arquivos: {
+      revenda_ubiqua: {
         Row: {
-          created_at: string
-          id: string
-          nome: string
-          separacao_id: string
-          tamanho_kb: number | null
-          tipo_mime: string | null
-          url: string
+          cod_fornecedor: number | null
+          cod_marca: number | null
+          cod_produto: number | null
+          created_at: string | null
+          desc_marca: string | null
+          desc_produto: string | null
+          descricao: string | null
+          disponivel: number | null
+          estoque: number | null
+          fonte_planilha1: boolean | null
+          fonte_planilha2: boolean | null
+          fonte_planilha3: boolean | null
+          id: number
+          imagem_catalogo_url: string | null
+          itens_vendidos: number | null
+          nm_fornecedor: string | null
+          referencia: string
+          updated_at: string | null
+          valor_revenda: number | null
+          vl_custo_indireto: number | null
+          vl_custo_produto: number | null
+          vl_custo_total_tabela: number | null
+          vl_venda_produto: number | null
         }
         Insert: {
-          created_at?: string
-          id?: string
-          nome: string
-          separacao_id: string
-          tamanho_kb?: number | null
-          tipo_mime?: string | null
-          url: string
+          cod_fornecedor?: number | null
+          cod_marca?: number | null
+          cod_produto?: number | null
+          created_at?: string | null
+          desc_marca?: string | null
+          desc_produto?: string | null
+          descricao?: string | null
+          disponivel?: number | null
+          estoque?: number | null
+          fonte_planilha1?: boolean | null
+          fonte_planilha2?: boolean | null
+          fonte_planilha3?: boolean | null
+          id?: number
+          imagem_catalogo_url?: string | null
+          itens_vendidos?: number | null
+          nm_fornecedor?: string | null
+          referencia: string
+          updated_at?: string | null
+          valor_revenda?: number | null
+          vl_custo_indireto?: number | null
+          vl_custo_produto?: number | null
+          vl_custo_total_tabela?: number | null
+          vl_venda_produto?: number | null
         }
         Update: {
-          created_at?: string
-          id?: string
-          nome?: string
-          separacao_id?: string
-          tamanho_kb?: number | null
-          tipo_mime?: string | null
-          url?: string
+          cod_fornecedor?: number | null
+          cod_marca?: number | null
+          cod_produto?: number | null
+          created_at?: string | null
+          desc_marca?: string | null
+          desc_produto?: string | null
+          descricao?: string | null
+          disponivel?: number | null
+          estoque?: number | null
+          fonte_planilha1?: boolean | null
+          fonte_planilha2?: boolean | null
+          fonte_planilha3?: boolean | null
+          id?: number
+          imagem_catalogo_url?: string | null
+          itens_vendidos?: number | null
+          nm_fornecedor?: string | null
+          referencia?: string
+          updated_at?: string | null
+          valor_revenda?: number | null
+          vl_custo_indireto?: number | null
+          vl_custo_produto?: number | null
+          vl_custo_total_tabela?: number | null
+          vl_venda_produto?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: 'separacao_arquivos_separacao_id_fkey'
-            columns: ['separacao_id']
-            isOneToOne: false
-            referencedRelation: 'separacoes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'separacao_arquivos_separacao_id_fkey'
-            columns: ['separacao_id']
-            isOneToOne: false
-            referencedRelation: 'vw_separacoes_agenda'
-            referencedColumns: ['separacao_id']
-          },
-          {
-            foreignKeyName: 'separacao_arquivos_separacao_id_fkey'
-            columns: ['separacao_id']
-            isOneToOne: false
-            referencedRelation: 'vw_vendas_loja'
-            referencedColumns: ['separacao_id']
-          },
-          {
-            foreignKeyName: 'separacao_arquivos_separacao_id_fkey'
-            columns: ['separacao_id']
-            isOneToOne: false
-            referencedRelation: 'vw_vendas_por_projeto'
-            referencedColumns: ['separacao_id']
-          },
-        ]
+        Relationships: []
       }
       separacao_itens: {
         Row: {
@@ -3244,151 +3000,6 @@ export type Database = {
             columns: ['responsavel_id']
             isOneToOne: false
             referencedRelation: 'usuarios'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      solicitacoes_compra: {
-        Row: {
-          aprovador_id: string | null
-          categoria_id: string | null
-          comprovante_url: string | null
-          created_at: string
-          data_aprovacao: string | null
-          data_compra: string | null
-          descricao: string
-          id: string
-          justificativa: string | null
-          observacoes: string | null
-          projeto_id: string | null
-          solicitante_id: string
-          status: Database['public']['Enums']['solicitacao_status']
-          transacao_id: string | null
-          updated_at: string
-          valor_aprovado: number | null
-          valor_estimado: number
-        }
-        Insert: {
-          aprovador_id?: string | null
-          categoria_id?: string | null
-          comprovante_url?: string | null
-          created_at?: string
-          data_aprovacao?: string | null
-          data_compra?: string | null
-          descricao: string
-          id?: string
-          justificativa?: string | null
-          observacoes?: string | null
-          projeto_id?: string | null
-          solicitante_id: string
-          status?: Database['public']['Enums']['solicitacao_status']
-          transacao_id?: string | null
-          updated_at?: string
-          valor_aprovado?: number | null
-          valor_estimado: number
-        }
-        Update: {
-          aprovador_id?: string | null
-          categoria_id?: string | null
-          comprovante_url?: string | null
-          created_at?: string
-          data_aprovacao?: string | null
-          data_compra?: string | null
-          descricao?: string
-          id?: string
-          justificativa?: string | null
-          observacoes?: string | null
-          projeto_id?: string | null
-          solicitante_id?: string
-          status?: Database['public']['Enums']['solicitacao_status']
-          transacao_id?: string | null
-          updated_at?: string
-          valor_aprovado?: number | null
-          valor_estimado?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'solicitacoes_compra_aprovador_id_fkey'
-            columns: ['aprovador_id']
-            isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_categoria_id_fkey'
-            columns: ['categoria_id']
-            isOneToOne: false
-            referencedRelation: 'categorias_financeiras'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'projetos'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_financeiro_projetos'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_projetos_pipeline'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_projetos_resumo'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_separacoes_agenda'
-            referencedColumns: ['projeto_id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_transacoes_completas'
-            referencedColumns: ['projeto_id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_projeto_id_fkey'
-            columns: ['projeto_id']
-            isOneToOne: false
-            referencedRelation: 'vw_vendas_por_projeto'
-            referencedColumns: ['projeto_id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_solicitante_id_fkey'
-            columns: ['solicitante_id']
-            isOneToOne: false
-            referencedRelation: 'usuarios'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_transacao_id_fkey'
-            columns: ['transacao_id']
-            isOneToOne: false
-            referencedRelation: 'transacoes'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'solicitacoes_compra_transacao_id_fkey'
-            columns: ['transacao_id']
-            isOneToOne: false
-            referencedRelation: 'vw_transacoes_completas'
             referencedColumns: ['id']
           },
         ]
@@ -3849,54 +3460,6 @@ export type Database = {
         }
         Relationships: []
       }
-      staging_projetos2024: {
-        Row: {
-          'Arquiteto Responsável ': string | null
-          Arquivado: boolean | null
-          Cidade: string | null
-          Codigo: string | null
-          created_at: string
-          'Data Entrada': string | null
-          Estado: string | null
-          id: number
-          'Nível Estratégico': string | null
-          Projeto: string | null
-          'Responsável ': string | null
-          'Responsável da Obra': string | null
-          Status: string | null
-        }
-        Insert: {
-          'Arquiteto Responsável '?: string | null
-          Arquivado?: boolean | null
-          Cidade?: string | null
-          Codigo?: string | null
-          created_at?: string
-          'Data Entrada'?: string | null
-          Estado?: string | null
-          id?: number
-          'Nível Estratégico'?: string | null
-          Projeto?: string | null
-          'Responsável '?: string | null
-          'Responsável da Obra'?: string | null
-          Status?: string | null
-        }
-        Update: {
-          'Arquiteto Responsável '?: string | null
-          Arquivado?: boolean | null
-          Cidade?: string | null
-          Codigo?: string | null
-          created_at?: string
-          'Data Entrada'?: string | null
-          Estado?: string | null
-          id?: number
-          'Nível Estratégico'?: string | null
-          Projeto?: string | null
-          'Responsável '?: string | null
-          'Responsável da Obra'?: string | null
-          Status?: string | null
-        }
-        Relationships: []
-      }
       sync_history: {
         Row: {
           created_at: string | null
@@ -3958,6 +3521,7 @@ export type Database = {
           dt_emissao: string | null
           dt_pagamento: string | null
           dt_vencimento: string | null
+          empresa_id: string | null
           id: string
           negociacao_id: string | null
           num_parc: number | null
@@ -3987,6 +3551,7 @@ export type Database = {
           dt_emissao?: string | null
           dt_pagamento?: string | null
           dt_vencimento?: string | null
+          empresa_id?: string | null
           id?: string
           negociacao_id?: string | null
           num_parc?: number | null
@@ -4016,6 +3581,7 @@ export type Database = {
           dt_emissao?: string | null
           dt_pagamento?: string | null
           dt_vencimento?: string | null
+          empresa_id?: string | null
           id?: string
           negociacao_id?: string | null
           num_parc?: number | null
@@ -4060,6 +3626,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'usuarios'
             referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transacoes_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'empresas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transacoes_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['empresa_id']
           },
           {
             foreignKeyName: 'transacoes_negociacao_id_fkey'
@@ -4132,87 +3712,6 @@ export type Database = {
             referencedColumns: ['projeto_id']
           },
         ]
-      }
-      transactions: {
-        Row: {
-          amount: number
-          boleto: string | null
-          category: string
-          cliente: string | null
-          codigo: string | null
-          created_at: string | null
-          data_final: string | null
-          data_inicio: string | null
-          date: string
-          description: string
-          duplicata: string | null
-          fatura: string | null
-          id: string
-          notes: string | null
-          operacao: string | null
-          payment_method: string
-          pessoa: string | null
-          responsavel: string | null
-          tipo_data: string | null
-          tipo_situacao: string | null
-          type: string
-          updated_at: string | null
-          user_id: string
-          venda: string | null
-        }
-        Insert: {
-          amount: number
-          boleto?: string | null
-          category: string
-          cliente?: string | null
-          codigo?: string | null
-          created_at?: string | null
-          data_final?: string | null
-          data_inicio?: string | null
-          date: string
-          description: string
-          duplicata?: string | null
-          fatura?: string | null
-          id?: string
-          notes?: string | null
-          operacao?: string | null
-          payment_method: string
-          pessoa?: string | null
-          responsavel?: string | null
-          tipo_data?: string | null
-          tipo_situacao?: string | null
-          type: string
-          updated_at?: string | null
-          user_id: string
-          venda?: string | null
-        }
-        Update: {
-          amount?: number
-          boleto?: string | null
-          category?: string
-          cliente?: string | null
-          codigo?: string | null
-          created_at?: string | null
-          data_final?: string | null
-          data_inicio?: string | null
-          date?: string
-          description?: string
-          duplicata?: string | null
-          fatura?: string | null
-          id?: string
-          notes?: string | null
-          operacao?: string | null
-          payment_method?: string
-          pessoa?: string | null
-          responsavel?: string | null
-          tipo_data?: string | null
-          tipo_situacao?: string | null
-          type?: string
-          updated_at?: string | null
-          user_id?: string
-          venda?: string | null
-        }
-        Relationships: []
       }
       usuarios: {
         Row: {
@@ -4463,63 +3962,15 @@ export type Database = {
         }
         Relationships: []
       }
-      vw_conta_pagar_aberto: {
+      vw_conferencia_financeira: {
         Row: {
-          data_vencimento: string | null
-          fornecedor: string | null
-          id: string | null
-          saldo: number | null
-          situacao: string | null
-          valor_pago: number | null
-          valor_parcela: number | null
-        }
-        Insert: {
-          data_vencimento?: string | null
-          fornecedor?: string | null
-          id?: string | null
-          saldo?: never
-          situacao?: never
-          valor_pago?: number | null
-          valor_parcela?: number | null
-        }
-        Update: {
-          data_vencimento?: string | null
-          fornecedor?: string | null
-          id?: string | null
-          saldo?: never
-          situacao?: never
-          valor_pago?: number | null
-          valor_parcela?: number | null
-        }
-        Relationships: []
-      }
-      vw_conta_receber_aberto: {
-        Row: {
-          cliente: string | null
-          data_vencimento: string | null
-          id: string | null
-          saldo: number | null
-          situacao: string | null
-          valor_pago: number | null
-          valor_parcela: number | null
-        }
-        Insert: {
-          cliente?: string | null
-          data_vencimento?: string | null
-          id?: string | null
-          saldo?: never
-          situacao?: never
-          valor_pago?: number | null
-          valor_parcela?: number | null
-        }
-        Update: {
-          cliente?: string | null
-          data_vencimento?: string | null
-          id?: string | null
-          saldo?: never
-          situacao?: never
-          valor_pago?: number | null
-          valor_parcela?: number | null
+          data_transacao: string | null
+          descricao: string | null
+          dt_vencimento: string | null
+          nome_empresa: string | null
+          nome_fornecedor: string | null
+          status_pago: number | null
+          valor: number | null
         }
         Relationships: []
       }
@@ -4997,7 +4448,7 @@ export type Database = {
       estoque_local: 'Estoque' | 'Showroom' | 'Em trânsito' | 'Reservado'
       frequencia_tipo: 'mensal' | 'trimestral' | 'semestral' | 'anual'
       lancamento_status: 'pendente' | 'pago' | 'cancelado'
-      pagamento_forma: 'pix' | 'cartao' | 'boleto' | 'transferencia' | 'cheque'
+      pagamento_forma: 'pix' | 'cartao' | 'boleto' | 'transferencia' | 'cheque' | 'dinheiro'
       parcela_status: 'pendente' | 'paga' | 'atrasada' | 'cancelada'
       projeto_nivel: '1' | '2' | '3' | '4'
       projeto_status:
@@ -5161,7 +4612,7 @@ export const Constants = {
       estoque_local: ['Estoque', 'Showroom', 'Em trânsito', 'Reservado'],
       frequencia_tipo: ['mensal', 'trimestral', 'semestral', 'anual'],
       lancamento_status: ['pendente', 'pago', 'cancelado'],
-      pagamento_forma: ['pix', 'cartao', 'boleto', 'transferencia', 'cheque'],
+      pagamento_forma: ['pix', 'cartao', 'boleto', 'transferencia', 'cheque', 'dinheiro'],
       parcela_status: ['pendente', 'paga', 'atrasada', 'cancelada'],
       projeto_nivel: ['1', '2', '3', '4'],
       projeto_status: [
@@ -5203,26 +4654,6 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
-// Table: avaliacoes
-//   id: uuid (not null, default: gen_random_uuid())
-//   funcionario_id: uuid (not null)
-//   avaliador_id: uuid (nullable)
-//   periodo: text (not null)
-//   nota: numeric (nullable)
-//   comentarios: text (nullable)
-//   created_at: timestamp with time zone (not null, default: now())
-// Table: candidatos
-//   id: uuid (not null, default: gen_random_uuid())
-//   nome: text (not null)
-//   email: text (nullable)
-//   telefone: character varying (nullable)
-//   cargo_pretendido: text (nullable)
-//   departamento_id: uuid (nullable)
-//   status: text (not null, default: 'Em análise'::text)
-//   curriculo_url: text (nullable)
-//   observacoes: text (nullable)
-//   created_at: timestamp with time zone (not null, default: now())
-//   updated_at: timestamp with time zone (not null, default: now())
 // Table: categorias_financeiras
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -5237,81 +4668,6 @@ export const Constants = {
 //   nome: text (not null)
 //   ativo: boolean (not null, default: true)
 //   created_at: timestamp with time zone (not null, default: now())
-// Table: conta_pagar
-//   id: uuid (not null, default: gen_random_uuid())
-//   cod_duplicata: integer (nullable)
-//   cod_venda: integer (nullable)
-//   num_nota: text (nullable)
-//   projeto_id: uuid (nullable)
-//   venda_id: uuid (nullable)
-//   cod_pessoa: integer (nullable)
-//   nome_pessoa: text (not null)
-//   cod_empresa: integer (nullable)
-//   nome_empresa: text (nullable)
-//   valor_duplicata: numeric (not null, default: 0)
-//   valor_parcela: numeric (not null, default: 0)
-//   valor_desconto: numeric (nullable, default: 0)
-//   valor_juros: numeric (nullable, default: 0)
-//   valor_pago: numeric (nullable, default: 0)
-//   valor_frete: numeric (nullable, default: 0)
-//   valor_ipi: numeric (nullable, default: 0)
-//   valor_st: numeric (nullable, default: 0)
-//   numero_parcela: integer (nullable)
-//   total_parcelas: integer (nullable)
-//   data_emissao: date (nullable)
-//   data_vencimento: date (nullable)
-//   data_pagamento: timestamp without time zone (nullable)
-//   data_baixa: timestamp without time zone (nullable)
-//   data_ultimo_pagamento: timestamp without time zone (nullable)
-//   pago: integer (nullable, default: 0)
-//   status_pagamento: status_pagamento (nullable, default: 'Pendente'::status_pagamento)
-//   tipo_operacao: tipo_operacao (nullable, default: 'CP'::tipo_operacao)
-//   tipo_pagamento: text (nullable)
-//   desc_apropriacao: text (nullable)
-//   lancamento: integer (nullable, default: 0)
-//   layout_boleto: numeric (nullable)
-//   nosso_numero: integer (nullable)
-//   observacao: text (nullable)
-//   created_at: timestamp with time zone (nullable, default: now())
-//   updated_at: timestamp with time zone (nullable, default: now())
-// Table: conta_receber
-//   id: uuid (not null, default: gen_random_uuid())
-//   cod_duplicata: integer (nullable)
-//   cod_venda: integer (nullable)
-//   num_nota: text (nullable)
-//   projeto_id: uuid (nullable)
-//   venda_id: uuid (nullable)
-//   cod_pessoa: integer (nullable)
-//   nome_pessoa: text (not null)
-//   cod_empresa: integer (nullable)
-//   nome_empresa: text (nullable)
-//   valor_duplicata: numeric (not null, default: 0)
-//   valor_parcela: numeric (not null, default: 0)
-//   valor_desconto: numeric (nullable, default: 0)
-//   valor_juros: numeric (nullable, default: 0)
-//   valor_pago: numeric (nullable, default: 0)
-//   valor_frete: numeric (nullable, default: 0)
-//   valor_ipi: numeric (nullable, default: 0)
-//   valor_st: numeric (nullable, default: 0)
-//   numero_parcela: integer (nullable)
-//   total_parcelas: integer (nullable)
-//   data_emissao: date (nullable)
-//   data_vencimento: date (nullable)
-//   data_pagamento: timestamp without time zone (nullable)
-//   data_baixa: timestamp without time zone (nullable)
-//   data_ultimo_pagamento: timestamp without time zone (nullable)
-//   pago: integer (nullable, default: 0)
-//   status_pagamento: status_pagamento (nullable, default: 'Pendente'::status_pagamento)
-//   tipo_operacao: tipo_operacao (nullable, default: 'CR'::tipo_operacao)
-//   tipo_pagamento: text (nullable)
-//   desc_apropriacao: text (nullable)
-//   nome_funcionario: text (nullable)
-//   lancamento: integer (nullable, default: 0)
-//   layout_boleto: numeric (nullable)
-//   nosso_numero: integer (nullable)
-//   observacao: text (nullable)
-//   created_at: timestamp with time zone (nullable, default: now())
-//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: contas_bancarias
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -5441,6 +4797,14 @@ export const Constants = {
 //   ativo: boolean (not null, default: true)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
+//   inscricao_estadual: text (nullable)
+//   logradouro: text (nullable)
+//   numero: text (nullable)
+//   complemento: text (nullable)
+//   bairro: text (nullable)
+//   cep: text (nullable)
+//   cor_hex: text (nullable)
+//   regime_tributario: text (nullable)
 // Table: entregas
 //   id: uuid (not null, default: gen_random_uuid())
 //   separacao_id: uuid (nullable)
@@ -5510,7 +4874,6 @@ export const Constants = {
 //   updated_at: timestamp with time zone (not null, default: now())
 //   comissao_padrao: numeric (nullable, default: 0)
 //   empresa: text (nullable)
-//   valor_vr: numeric (nullable, default: 0)
 //   valor_vt: numeric (nullable, default: 0)
 //   data_aniversario: date (nullable)
 //   salario_liquido: numeric (nullable, default: 0)
@@ -5543,6 +4906,33 @@ export const Constants = {
 //   observacao: text (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
 //   cod_pessoa: integer (nullable)
+// Table: orcamento_itens
+//   id: uuid (not null, default: gen_random_uuid())
+//   orcamento_id: uuid (not null)
+//   produto_id: uuid (nullable)
+//   quantidade: numeric (nullable, default: 1)
+//   preco_unitario: numeric (nullable)
+//   desconto: numeric (nullable, default: 0)
+//   item_pai_id: uuid (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   custom_id: text (nullable)
+//   descricao: text (nullable)
+// Table: orcamentos
+//   id: uuid (not null, default: gen_random_uuid())
+//   empresa_id: uuid (not null)
+//   cliente_id: uuid (nullable)
+//   arquiteto_id: uuid (nullable)
+//   vendedor_id: uuid (nullable)
+//   status: text (nullable, default: 'Rascunho'::text)
+//   data_emissao: timestamp with time zone (nullable, default: now())
+//   validade: date (nullable)
+//   valor_total: numeric (nullable, default: 0)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   numero: text (nullable)
+//   observacoes: text (nullable)
+//   condicoes_pagamento: text (nullable)
+//   desconto_global: numeric (nullable, default: 0)
+//   forma_pagamento: pagamento_forma (nullable)
 // Table: pedido_compra
 //   id: uuid (not null, default: gen_random_uuid())
 //   codigo_pedido: integer (not null)
@@ -5605,12 +4995,6 @@ export const Constants = {
 //   margem_lucro: numeric (nullable)
 //   ncm: character varying (nullable)
 //   tipo_fiscal: text (nullable)
-// Table: profiles
-//   id: uuid (not null)
-//   full_name: text (nullable)
-//   created_at: timestamp with time zone (nullable, default: now())
-//   updated_at: timestamp with time zone (nullable, default: now())
-//   role: text (not null, default: 'visitante'::text)
 // Table: projeto_itens
 //   id: uuid (not null, default: gen_random_uuid())
 //   projeto_id: uuid (not null)
@@ -5726,14 +5110,30 @@ export const Constants = {
 //   items: jsonb (not null, default: '[]'::jsonb)
 //   data_aprovacao: timestamp with time zone (nullable)
 //   created_at: timestamp with time zone (not null, default: now())
-// Table: separacao_arquivos
-//   id: uuid (not null, default: gen_random_uuid())
-//   separacao_id: uuid (not null)
-//   nome: text (not null)
-//   url: text (not null)
-//   tipo_mime: text (nullable)
-//   tamanho_kb: integer (nullable)
-//   created_at: timestamp with time zone (not null, default: now())
+// Table: revenda_ubiqua
+//   id: integer (not null, default: nextval('revenda_ubiqua_id_seq'::regclass))
+//   referencia: text (not null)
+//   descricao: text (nullable)
+//   valor_revenda: numeric (nullable)
+//   cod_produto: integer (nullable)
+//   desc_produto: text (nullable)
+//   cod_marca: integer (nullable)
+//   desc_marca: text (nullable)
+//   cod_fornecedor: integer (nullable)
+//   nm_fornecedor: text (nullable)
+//   itens_vendidos: integer (nullable, default: 0)
+//   estoque: integer (nullable, default: 0)
+//   disponivel: integer (nullable, default: 0)
+//   vl_custo_produto: numeric (nullable)
+//   vl_custo_indireto: numeric (nullable)
+//   vl_venda_produto: numeric (nullable)
+//   vl_custo_total_tabela: numeric (nullable)
+//   imagem_catalogo_url: text (nullable)
+//   fonte_planilha1: boolean (nullable, default: false)
+//   fonte_planilha2: boolean (nullable, default: false)
+//   fonte_planilha3: boolean (nullable, default: false)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: separacao_itens
 //   id: uuid (not null, default: gen_random_uuid())
 //   separacao_id: uuid (not null)
@@ -5761,24 +5161,6 @@ export const Constants = {
 //   data_entrega_original: date (nullable)
 //   reagendamentos: integer (not null, default: 0)
 //   cliente_id: uuid (nullable)
-// Table: solicitacoes_compra
-//   id: uuid (not null, default: gen_random_uuid())
-//   solicitante_id: uuid (not null)
-//   aprovador_id: uuid (nullable)
-//   categoria_id: uuid (nullable)
-//   projeto_id: uuid (nullable)
-//   descricao: text (not null)
-//   justificativa: text (nullable)
-//   valor_estimado: numeric (not null)
-//   valor_aprovado: numeric (nullable)
-//   status: solicitacao_status (not null, default: 'pendente'::solicitacao_status)
-//   data_aprovacao: date (nullable)
-//   data_compra: date (nullable)
-//   comprovante_url: text (nullable)
-//   transacao_id: uuid (nullable)
-//   observacoes: text (nullable)
-//   created_at: timestamp with time zone (not null, default: now())
-//   updated_at: timestamp with time zone (not null, default: now())
 // Table: staging_conta_pagar
 //   tipo_operacao: text (nullable)
 //   cod_empresa: integer (nullable)
@@ -5921,20 +5303,6 @@ export const Constants = {
 //   importado_em: timestamp with time zone (nullable, default: now())
 //   processado: boolean (nullable, default: false)
 //   linha_excel: integer (nullable)
-// Table: staging_projetos2024
-//   id: bigint (not null)
-//   created_at: timestamp with time zone (not null, default: now())
-//   Codigo: text (nullable)
-//   Nível Estratégico: text (nullable)
-//   Projeto: text (nullable)
-//   Responsável : text (nullable)
-//   Data Entrada: date (nullable)
-//   Status: text (nullable)
-//   Arquiteto Responsável : text (nullable)
-//   Responsável da Obra: text (nullable)
-//   Cidade: text (nullable)
-//   Estado: text (nullable)
-//   Arquivado: boolean (nullable)
 // Table: sync_history
 //   id: bigint (not null)
 //   status: text (nullable)
@@ -5974,31 +5342,7 @@ export const Constants = {
 //   status_pago: smallint (nullable, default: 0)
 //   tipo_pagamento: text (nullable)
 //   acordo: integer (nullable)
-// Table: transactions
-//   id: uuid (not null, default: gen_random_uuid())
-//   user_id: uuid (not null)
-//   date: date (not null)
-//   description: text (not null)
-//   category: text (not null)
-//   type: text (not null)
-//   amount: numeric (not null)
-//   payment_method: text (not null)
-//   notes: text (nullable)
-//   created_at: timestamp with time zone (nullable, default: now())
-//   updated_at: timestamp with time zone (nullable, default: now())
-//   responsavel: text (nullable)
-//   operacao: text (nullable)
-//   tipo_situacao: text (nullable)
-//   tipo_data: text (nullable)
-//   data_inicio: date (nullable)
-//   data_final: date (nullable)
-//   venda: text (nullable)
-//   fatura: text (nullable)
-//   duplicata: text (nullable)
-//   boleto: text (nullable)
-//   pessoa: text (nullable)
-//   codigo: text (nullable)
-//   cliente: text (nullable)
+//   empresa_id: uuid (nullable)
 // Table: usuarios
 //   id: uuid (not null)
 //   email: text (not null)
@@ -6052,22 +5396,14 @@ export const Constants = {
 //   valor_vt_dia: numeric (nullable)
 //   total_faltas_integrais: bigint (nullable)
 //   total_meio_periodo: bigint (nullable)
-// Table: vw_conta_pagar_aberto
-//   id: uuid (nullable)
-//   fornecedor: text (nullable)
-//   valor_parcela: numeric (nullable)
-//   valor_pago: numeric (nullable)
-//   saldo: numeric (nullable)
-//   data_vencimento: date (nullable)
-//   situacao: text (nullable)
-// Table: vw_conta_receber_aberto
-//   id: uuid (nullable)
-//   cliente: text (nullable)
-//   valor_parcela: numeric (nullable)
-//   valor_pago: numeric (nullable)
-//   saldo: numeric (nullable)
-//   data_vencimento: date (nullable)
-//   situacao: text (nullable)
+// Table: vw_conferencia_financeira
+//   data_transacao: date (nullable)
+//   descricao: text (nullable)
+//   valor: numeric (nullable)
+//   nome_empresa: text (nullable)
+//   nome_fornecedor: text (nullable)
+//   status_pago: smallint (nullable)
+//   dt_vencimento: date (nullable)
 // Table: vw_controle_ferias_clt
 //   funcionario_id: uuid (nullable)
 //   funcionario_nome: text (nullable)
@@ -6310,15 +5646,6 @@ export const Constants = {
 //   cliente: text (nullable)
 
 // --- CONSTRAINTS ---
-// Table: avaliacoes
-//   FOREIGN KEY avaliacoes_avaliador_id_fkey: FOREIGN KEY (avaliador_id) REFERENCES usuarios(id) ON DELETE SET NULL
-//   FOREIGN KEY avaliacoes_funcionario_id_fkey: FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id) ON DELETE CASCADE
-//   CHECK avaliacoes_nota_check: CHECK (((nota >= (0)::numeric) AND (nota <= (10)::numeric)))
-//   PRIMARY KEY avaliacoes_pkey: PRIMARY KEY (id)
-// Table: candidatos
-//   FOREIGN KEY candidatos_departamento_id_fkey: FOREIGN KEY (departamento_id) REFERENCES departamentos(id) ON DELETE SET NULL
-//   PRIMARY KEY candidatos_pkey: PRIMARY KEY (id)
-//   CHECK candidatos_status_check: CHECK ((status = ANY (ARRAY['Em análise'::text, 'Entrevista agendada'::text, 'Aprovado'::text, 'Reprovado'::text, 'Desistiu'::text])))
 // Table: categorias_financeiras
 //   CHECK categorias_financeiras_grupo_check: CHECK ((grupo = ANY (ARRAY['fixo'::text, 'variavel'::text, 'investimento'::text, 'transferencia'::text])))
 //   UNIQUE categorias_financeiras_nome_key: UNIQUE (nome)
@@ -6326,14 +5653,6 @@ export const Constants = {
 // Table: categorias_produto
 //   UNIQUE categorias_produto_codigo_connect_key: UNIQUE (codigo_connect)
 //   PRIMARY KEY categorias_produto_pkey: PRIMARY KEY (id)
-// Table: conta_pagar
-//   PRIMARY KEY conta_pagar_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY conta_pagar_projeto_id_fkey: FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE SET NULL
-//   FOREIGN KEY conta_pagar_venda_id_fkey: FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE SET NULL
-// Table: conta_receber
-//   PRIMARY KEY conta_receber_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY conta_receber_projeto_id_fkey: FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE SET NULL
-//   FOREIGN KEY conta_receber_venda_id_fkey: FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE SET NULL
 // Table: contas_bancarias
 //   UNIQUE contas_bancarias_codigo_connect_key: UNIQUE (codigo_connect)
 //   FOREIGN KEY contas_bancarias_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id)
@@ -6357,7 +5676,7 @@ export const Constants = {
 //   UNIQUE uq_contatos_codigo_legado_tipo: UNIQUE (codigo_legado, tipo)
 //   UNIQUE uq_contatos_cpf_cnpj: UNIQUE (cpf_cnpj)
 // Table: contatos_connect
-//   FOREIGN KEY contatos_connect_contato_id_fkey: FOREIGN KEY (contato_id) REFERENCES contatos(id)
+//   FOREIGN KEY contatos_connect_contato_id_fkey: FOREIGN KEY (contato_id) REFERENCES contatos(id) ON DELETE CASCADE
 //   PRIMARY KEY contatos_connect_pkey: PRIMARY KEY (cod_pessoa)
 // Table: contatos_revisao
 //   CHECK contatos_revisao_check: CHECK ((id_a < id_b))
@@ -6394,6 +5713,7 @@ export const Constants = {
 //   UNIQUE empresas_cnpj_key: UNIQUE (cnpj)
 //   UNIQUE empresas_codigo_key: UNIQUE (codigo)
 //   PRIMARY KEY empresas_pkey: PRIMARY KEY (id)
+//   UNIQUE unique_cnpj: UNIQUE (cnpj)
 // Table: entregas
 //   CHECK entregas_avaliacao_check: CHECK (((avaliacao >= 1) AND (avaliacao <= 5)))
 //   CHECK entregas_delivery_type_check: CHECK ((delivery_type = ANY (ARRAY['scheduled'::text, 'flexible'::text])))
@@ -6434,12 +5754,23 @@ export const Constants = {
 //   PRIMARY KEY marcas_pkey: PRIMARY KEY (id)
 // Table: negociacoes
 //   FOREIGN KEY negociacoes_contato_id_fkey: FOREIGN KEY (contato_id) REFERENCES contatos(id)
-//   UNIQUE negociacoes_empresa_id_cod_duplicata_key: UNIQUE (empresa_id, cod_duplicata)
 //   FOREIGN KEY negociacoes_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id)
 //   FOREIGN KEY negociacoes_funcionario_id_fkey: FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
 //   PRIMARY KEY negociacoes_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY negociacoes_plano_contas_id_fkey: FOREIGN KEY (plano_contas_id) REFERENCES plano_de_contas(id)
 //   FOREIGN KEY negociacoes_projeto_id_fkey: FOREIGN KEY (projeto_id) REFERENCES projetos(id)
+//   UNIQUE uq_negociacoes_empresa_cod_dup_tipo: UNIQUE (empresa_id, cod_duplicata, tipo)
+// Table: orcamento_itens
+//   FOREIGN KEY orcamento_itens_item_pai_id_fkey: FOREIGN KEY (item_pai_id) REFERENCES orcamento_itens(id)
+//   FOREIGN KEY orcamento_itens_orcamento_id_fkey: FOREIGN KEY (orcamento_id) REFERENCES orcamentos(id) ON DELETE CASCADE
+//   PRIMARY KEY orcamento_itens_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY orcamento_itens_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id)
+// Table: orcamentos
+//   FOREIGN KEY orcamentos_arquiteto_id_fkey: FOREIGN KEY (arquiteto_id) REFERENCES contatos(id)
+//   FOREIGN KEY orcamentos_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES contatos(id)
+//   FOREIGN KEY orcamentos_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id)
+//   PRIMARY KEY orcamentos_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY orcamentos_vendedor_id_fkey: FOREIGN KEY (vendedor_id) REFERENCES funcionarios(id) ON DELETE SET NULL
 // Table: pedido_compra
 //   UNIQUE pedido_compra_codigo_pedido_key: UNIQUE (codigo_pedido)
 //   PRIMARY KEY pedido_compra_pkey: PRIMARY KEY (id)
@@ -6459,10 +5790,6 @@ export const Constants = {
 //   FOREIGN KEY produtos_marca_id_fkey: FOREIGN KEY (marca_id) REFERENCES marcas(id) ON DELETE SET NULL
 //   PRIMARY KEY produtos_pkey: PRIMARY KEY (id)
 //   UNIQUE produtos_sku_key: UNIQUE (sku)
-// Table: profiles
-//   FOREIGN KEY profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id)
-//   PRIMARY KEY profiles_pkey: PRIMARY KEY (id)
-//   CHECK profiles_role_check: CHECK ((role = ANY (ARRAY['admin'::text, 'colaborador'::text, 'visitante'::text])))
 // Table: projeto_itens
 //   CHECK projeto_itens_desconto_check: CHECK (((desconto >= (0)::numeric) AND (desconto <= (100)::numeric)))
 //   PRIMARY KEY projeto_itens_pkey: PRIMARY KEY (id)
@@ -6497,7 +5824,7 @@ export const Constants = {
 //   CHECK check_area_projeto_estrutura: CHECK (((area_do_projeto IS NULL) OR (jsonb_typeof(area_do_projeto) = 'object'::text)))
 //   CHECK check_tipo_projeto_valido: CHECK (((area_do_projeto IS NULL) OR ((area_do_projeto ->> 'tipo'::text) IS NULL) OR ((area_do_projeto ->> 'tipo'::text) = ANY (ARRAY['Residential'::text, 'Corporativo'::text, 'Exposição Comercial'::text, 'Paisagismo'::text]))))
 //   CHECK chk_historico_is_array: CHECK ((jsonb_typeof(historico) = 'array'::text))
-//   FOREIGN KEY projetos_arquiteto_id_fkey: FOREIGN KEY (arquiteto_id) REFERENCES contatos(id)
+//   FOREIGN KEY projetos_arquiteto_id_fkey: FOREIGN KEY (arquiteto_id) REFERENCES contatos(id) ON DELETE CASCADE
 //   FOREIGN KEY projetos_client_id_fkey: FOREIGN KEY (client_id) REFERENCES contatos(id) ON DELETE SET NULL
 //   FOREIGN KEY projetos_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES contatos(id)
 //   UNIQUE projetos_codigo_key: UNIQUE (codigo)
@@ -6514,9 +5841,8 @@ export const Constants = {
 //   FOREIGN KEY quote_history_quote_id_fkey: FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE
 // Table: quotes
 //   PRIMARY KEY quotes_pkey: PRIMARY KEY (id)
-// Table: separacao_arquivos
-//   PRIMARY KEY separacao_arquivos_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY separacao_arquivos_separacao_id_fkey: FOREIGN KEY (separacao_id) REFERENCES separacoes(id) ON DELETE CASCADE
+// Table: revenda_ubiqua
+//   PRIMARY KEY revenda_ubiqua_pkey: PRIMARY KEY (id)
 // Table: separacao_itens
 //   PRIMARY KEY separacao_itens_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY separacao_itens_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE SET NULL
@@ -6527,17 +5853,6 @@ export const Constants = {
 //   PRIMARY KEY separacoes_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY separacoes_projeto_id_fkey: FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE SET NULL
 //   FOREIGN KEY separacoes_responsavel_id_fkey: FOREIGN KEY (responsavel_id) REFERENCES usuarios(id) ON DELETE SET NULL
-// Table: solicitacoes_compra
-//   FOREIGN KEY solicitacoes_compra_aprovador_id_fkey: FOREIGN KEY (aprovador_id) REFERENCES usuarios(id) ON DELETE SET NULL
-//   FOREIGN KEY solicitacoes_compra_categoria_id_fkey: FOREIGN KEY (categoria_id) REFERENCES categorias_financeiras(id) ON DELETE SET NULL
-//   PRIMARY KEY solicitacoes_compra_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY solicitacoes_compra_projeto_id_fkey: FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE SET NULL
-//   FOREIGN KEY solicitacoes_compra_solicitante_id_fkey: FOREIGN KEY (solicitante_id) REFERENCES usuarios(id) ON DELETE RESTRICT
-//   FOREIGN KEY solicitacoes_compra_transacao_id_fkey: FOREIGN KEY (transacao_id) REFERENCES transacoes(id) ON DELETE SET NULL
-//   CHECK solicitacoes_compra_valor_aprovado_check: CHECK ((valor_aprovado >= (0)::numeric))
-//   CHECK solicitacoes_compra_valor_estimado_check: CHECK ((valor_estimado > (0)::numeric))
-// Table: staging_projetos2024
-//   PRIMARY KEY staging_projetos2024_pkey: PRIMARY KEY (id)
 // Table: sync_history
 //   FOREIGN KEY sync_history_executado_por_fkey: FOREIGN KEY (executado_por) REFERENCES usuarios(id) ON DELETE SET NULL
 //   PRIMARY KEY sync_history_pkey: PRIMARY KEY (id)
@@ -6545,14 +5860,12 @@ export const Constants = {
 //   FOREIGN KEY transacoes_categoria_id_fkey: FOREIGN KEY (categoria_id) REFERENCES categorias_financeiras(id) ON DELETE SET NULL
 //   FOREIGN KEY transacoes_conta_id_fkey: FOREIGN KEY (conta_id) REFERENCES contas_bancarias(id) ON DELETE RESTRICT
 //   FOREIGN KEY transacoes_created_by_fkey: FOREIGN KEY (created_by) REFERENCES usuarios(id) ON DELETE SET NULL
+//   FOREIGN KEY transacoes_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE RESTRICT
 //   FOREIGN KEY transacoes_negociacao_id_fkey: FOREIGN KEY (negociacao_id) REFERENCES negociacoes(id)
 //   FOREIGN KEY transacoes_parcela_id_fkey: FOREIGN KEY (parcela_id) REFERENCES projeto_parcelas(id) ON DELETE SET NULL
 //   PRIMARY KEY transacoes_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY transacoes_projeto_id_fkey: FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE SET NULL
 //   UNIQUE uq_transacoes_connect: UNIQUE (negociacao_id, cod_itens_duplicata)
-// Table: transactions
-//   PRIMARY KEY transactions_pkey: PRIMARY KEY (id)
-//   FOREIGN KEY transactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
 // Table: usuarios
 //   UNIQUE usuarios_email_key: UNIQUE (email)
 //   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -6570,12 +5883,6 @@ export const Constants = {
 //   PRIMARY KEY vendas_marca_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
-// Table: avaliacoes
-//   Policy "aval_admin" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
-// Table: candidatos
-//   Policy "candidatos_admin" (ALL, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 // Table: categorias_financeiras
 //   Policy "catfin_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
@@ -6590,16 +5897,6 @@ export const Constants = {
 //     USING: true
 //   Policy "categorias_produto_write" (ALL, PERMISSIVE) roles={service_role}
 //     USING: true
-// Table: conta_pagar
-//   Policy "Permitir leitura para autenticados" (SELECT, PERMISSIVE) roles={public}
-//     USING: (auth.role() = 'authenticated'::text)
-//   Policy "Permitir tudo para service_role" (ALL, PERMISSIVE) roles={public}
-//     USING: (auth.role() = 'service_role'::text)
-// Table: conta_receber
-//   Policy "Permitir leitura para autenticados" (SELECT, PERMISSIVE) roles={public}
-//     USING: (auth.role() = 'authenticated'::text)
-//   Policy "Permitir tudo para service_role" (ALL, PERMISSIVE) roles={public}
-//     USING: (auth.role() = 'service_role'::text)
 // Table: contas_bancarias
 //   Policy "contas_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = 'admin'::usuario_role))))
@@ -6678,11 +5975,17 @@ export const Constants = {
 //   Policy "dept_update_admin" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 // Table: empresas
+//   Policy "empresas_delete_auth" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
 //   Policy "empresas_insert" (INSERT, PERMISSIVE) roles={service_role}
+//     WITH CHECK: true
+//   Policy "empresas_insert_auth" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
 //   Policy "empresas_select" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 //   Policy "empresas_update" (UPDATE, PERMISSIVE) roles={service_role}
+//     USING: true
+//   Policy "empresas_update_auth" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: entregas
 //   Policy "entregas_delete_admin" (DELETE, PERMISSIVE) roles={authenticated}
@@ -6743,6 +6046,42 @@ export const Constants = {
 //     USING: true
 //   Policy "negociacoes_write" (ALL, PERMISSIVE) roles={service_role}
 //     USING: true
+// Table: orcamento_itens
+//   Policy "authenticated_delete_orcamento_itens" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "authenticated_insert_orcamento_itens" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "authenticated_select_orcamento_itens" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "authenticated_update_orcamento_itens" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+//   Policy "orcamento_itens_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "orcamento_itens_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "orcamento_itens_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "orcamento_itens_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+// Table: orcamentos
+//   Policy "authenticated_delete_orcamentos" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "authenticated_insert_orcamentos" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "authenticated_select_orcamentos" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "authenticated_update_orcamentos" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+//   Policy "orcamentos_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "orcamentos_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "orcamentos_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: true
+//   Policy "orcamentos_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: true
 // Table: pedido_compra
 //   Policy "Permitir leitura para autenticados" (SELECT, PERMISSIVE) roles={public}
 //     USING: (auth.role() = 'authenticated'::text)
@@ -6766,21 +6105,6 @@ export const Constants = {
 //     USING: true
 //   Policy "prod_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
-// Table: profiles
-//   Policy "Admins can update all profiles" (UPDATE, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Admins can view all profiles" (SELECT, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Users can insert their own profile" (INSERT, PERMISSIVE) roles={public}
-//     WITH CHECK: (auth.uid() = id)
-//   Policy "Users can update own profile" (UPDATE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = id)
-//   Policy "Users can update their own profile" (UPDATE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = id)
-//   Policy "Users can view own profile" (SELECT, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = id)
-//   Policy "Users can view their own profile" (SELECT, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = id)
 // Table: projeto_itens
 //   Policy "pi_delete_admin" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
@@ -6856,15 +6180,14 @@ export const Constants = {
 // Table: quotes
 //   Policy "all_quotes_auth" (ALL, PERMISSIVE) roles={public}
 //     USING: true
-// Table: separacao_arquivos
-//   Policy "sep_arq_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
-//   Policy "sep_arq_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role, 'operador'::usuario_role])))))
-//   Policy "sep_arq_select" (SELECT, PERMISSIVE) roles={authenticated}
+// Table: revenda_ubiqua
+//   Policy "revenda_ubiqua_insert_policy" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: true
+//   Policy "revenda_ubiqua_select_policy" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
-//   Policy "sep_arq_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role, 'operador'::usuario_role])))))
+//   Policy "revenda_ubiqua_update_policy" (UPDATE, PERMISSIVE) roles={public}
+//     USING: true
+//     WITH CHECK: true
 // Table: separacao_itens
 //   Policy "sep_itens_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
@@ -6883,15 +6206,6 @@ export const Constants = {
 //     USING: true
 //   Policy "separacoes_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role, 'operador'::usuario_role])))))
-// Table: solicitacoes_compra
-//   Policy "solicit_admin" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = 'admin'::usuario_role))))
-//   Policy "solicit_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (solicitante_id = ( SELECT auth.uid() AS uid))
-//   Policy "solicit_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((solicitante_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role]))))))
-//   Policy "solicit_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: ((solicitante_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role]))))))
 // Table: sync_history
 //   Policy "sync_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role, 'operador'::usuario_role])))))
@@ -6906,27 +6220,6 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role, 'operador'::usuario_role])))))
 //   Policy "trans_update_admin" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = 'admin'::usuario_role))))
-// Table: transactions
-//   Policy "Admins and users can insert transactions" (INSERT, PERMISSIVE) roles={public}
-//     WITH CHECK: (is_admin() OR (auth.uid() = user_id))
-//   Policy "Admins can delete all transactions" (DELETE, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Admins can update all transactions" (UPDATE, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Admins can view all transactions" (SELECT, PERMISSIVE) roles={public}
-//     USING: is_admin()
-//   Policy "Collaborators can view latest transaction" (SELECT, PERMISSIVE) roles={public}
-//     USING: ((get_user_role() = 'colaborador'::text) AND (id = get_latest_transaction_id()))
-//   Policy "Standard users can view own transactions" (SELECT, PERMISSIVE) roles={public}
-//     USING: ((COALESCE(get_user_role(), 'visitante'::text) <> ALL (ARRAY['admin'::text, 'colaborador'::text])) AND (user_id = auth.uid()))
-//   Policy "Users can delete own transactions" (DELETE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = user_id)
-//   Policy "Users can delete their own transactions" (DELETE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = user_id)
-//   Policy "Users can update own transactions" (UPDATE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = user_id)
-//   Policy "Users can update their own transactions" (UPDATE, PERMISSIVE) roles={public}
-//     USING: (auth.uid() = user_id)
 // Table: usuarios
 //   Policy "usuarios_delete_admin" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = 'admin'::usuario_role))))
@@ -6950,13 +6243,6 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role, 'operador'::usuario_role])))))
 //   Policy "vendas_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
-
-// --- WARNING: TABLES WITH RLS ENABLED BUT NO POLICIES ---
-// These tables have Row Level Security enabled but NO policies defined.
-// This means ALL queries (SELECT, INSERT, UPDATE, DELETE) will return ZERO rows
-// for non-superuser roles (including the anon and authenticated roles used by the app).
-// You MUST create RLS policies for these tables to allow data access.
-//   - staging_projetos2024
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION admin_update_user_password(uuid, text)
@@ -7389,6 +6675,26 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION set_orcamento_numero()
+//   CREATE OR REPLACE FUNCTION public.set_orcamento_numero()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//     v_max_num INTEGER;
+//   BEGIN
+//     IF NEW.numero IS NULL OR NEW.numero = '' THEN
+//       SELECT COALESCE(MAX(CAST(SUBSTRING(numero FROM 5) AS INTEGER)), 0)
+//       INTO v_max_num
+//       FROM public.orcamentos
+//       WHERE numero LIKE 'ORC-%' AND numero ~ '^ORC-\d+
+//
+//       NEW.numero := 'ORC-' || LPAD((v_max_num + 1)::text, 4, '0');
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION set_updated_at()
 //   CREATE OR REPLACE FUNCTION public.set_updated_at()
 //    RETURNS trigger
@@ -7766,6 +7072,17 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION update_revenda_ubiqua_updated_at()
+//   CREATE OR REPLACE FUNCTION public.update_revenda_ubiqua_updated_at()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//       NEW.updated_at = NOW();
+//       RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION update_updated_at_column()
 //   CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 //    RETURNS trigger
@@ -7779,12 +7096,6 @@ export const Constants = {
 //
 
 // --- TRIGGERS ---
-// Table: candidatos
-//   candidatos_updated_at: CREATE TRIGGER candidatos_updated_at BEFORE UPDATE ON public.candidatos FOR EACH ROW EXECUTE FUNCTION set_updated_at()
-// Table: conta_pagar
-//   update_conta_pagar_updated_at: CREATE TRIGGER update_conta_pagar_updated_at BEFORE UPDATE ON public.conta_pagar FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
-// Table: conta_receber
-//   update_conta_receber_updated_at: CREATE TRIGGER update_conta_receber_updated_at BEFORE UPDATE ON public.conta_receber FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
 // Table: contas_bancarias
 //   contas_updated_at: CREATE TRIGGER contas_updated_at BEFORE UPDATE ON public.contas_bancarias FOR EACH ROW EXECUTE FUNCTION set_updated_at()
 // Table: contatos
@@ -7796,6 +7107,8 @@ export const Constants = {
 //   entregas_updated_at: CREATE TRIGGER entregas_updated_at BEFORE UPDATE ON public.entregas FOR EACH ROW EXECUTE FUNCTION set_updated_at()
 // Table: funcionarios
 //   funcionarios_updated_at: CREATE TRIGGER funcionarios_updated_at BEFORE UPDATE ON public.funcionarios FOR EACH ROW EXECUTE FUNCTION set_updated_at()
+// Table: orcamentos
+//   trigger_set_orcamento_numero: CREATE TRIGGER trigger_set_orcamento_numero BEFORE INSERT ON public.orcamentos FOR EACH ROW EXECUTE FUNCTION set_orcamento_numero()
 // Table: produtos
 //   produtos_updated_at: CREATE TRIGGER produtos_updated_at BEFORE UPDATE ON public.produtos FOR EACH ROW EXECUTE FUNCTION set_updated_at()
 //   update_produtos_updated_at: CREATE TRIGGER update_produtos_updated_at BEFORE UPDATE ON public.produtos FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
@@ -7815,14 +7128,14 @@ export const Constants = {
 //   trg_reserva_estoque: CREATE TRIGGER trg_reserva_estoque AFTER UPDATE OF status ON public.projetos FOR EACH ROW EXECUTE FUNCTION trigger_reserva_estoque()
 //   trg_sync_responsavel_nome: CREATE TRIGGER trg_sync_responsavel_nome BEFORE INSERT OR UPDATE OF responsavel_id ON public.projetos FOR EACH ROW EXECUTE FUNCTION sync_responsavel_nome()
 //   update_projetos_updated_at: CREATE TRIGGER update_projetos_updated_at BEFORE UPDATE ON public.projetos FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+// Table: revenda_ubiqua
+//   trigger_revenda_ubiqua_updated_at: CREATE TRIGGER trigger_revenda_ubiqua_updated_at BEFORE UPDATE ON public.revenda_ubiqua FOR EACH ROW EXECUTE FUNCTION update_revenda_ubiqua_updated_at()
 // Table: separacoes
 //   separacoes_updated_at: CREATE TRIGGER separacoes_updated_at BEFORE UPDATE ON public.separacoes FOR EACH ROW EXECUTE FUNCTION set_updated_at()
 //   trg_separacao_pronta: CREATE TRIGGER trg_separacao_pronta AFTER UPDATE OF status, data_entrega ON public.separacoes FOR EACH ROW EXECUTE FUNCTION trigger_separacao_pronta()
 //   trg_sync_sep_cliente: CREATE TRIGGER trg_sync_sep_cliente BEFORE INSERT OR UPDATE OF cliente_id ON public.separacoes FOR EACH ROW EXECUTE FUNCTION sync_separacao_cliente()
 //   trg_sync_sep_codigo_obra: CREATE TRIGGER trg_sync_sep_codigo_obra BEFORE INSERT OR UPDATE OF projeto_id ON public.separacoes FOR EACH ROW EXECUTE FUNCTION sync_separacao_codigo_obra()
 //   trg_track_reagendamento: CREATE TRIGGER trg_track_reagendamento BEFORE UPDATE OF data_entrega ON public.separacoes FOR EACH ROW EXECUTE FUNCTION track_reagendamento()
-// Table: solicitacoes_compra
-//   solicit_updated_at: CREATE TRIGGER solicit_updated_at BEFORE UPDATE ON public.solicitacoes_compra FOR EACH ROW EXECUTE FUNCTION set_updated_at()
 // Table: usuarios
 //   trg_propagate_usuario_nome: CREATE TRIGGER trg_propagate_usuario_nome AFTER UPDATE OF nome ON public.usuarios FOR EACH ROW EXECUTE FUNCTION propagate_usuario_nome()
 //   usuarios_updated_at: CREATE TRIGGER usuarios_updated_at BEFORE UPDATE ON public.usuarios FOR EACH ROW EXECUTE FUNCTION set_updated_at()
@@ -7830,29 +7143,10 @@ export const Constants = {
 //   update_vendas_updated_at: CREATE TRIGGER update_vendas_updated_at BEFORE UPDATE ON public.vendas FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
 
 // --- INDEXES ---
-// Table: avaliacoes
-//   CREATE INDEX idx_aval_avaliador ON public.avaliacoes USING btree (avaliador_id)
-//   CREATE INDEX idx_aval_funcionario ON public.avaliacoes USING btree (funcionario_id)
-// Table: candidatos
-//   CREATE INDEX idx_cand_departamento ON public.candidatos USING btree (departamento_id)
 // Table: categorias_financeiras
 //   CREATE UNIQUE INDEX categorias_financeiras_nome_key ON public.categorias_financeiras USING btree (nome)
 // Table: categorias_produto
 //   CREATE UNIQUE INDEX categorias_produto_codigo_connect_key ON public.categorias_produto USING btree (codigo_connect)
-// Table: conta_pagar
-//   CREATE INDEX idx_conta_pagar_cod_duplicata ON public.conta_pagar USING btree (cod_duplicata)
-//   CREATE INDEX idx_conta_pagar_cod_venda ON public.conta_pagar USING btree (cod_venda)
-//   CREATE INDEX idx_conta_pagar_pessoa ON public.conta_pagar USING btree (cod_pessoa)
-//   CREATE INDEX idx_conta_pagar_projeto ON public.conta_pagar USING btree (projeto_id)
-//   CREATE INDEX idx_conta_pagar_status ON public.conta_pagar USING btree (status_pagamento)
-//   CREATE INDEX idx_conta_pagar_vencimento ON public.conta_pagar USING btree (data_vencimento)
-// Table: conta_receber
-//   CREATE INDEX idx_conta_receber_cod_duplicata ON public.conta_receber USING btree (cod_duplicata)
-//   CREATE INDEX idx_conta_receber_cod_venda ON public.conta_receber USING btree (cod_venda)
-//   CREATE INDEX idx_conta_receber_pessoa ON public.conta_receber USING btree (cod_pessoa)
-//   CREATE INDEX idx_conta_receber_projeto ON public.conta_receber USING btree (projeto_id)
-//   CREATE INDEX idx_conta_receber_status ON public.conta_receber USING btree (status_pagamento)
-//   CREATE INDEX idx_conta_receber_vencimento ON public.conta_receber USING btree (data_vencimento)
 // Table: contas_bancarias
 //   CREATE UNIQUE INDEX contas_bancarias_codigo_connect_key ON public.contas_bancarias USING btree (codigo_connect)
 // Table: contato_origens
@@ -7905,6 +7199,7 @@ export const Constants = {
 // Table: empresas
 //   CREATE UNIQUE INDEX empresas_cnpj_key ON public.empresas USING btree (cnpj)
 //   CREATE UNIQUE INDEX empresas_codigo_key ON public.empresas USING btree (codigo)
+//   CREATE UNIQUE INDEX unique_cnpj ON public.empresas USING btree (cnpj)
 // Table: entregas
 //   CREATE INDEX idx_entregas_data ON public.entregas USING btree (data_prevista)
 //   CREATE INDEX idx_entregas_entregador ON public.entregas USING btree (entregador_id)
@@ -7948,7 +7243,7 @@ export const Constants = {
 //   CREATE INDEX idx_neg_plano_contas_id ON public.negociacoes USING btree (plano_contas_id)
 //   CREATE INDEX idx_neg_projeto_id ON public.negociacoes USING btree (projeto_id)
 //   CREATE INDEX idx_neg_tipo ON public.negociacoes USING btree (tipo)
-//   CREATE UNIQUE INDEX negociacoes_empresa_id_cod_duplicata_key ON public.negociacoes USING btree (empresa_id, cod_duplicata)
+//   CREATE UNIQUE INDEX uq_negociacoes_empresa_cod_dup_tipo ON public.negociacoes USING btree (empresa_id, cod_duplicata, tipo)
 // Table: pedido_compra
 //   CREATE INDEX idx_pedido_compra_codigo ON public.pedido_compra USING btree (codigo_pedido)
 //   CREATE INDEX idx_pedido_compra_data ON public.pedido_compra USING btree (data_emissao)
@@ -8012,8 +7307,11 @@ export const Constants = {
 //   CREATE INDEX idx_projetos_tipo_projeto ON public.projetos USING btree (((area_do_projeto ->> 'tipo'::text)))
 //   CREATE UNIQUE INDEX projetos_codigo_key ON public.projetos USING btree (codigo)
 //   CREATE UNIQUE INDEX projetos_codigo_legado_key ON public.projetos USING btree (codigo_legado)
-// Table: separacao_arquivos
-//   CREATE INDEX idx_sep_arq_separacao ON public.separacao_arquivos USING btree (separacao_id)
+// Table: revenda_ubiqua
+//   CREATE INDEX idx_revenda_ubiqua_cod_marca ON public.revenda_ubiqua USING btree (cod_marca)
+//   CREATE INDEX idx_revenda_ubiqua_cod_produto ON public.revenda_ubiqua USING btree (cod_produto)
+//   CREATE INDEX idx_revenda_ubiqua_referencia ON public.revenda_ubiqua USING btree (referencia)
+//   CREATE UNIQUE INDEX idx_revenda_ubiqua_referencia_unique ON public.revenda_ubiqua USING btree (lower(TRIM(BOTH FROM referencia)))
 // Table: separacao_itens
 //   CREATE INDEX idx_sep_itens_produto ON public.separacao_itens USING btree (produto_id)
 //   CREATE INDEX idx_sep_itens_separacao ON public.separacao_itens USING btree (separacao_id)
@@ -8023,13 +7321,6 @@ export const Constants = {
 //   CREATE INDEX idx_sep_projeto ON public.separacoes USING btree (projeto_id)
 //   CREATE INDEX idx_sep_responsavel ON public.separacoes USING btree (responsavel_id)
 //   CREATE INDEX idx_sep_status ON public.separacoes USING btree (status)
-// Table: solicitacoes_compra
-//   CREATE INDEX idx_solicit_aprovador ON public.solicitacoes_compra USING btree (aprovador_id)
-//   CREATE INDEX idx_solicit_categoria ON public.solicitacoes_compra USING btree (categoria_id)
-//   CREATE INDEX idx_solicit_projeto ON public.solicitacoes_compra USING btree (projeto_id)
-//   CREATE INDEX idx_solicit_solicitante ON public.solicitacoes_compra USING btree (solicitante_id)
-//   CREATE INDEX idx_solicit_status ON public.solicitacoes_compra USING btree (status)
-//   CREATE INDEX idx_solicit_transacao ON public.solicitacoes_compra USING btree (transacao_id)
 // Table: staging_conta_pagar
 //   CREATE INDEX idx_staging_cp_cod_venda ON public.staging_conta_pagar USING btree (cod_venda)
 //   CREATE INDEX idx_staging_cp_processado ON public.staging_conta_pagar USING btree (processado)
@@ -8057,9 +7348,8 @@ export const Constants = {
 //   CREATE INDEX idx_trans_parcela ON public.transacoes USING btree (parcela_id)
 //   CREATE INDEX idx_trans_projeto ON public.transacoes USING btree (projeto_id)
 //   CREATE INDEX idx_trans_tipo ON public.transacoes USING btree (tipo)
+//   CREATE INDEX idx_transacoes_empresa_id ON public.transacoes USING btree (empresa_id)
 //   CREATE UNIQUE INDEX uq_transacoes_connect ON public.transacoes USING btree (negociacao_id, cod_itens_duplicata)
-// Table: transactions
-//   CREATE INDEX transactions_created_at_idx ON public.transactions USING btree (created_at DESC)
 // Table: usuarios
 //   CREATE INDEX idx_usuarios_email ON public.usuarios USING btree (email)
 //   CREATE INDEX idx_usuarios_role ON public.usuarios USING btree (role)

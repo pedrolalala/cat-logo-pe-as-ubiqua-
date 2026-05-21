@@ -26,73 +26,33 @@ export async function checkAdminRole(): Promise<boolean> {
     const {
       data: { user },
     } = await supabase.auth.getUser()
-    if (!user) return true // Fallback para visualização se não houver auth real
+    if (!user) return false
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    const { data } = await supabase.from('usuarios').select('role').eq('id', user.id).single()
 
-    if (data?.role === 'admin') return true
-
-    // Checa na tabela usuarios também
-    const { data: usuarioData } = await supabase
-      .from('usuarios')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    return usuarioData?.role === 'admin'
+    return data?.role === 'admin'
   } catch {
-    return true
+    return false
   }
 }
 
 export async function fetchQuotes(): Promise<Quote[]> {
-  try {
-    const { data, error } = await supabase
-      .from('quotes' as any)
-      .select('*')
-      .order('created_at', { ascending: false })
+  const { data, error } = await supabase
+    .from('quotes')
+    .select('*')
+    .order('created_at', { ascending: false })
 
-    if (error || !data) {
-      throw new Error()
-    }
-
-    return data as Quote[]
-  } catch {
-    // Retorna mock em caso de erro ou tabela inexistente
-    return [
-      {
-        id: '1',
-        empresa: 'Indústrias Acme',
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        valor_total: 4670.0,
-        status: 'aberto',
-        observacoes: 'Entrega urgente. Favor confirmar disponibilidade imediata.',
-        items: [
-          {
-            part_id: '1',
-            referencia: 'UBQ-1001',
-            descricao: 'LUMINÁRIA PLISSE',
-            quantidade: 2,
-            preco_unitario: 1250.0,
-            subtotal: 2500.0,
-          },
-        ],
-      },
-    ]
+  if (error) {
+    throw error
   }
+
+  return (data || []) as Quote[]
 }
 
 export async function approvePurchase(quoteId: string) {
   try {
-    // Simulando atraso para UX fluida
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
     const { error: updateError } = await supabase
-      .from('quotes' as any)
+      .from('quotes')
       .update({
         status: 'aprovado',
         data_aprovacao: new Date().toISOString(),
@@ -100,27 +60,31 @@ export async function approvePurchase(quoteId: string) {
       .eq('id', quoteId)
 
     if (updateError) {
-      console.warn('Tabela quotes não existe. Usando mock')
-      return // Simula sucesso se a tabela não existir
+      throw updateError
     }
 
-    const { error: historyError } = await supabase.from('quote_history' as any).insert([
+    const { data: userData } = await supabase.auth.getUser()
+
+    const { error: historyError } = await supabase.from('quote_history').insert([
       {
         quote_id: quoteId,
         acao: 'aprovado',
+        created_by: userData?.user?.id,
       },
     ])
 
-    if (historyError) console.error(historyError)
+    if (historyError) throw historyError
 
     // Chama a Edge Function
-    await supabase.functions.invoke('enviar-confirmacao-email', {
+    const { error: invokeError } = await supabase.functions.invoke('enviar-confirmacao-email', {
       body: {
         quote_id: quoteId,
         email_vinicius: 'vinicius@ubiqua.com',
         email_josi: 'josi@ubiqua.com',
       },
     })
+
+    if (invokeError) throw invokeError
   } catch (err) {
     console.error(err)
     throw err

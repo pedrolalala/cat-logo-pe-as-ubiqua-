@@ -8,24 +8,30 @@ import Layout from './components/Layout'
 import NewQuote from './pages/NewQuote'
 import AdminPage from './pages/admin/AdminPage'
 import { CartProvider } from './hooks/use-cart'
+import { AuthProvider } from './hooks/use-auth'
+import { AuthWrapper } from './components/AuthWrapper'
 
 const App = () => (
-  <CartProvider>
-    <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner position="bottom-right" richColors />
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/novo-orcamento" element={<NewQuote />} />
-            <Route path="/admin" element={<AdminPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </TooltipProvider>
-    </BrowserRouter>
-  </CartProvider>
+  <AuthProvider>
+    <CartProvider>
+      <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner position="bottom-right" richColors />
+          <AuthWrapper>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/novo-orcamento" element={<NewQuote />} />
+                <Route path="/admin" element={<AdminPage />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthWrapper>
+        </TooltipProvider>
+      </BrowserRouter>
+    </CartProvider>
+  </AuthProvider>
 )
 
 export default App

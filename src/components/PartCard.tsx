@@ -13,10 +13,11 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(part.valor_revenda)
+  }).format(part.valor_revenda || 0)
 
   // Extrair nome da luminária
   const extractName = (desc: string) => {
+    if (!desc) return 'Peça'
     const match = desc.match(/^(?:IS\s*-\s*)?([A-Z0-9\s]+?)\s+(?:LUM|LED|MINI|LUMIN)/i)
     if (match && match[1]) {
       return match[1].trim()
@@ -27,8 +28,10 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
 
   const lampName = extractName(part.descricao)
 
-  // Imagem de referência
-  const imageUrl = `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(lampName + ' lamp')}&color=orange`
+  // Imagem de referência ou fallback
+  const imageUrl =
+    part.imagem_catalogo_url ||
+    `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(lampName + ' lamp')}&color=orange`
 
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-border/50">
@@ -38,17 +41,28 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
           alt={lampName}
           className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105"
         />
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 flex flex-col gap-2 items-start">
           <Badge
             variant="secondary"
             className="font-mono font-bold text-xs bg-background/90 backdrop-blur-sm text-foreground shadow-sm"
           >
             {part.referencia}
           </Badge>
+          {part.disponivel !== undefined && (
+            <Badge
+              variant={part.disponivel > 0 ? 'default' : 'destructive'}
+              className="text-xs shadow-sm opacity-90 backdrop-blur-sm"
+            >
+              {part.disponivel > 0 ? `${part.disponivel} em estoque` : 'Sem estoque'}
+            </Badge>
+          )}
         </div>
       </div>
       <CardHeader className="pb-2 pt-4">
-        <h3 className="font-extrabold text-foreground text-xl leading-tight line-clamp-1 uppercase tracking-tight">
+        <h3
+          className="font-extrabold text-foreground text-xl leading-tight line-clamp-1 uppercase tracking-tight"
+          title={lampName}
+        >
           {lampName}
         </h3>
       </CardHeader>

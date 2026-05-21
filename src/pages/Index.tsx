@@ -18,8 +18,8 @@ export default function Index() {
     if (!query) return data
     return data.filter(
       (part) =>
-        part.referencia.toLowerCase().includes(query) ||
-        part.descricao.toLowerCase().includes(query),
+        (part.referencia && part.referencia.toLowerCase().includes(query)) ||
+        (part.descricao && part.descricao.toLowerCase().includes(query)),
     )
   }, [data, query])
 
