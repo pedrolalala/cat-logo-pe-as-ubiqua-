@@ -83,14 +83,22 @@ export default function NewQuote() {
   const executeSaveQuote = async (saveLead = false) => {
     setIsSaving(true)
     setSaveError(false)
-    try {
-      let leadId: string | undefined = undefined
 
-      if (saveLead) {
+    let leadId: string | undefined = undefined
+
+    if (saveLead) {
+      try {
         const lead = await saveClienteInfo(clienteInfo)
         leadId = lead.id
+      } catch (err) {
+        setSaveError(true)
+        toast.error('Não foi possível salvar seus dados de contato.')
+        setIsSaving(false)
+        return
       }
+    }
 
+    try {
       const quoteData = {
         items,
         observacoes,
@@ -105,7 +113,13 @@ export default function NewQuote() {
       toast.success('Orçamento gerado com sucesso!')
     } catch (e) {
       setSaveError(true)
-      toast.error('Erro ao processar o orçamento. Verifique os dados e tente novamente.')
+      if (leadId) {
+        toast.error(
+          'Erro ao salvar o orçamento. Seus dados foram salvos, mas houve um problema com o pedido.',
+        )
+      } else {
+        toast.error('Erro ao processar o orçamento. Verifique os dados e tente novamente.')
+      }
     } finally {
       setIsSaving(false)
     }

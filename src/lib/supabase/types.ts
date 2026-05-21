@@ -1655,6 +1655,7 @@ export type Database = {
           empresa_id: string
           forma_pagamento: Database['public']['Enums']['pagamento_forma'] | null
           id: string
+          informacoes_cliente_id: string | null
           numero: string | null
           observacoes: string | null
           status: string | null
@@ -1672,6 +1673,7 @@ export type Database = {
           empresa_id: string
           forma_pagamento?: Database['public']['Enums']['pagamento_forma'] | null
           id?: string
+          informacoes_cliente_id?: string | null
           numero?: string | null
           observacoes?: string | null
           status?: string | null
@@ -1689,6 +1691,7 @@ export type Database = {
           empresa_id?: string
           forma_pagamento?: Database['public']['Enums']['pagamento_forma'] | null
           id?: string
+          informacoes_cliente_id?: string | null
           numero?: string | null
           observacoes?: string | null
           status?: string | null
@@ -1738,6 +1741,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'vw_transacoes_completas'
             referencedColumns: ['empresa_id']
+          },
+          {
+            foreignKeyName: 'orcamentos_informacoes_cliente_id_fkey'
+            columns: ['informacoes_cliente_id']
+            isOneToOne: false
+            referencedRelation: 'informacoes_cliente_ubiqua'
+            referencedColumns: ['id']
           },
           {
             foreignKeyName: 'orcamentos_vendedor_id_fkey'
@@ -5060,6 +5070,7 @@ export const Constants = {
 //   condicoes_pagamento: text (nullable)
 //   desconto_global: numeric (nullable, default: 0)
 //   forma_pagamento: pagamento_forma (nullable)
+//   informacoes_cliente_id: uuid (nullable)
 // Table: pedido_compra
 //   id: uuid (not null, default: gen_random_uuid())
 //   codigo_pedido: integer (not null)
@@ -5917,6 +5928,7 @@ export const Constants = {
 //   FOREIGN KEY orcamentos_arquiteto_id_fkey: FOREIGN KEY (arquiteto_id) REFERENCES contatos(id)
 //   FOREIGN KEY orcamentos_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES contatos(id)
 //   FOREIGN KEY orcamentos_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id)
+//   FOREIGN KEY orcamentos_informacoes_cliente_id_fkey: FOREIGN KEY (informacoes_cliente_id) REFERENCES informacoes_cliente_ubiqua(id) ON DELETE SET NULL
 //   PRIMARY KEY orcamentos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY orcamentos_vendedor_id_fkey: FOREIGN KEY (vendedor_id) REFERENCES funcionarios(id) ON DELETE SET NULL
 // Table: pedido_compra
@@ -6124,6 +6136,8 @@ export const Constants = {
 //   Policy "dept_update_admin" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 // Table: empresas
+//   Policy "anon_select_empresas" (SELECT, PERMISSIVE) roles={anon,authenticated}
+//     USING: true
 //   Policy "empresas_delete_auth" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //   Policy "empresas_insert" (INSERT, PERMISSIVE) roles={service_role}
@@ -6188,6 +6202,8 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 //   Policy "Permitir leitura anon e auth" (SELECT, PERMISSIVE) roles={anon,authenticated}
 //     USING: true
+//   Policy "anon_insert_informacoes_cliente" (INSERT, PERMISSIVE) roles={anon,authenticated}
+//     WITH CHECK: true
 // Table: marcas
 //   Policy "marcas_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
@@ -6203,6 +6219,8 @@ export const Constants = {
 //   Policy "negociacoes_write" (ALL, PERMISSIVE) roles={service_role}
 //     USING: true
 // Table: orcamento_itens
+//   Policy "anon_insert_orcamento_itens" (INSERT, PERMISSIVE) roles={anon,authenticated}
+//     WITH CHECK: true
 //   Policy "authenticated_delete_orcamento_itens" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //   Policy "authenticated_insert_orcamento_itens" (INSERT, PERMISSIVE) roles={authenticated}
@@ -6221,6 +6239,8 @@ export const Constants = {
 //   Policy "orcamento_itens_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
 // Table: orcamentos
+//   Policy "anon_insert_orcamentos" (INSERT, PERMISSIVE) roles={anon,authenticated}
+//     WITH CHECK: true
 //   Policy "authenticated_delete_orcamentos" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: true
 //   Policy "authenticated_insert_orcamentos" (INSERT, PERMISSIVE) roles={authenticated}
