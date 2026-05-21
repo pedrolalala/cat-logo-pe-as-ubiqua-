@@ -63,7 +63,10 @@ export default function NewQuote() {
   const [isSigningUp, setIsSigningUp] = useState(false)
 
   const isIdentValid =
-    clienteInfo.nome && clienteInfo.email && clienteInfo.telefone && clienteInfo.data_nascimento
+    clienteInfo.nome.trim() !== '' &&
+    clienteInfo.email.trim() !== '' &&
+    clienteInfo.telefone.trim() !== '' &&
+    clienteInfo.data_nascimento.trim() !== ''
 
   const totalGeral = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
 
@@ -79,25 +82,34 @@ export default function NewQuote() {
   }
 
   const executeSaveQuote = async (saveLead = false) => {
+    if (saveLead) {
+      if (!isIdentValid) {
+        toast.error('Por favor, preencha todos os campos obrigatórios de identificação.')
+        return
+      }
+    }
+
     setIsSaving(true)
     setSaveError(false)
     try {
       if (saveLead) {
         await saveClienteInfo(clienteInfo)
       }
+
       const quoteData = {
         items,
         observacoes,
         valor_total: totalGeral,
-        empresa: user ? null : clienteInfo.nome,
+        nome_cliente: user ? undefined : clienteInfo.nome,
       }
-      await saveQuoteToSupabase(quoteData)
-      setSavedQuote(quoteData)
+
+      const saved = await saveQuoteToSupabase(quoteData)
+      setSavedQuote(saved)
       clearCart()
-      toast.success('Orçamento salvo com sucesso!')
+      toast.success('Orçamento gerado com sucesso!')
     } catch (e) {
       setSaveError(true)
-      toast.error('Erro ao salvar o orçamento.')
+      toast.error('Erro ao processar o orçamento. Verifique os dados e tente novamente.')
     } finally {
       setIsSaving(false)
       setIsIdentModalOpen(false)
@@ -481,39 +493,51 @@ export default function NewQuote() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Nome Completo</Label>
+              <Label>
+                Nome Completo <span className="text-destructive">*</span>
+              </Label>
               <Input
                 value={clienteInfo.nome}
                 onChange={(e) => setClienteInfo((prev) => ({ ...prev, nome: e.target.value }))}
                 placeholder="Ex: João da Silva"
+                required
               />
             </div>
             <div className="space-y-2">
-              <Label>E-mail</Label>
+              <Label>
+                E-mail <span className="text-destructive">*</span>
+              </Label>
               <Input
                 type="email"
                 value={clienteInfo.email}
                 onChange={(e) => setClienteInfo((prev) => ({ ...prev, email: e.target.value }))}
                 placeholder="Ex: joao@email.com"
+                required
               />
             </div>
             <div className="space-y-2">
-              <Label>Telefone</Label>
+              <Label>
+                Telefone <span className="text-destructive">*</span>
+              </Label>
               <Input
                 type="tel"
                 value={clienteInfo.telefone}
                 onChange={(e) => setClienteInfo((prev) => ({ ...prev, telefone: e.target.value }))}
                 placeholder="Ex: (11) 99999-9999"
+                required
               />
             </div>
             <div className="space-y-2">
-              <Label>Data de Nascimento</Label>
+              <Label>
+                Data de Nascimento <span className="text-destructive">*</span>
+              </Label>
               <Input
                 type="date"
                 value={clienteInfo.data_nascimento}
                 onChange={(e) =>
                   setClienteInfo((prev) => ({ ...prev, data_nascimento: e.target.value }))
                 }
+                required
               />
             </div>
           </div>

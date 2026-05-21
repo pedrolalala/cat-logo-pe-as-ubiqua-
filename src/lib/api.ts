@@ -25,14 +25,55 @@ export async function saveClienteInfo(data: {
 }
 
 export async function saveQuoteToSupabase(quoteData: any): Promise<any> {
-  const { data, error } = await supabase.from('quotes').insert(quoteData).select().single()
+  const { data: empresa } = await supabase.from('empresas').select('id').limit(1).single()
 
-  if (error) {
-    console.error('Error saving quote:', error)
-    throw error
+  if (!empresa) {
+    throw new Error('Nenhuma empresa encontrada para associar ao orçamento.')
   }
 
-  return data
+  let observacoesFinal = quoteData.observacoes || ''
+  if (quoteData.nome_cliente) {
+    observacoesFinal = `Lead (Website): ${quoteData.nome_cliente}\n\n${observacoesFinal}`
+  }
+
+  const { data: orcamento, error: orcError } = await supabase
+    .from('orcamentos')
+    .insert({
+      empresa_id: empresa.id,
+      observacoes: observacoesFinal,
+      valor_total: quoteData.valor_total,
+      status: 'Rascunho',
+      data_emissao: new Date().toISOString(),
+    })
+    .select()
+    .single()
+
+  if (orcError) {
+    console.error('Error saving orcamento:', orcError)
+    throw orcError
+  }
+
+  if (quoteData.items && quoteData.items.length > 0) {
+    const itensToInsert = quoteData.items.map((item: any) => ({
+      orcamento_id: orcamento.id,
+      descricao: item.descricao,
+      quantidade: item.quantity,
+      preco_unitario: item.valor_revenda,
+      custom_id: item.referencia,
+    }))
+
+    const { error: itemsError } = await supabase.from('orcamento_itens').insert(itensToInsert)
+
+    if (itemsError) {
+      console.error('Error saving orcamento_itens:', itemsError)
+      throw itemsError
+    }
+  }
+
+  return {
+    ...orcamento,
+    items: quoteData.items,
+  }
 }
 
 export async function sendQuoteEmail(payload: any): Promise<void> {

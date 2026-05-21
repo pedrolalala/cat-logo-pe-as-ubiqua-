@@ -6186,6 +6186,8 @@ export const Constants = {
 //     WITH CHECK: true
 //   Policy "Permitir leitura admin_gerente" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
+//   Policy "Permitir leitura anon e auth" (SELECT, PERMISSIVE) roles={anon,authenticated}
+//     USING: true
 // Table: marcas
 //   Policy "marcas_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
@@ -6334,6 +6336,7 @@ export const Constants = {
 // Table: quotes
 //   Policy "all_quotes_auth" (ALL, PERMISSIVE) roles={public}
 //     USING: true
+//     WITH CHECK: true
 // Table: revenda_ubiqua
 //   Policy "revenda_ubiqua_insert_policy" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: true
