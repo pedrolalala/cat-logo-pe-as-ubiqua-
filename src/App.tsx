@@ -21,9 +21,19 @@ const App = () => (
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Index />} />
+              <Route path="/produtos" element={<Index />} />
               <Route path="/novo-orcamento" element={<NewQuote />} />
+              <Route path="/carrinho" element={<NewQuote />} />
               <Route
-                path="/admin"
+                path="/admin/*"
+                element={
+                  <AuthWrapper>
+                    <AdminPage />
+                  </AuthWrapper>
+                }
+              />
+              <Route
+                path="/dashboard"
                 element={
                   <AuthWrapper>
                     <AdminPage />

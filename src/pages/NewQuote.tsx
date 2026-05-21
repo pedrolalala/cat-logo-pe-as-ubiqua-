@@ -189,7 +189,7 @@ export default function NewQuote() {
           <div className="mb-10 p-6 bg-muted/50 rounded-xl border max-w-md w-full animate-fade-in">
             <h3 className="font-semibold text-lg mb-2">Acompanhe seus pedidos</h3>
             <p className="text-muted-foreground text-sm mb-4">
-              Crie uma conta rapidamente para acompanhar o status deste e de outros orçamentos.
+              Deseja criar uma senha para acompanhar seus pedidos?
             </p>
             <Button variant="outline" className="w-full" onClick={() => setIsSignupModalOpen(true)}>
               Criar uma conta
@@ -460,10 +460,10 @@ export default function NewQuote() {
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Salvando...
+                    Gerando...
                   </>
                 ) : (
-                  'Salvar Orçamento'
+                  'Gerar Orçamento'
                 )}
               </Button>
             </div>

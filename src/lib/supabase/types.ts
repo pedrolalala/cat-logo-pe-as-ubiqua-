@@ -1350,6 +1350,7 @@ export type Database = {
       informacoes_cliente_ubiqua: {
         Row: {
           created_at: string | null
+          data_nascimento: string | null
           email: string | null
           id: string
           nome: string
@@ -1357,6 +1358,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          data_nascimento?: string | null
           email?: string | null
           id?: string
           nome: string
@@ -1364,6 +1366,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          data_nascimento?: string | null
           email?: string | null
           id?: string
           nome?: string
@@ -5008,6 +5011,7 @@ export const Constants = {
 //   email: text (nullable)
 //   telefone: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
+//   data_nascimento: date (nullable)
 // Table: marcas
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -6178,10 +6182,10 @@ export const Constants = {
 //   Policy "func_update_admin" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 // Table: informacoes_cliente_ubiqua
-//   Policy "Permitir inserção pública" (INSERT, PERMISSIVE) roles={anon}
+//   Policy "Permitir inserção anon" (INSERT, PERMISSIVE) roles={anon,authenticated}
 //     WITH CHECK: true
-//   Policy "Permitir leitura apenas para admins" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((auth.jwt() ->> 'role'::text) = 'admin'::text)
+//   Policy "Permitir leitura admin_gerente" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 // Table: marcas
 //   Policy "marcas_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
