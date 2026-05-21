@@ -35,6 +35,9 @@ export function useParts() {
           if (!existing.imagem_catalogo_url && part.imagem_catalogo_url) {
             existing.imagem_catalogo_url = part.imagem_catalogo_url
             existing.referencia = part.referencia
+            if ('cod_produto' in part) {
+              ;(existing as any).cod_produto = (part as any).cod_produto
+            }
           }
         }
       })

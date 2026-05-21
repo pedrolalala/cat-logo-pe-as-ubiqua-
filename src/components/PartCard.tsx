@@ -20,12 +20,26 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
 
   const lampName = part.baseName || part.descricao.split(' ')[0] || 'Peça'
 
-  // Dynamic Image Mapping: maps to the storage bucket folder 'catalogos' using the primary reference
+  // Dynamic Image Mapping: maps to the storage bucket folder 'catalogos' using the first 6 digits
+  const getSixDigits = (p: Part) => {
+    const codProd = (p as any).cod_produto
+    if (codProd) {
+      const codStr = String(codProd)
+      if (codStr.length >= 6) return codStr.substring(0, 6)
+    }
+    if (p.referencia) {
+      const match = p.referencia.match(/^[0-9]{6}/)
+      if (match) return match[0]
+    }
+    return null
+  }
+
+  const sixDigits = getSixDigits(part)
+
   const storageBaseUrl =
     'https://vcvcwzmbiftcawncibke.supabase.co/storage/v1/object/public/revenda-ubiqua-images/catalogos/'
   const mappedImageUrl =
-    part.imagem_catalogo_url ||
-    (part.referencia ? `${storageBaseUrl}${part.referencia}_catalogo.jpg` : null)
+    part.imagem_catalogo_url || (sixDigits ? `${storageBaseUrl}${sixDigits}_catalogo.jpg` : null)
 
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-orange-200/50 hover:border-orange-500/30">
@@ -35,6 +49,7 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
             src={mappedImageUrl}
             alt={lampName}
             onError={() => setImageError(true)}
+            loading="lazy"
             className="absolute inset-0 w-full h-full object-contain mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105 p-4"
           />
         ) : (
