@@ -18,16 +18,21 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner position="bottom-right" richColors />
-          <AuthWrapper>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/novo-orcamento" element={<NewQuote />} />
-                <Route path="/admin" element={<AdminPage />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthWrapper>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/novo-orcamento" element={<NewQuote />} />
+              <Route
+                path="/admin"
+                element={
+                  <AuthWrapper>
+                    <AdminPage />
+                  </AuthWrapper>
+                }
+              />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
       </BrowserRouter>
     </CartProvider>

@@ -1347,6 +1347,30 @@ export type Database = {
         }
         Relationships: []
       }
+      informacoes_cliente_ubiqua: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
+      }
       marcas: {
         Row: {
           ativo: boolean
@@ -4978,6 +5002,12 @@ export const Constants = {
 //   data_admissao: date (nullable)
 //   ativo: boolean (nullable, default: true)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: informacoes_cliente_ubiqua
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: text (not null)
+//   email: text (nullable)
+//   telefone: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: marcas
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -5860,6 +5890,8 @@ export const Constants = {
 //   PRIMARY KEY funcionarios_financeiro_pkey: PRIMARY KEY (id)
 // Table: funcionarios_novo
 //   PRIMARY KEY funcionarios_novo_pkey: PRIMARY KEY (id)
+// Table: informacoes_cliente_ubiqua
+//   PRIMARY KEY informacoes_cliente_ubiqua_pkey: PRIMARY KEY (id)
 // Table: marcas
 //   UNIQUE marcas_codigo_legado_key: UNIQUE (codigo_legado)
 //   UNIQUE marcas_nome_key: UNIQUE (nome)
@@ -6145,6 +6177,11 @@ export const Constants = {
 //     USING: ((EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role]))))) OR (usuario_id = ( SELECT auth.uid() AS uid)))
 //   Policy "func_update_admin" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
+// Table: informacoes_cliente_ubiqua
+//   Policy "Permitir inserção pública" (INSERT, PERMISSIVE) roles={anon}
+//     WITH CHECK: true
+//   Policy "Permitir leitura apenas para admins" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((auth.jwt() ->> 'role'::text) = 'admin'::text)
 // Table: marcas
 //   Policy "marcas_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))

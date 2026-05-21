@@ -1,4 +1,5 @@
 import { useCart } from '@/hooks/use-cart'
+import { useAuth } from '@/hooks/use-auth'
 import { useState } from 'react'
 import {
   Table,
@@ -11,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
-import { saveQuoteToSupabase, sendQuoteEmail, QuoteData } from '@/lib/api'
+import { saveQuoteToSupabase, sendQuoteEmail, QuoteData, saveClienteInfo } from '@/lib/api'
 import { toast } from 'sonner'
 import {
   Trash2,
@@ -37,30 +38,58 @@ import { Label } from '@/components/ui/label'
 
 export default function NewQuote() {
   const { items, clearCart, removeFromCart, updateQuantity } = useCart()
+  const { user, signUp } = useAuth()
   const [observacoes, setObservacoes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
   const [savedQuote, setSavedQuote] = useState<QuoteData | null>(null)
 
-  // Estados para geração de PDF e envio de E-mail
+  // PDF / E-mail states
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [emailRecipient, setEmailRecipient] = useState('')
   const [isSendingEmail, setIsSendingEmail] = useState(false)
+
+  // Identificação e Cadastro states
+  const [isIdentModalOpen, setIsIdentModalOpen] = useState(false)
+  const [clienteInfo, setClienteInfo] = useState({
+    nome: '',
+    email: '',
+    telefone: '',
+    data_nascimento: '',
+  })
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
+  const [signupPassword, setSignupPassword] = useState('')
+  const [isSigningUp, setIsSigningUp] = useState(false)
+
+  const isIdentValid =
+    clienteInfo.nome && clienteInfo.email && clienteInfo.telefone && clienteInfo.data_nascimento
 
   const totalGeral = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
-  const handleSave = async () => {
+  const handleInitiateSave = () => {
+    if (!user) {
+      setIsIdentModalOpen(true)
+    } else {
+      executeSaveQuote(false)
+    }
+  }
+
+  const executeSaveQuote = async (saveLead = false) => {
     setIsSaving(true)
     setSaveError(false)
     try {
+      if (saveLead) {
+        await saveClienteInfo(clienteInfo)
+      }
       const quoteData = {
         items,
         observacoes,
         valor_total: totalGeral,
+        empresa: user ? null : clienteInfo.nome,
       }
       await saveQuoteToSupabase(quoteData)
       setSavedQuote(quoteData)
@@ -71,6 +100,22 @@ export default function NewQuote() {
       toast.error('Erro ao salvar o orçamento.')
     } finally {
       setIsSaving(false)
+      setIsIdentModalOpen(false)
+    }
+  }
+
+  const handleSignup = async () => {
+    if (!signupPassword) return
+    setIsSigningUp(true)
+    try {
+      const { error } = await signUp(clienteInfo.email, signupPassword)
+      if (error) throw error
+      toast.success('Conta criada com sucesso!')
+      setIsSignupModalOpen(false)
+    } catch (e) {
+      toast.error('Erro ao criar conta. Verifique suas informações e tente novamente.')
+    } finally {
+      setIsSigningUp(false)
     }
   }
 
@@ -92,12 +137,8 @@ export default function NewQuote() {
     if (!savedQuote || !emailRecipient) return
     setIsSendingEmail(true)
     try {
-      // 1. Gera o documento em memória (base64)
       const pdfBase64 = await generateQuotePDFBase64(savedQuote)
-
-      // 2. Dispara requisição para a Edge Function
       await sendQuoteEmail(emailRecipient, pdfBase64, savedQuote)
-
       toast.success('PDF enviado com sucesso')
       setIsEmailModalOpen(false)
       setEmailRecipient('')
@@ -143,6 +184,18 @@ export default function NewQuote() {
             Enviar por E-mail
           </Button>
         </div>
+
+        {!user && (
+          <div className="mb-10 p-6 bg-muted/50 rounded-xl border max-w-md w-full animate-fade-in">
+            <h3 className="font-semibold text-lg mb-2">Acompanhe seus pedidos</h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              Crie uma conta rapidamente para acompanhar o status deste e de outros orçamentos.
+            </p>
+            <Button variant="outline" className="w-full" onClick={() => setIsSignupModalOpen(true)}>
+              Criar uma conta
+            </Button>
+          </div>
+        )}
 
         <Button variant="ghost" asChild size="lg" className="hover:text-orange-600">
           <Link to="/">Voltar ao Catálogo</Link>
@@ -192,6 +245,54 @@ export default function NewQuote() {
                 ) : (
                   'Enviar E-mail'
                 )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isSignupModalOpen} onOpenChange={setIsSignupModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Criar Conta</DialogTitle>
+              <DialogDescription>
+                Use seu e-mail para criar uma conta e acompanhar seus pedidos.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input
+                  type="email"
+                  value={clienteInfo.email}
+                  disabled
+                  className="bg-muted text-muted-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Senha</Label>
+                <Input
+                  type="password"
+                  value={signupPassword}
+                  onChange={(e) => setSignupPassword(e.target.value)}
+                  placeholder="Crie uma senha segura"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsSignupModalOpen(false)}
+                disabled={isSigningUp}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSignup}
+                disabled={!signupPassword || isSigningUp}
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                {isSigningUp ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Criar Conta
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -246,7 +347,7 @@ export default function NewQuote() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleSave}
+              onClick={handleInitiateSave}
               className="bg-background hover:bg-background/90 text-destructive border-destructive/20"
             >
               Tentar novamente
@@ -353,7 +454,7 @@ export default function NewQuote() {
               </Button>
               <Button
                 className="w-full sm:w-2/3 shadow-sm bg-orange-500 hover:bg-orange-600 text-white"
-                onClick={handleSave}
+                onClick={handleInitiateSave}
                 disabled={isSaving}
               >
                 {isSaving ? (
@@ -369,6 +470,72 @@ export default function NewQuote() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isIdentModalOpen} onOpenChange={setIsIdentModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Identificação Necessária</DialogTitle>
+            <DialogDescription>
+              Por favor, informe seus dados para finalizar e gerar o orçamento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome Completo</Label>
+              <Input
+                value={clienteInfo.nome}
+                onChange={(e) => setClienteInfo((prev) => ({ ...prev, nome: e.target.value }))}
+                placeholder="Ex: João da Silva"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input
+                type="email"
+                value={clienteInfo.email}
+                onChange={(e) => setClienteInfo((prev) => ({ ...prev, email: e.target.value }))}
+                placeholder="Ex: joao@email.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input
+                type="tel"
+                value={clienteInfo.telefone}
+                onChange={(e) => setClienteInfo((prev) => ({ ...prev, telefone: e.target.value }))}
+                placeholder="Ex: (11) 99999-9999"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Data de Nascimento</Label>
+              <Input
+                type="date"
+                value={clienteInfo.data_nascimento}
+                onChange={(e) =>
+                  setClienteInfo((prev) => ({ ...prev, data_nascimento: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsIdentModalOpen(false)}
+              disabled={isSaving}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => executeSaveQuote(true)}
+              disabled={!isIdentValid || isSaving}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

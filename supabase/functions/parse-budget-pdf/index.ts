@@ -105,7 +105,7 @@ Se uma informação não existir, retorne null ou string vazia.`
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -133,16 +133,23 @@ Se uma informação não existir, retorne null ou string vazia.`
 
     if (!response.ok) {
       const err = await response.text()
-      return new Response(JSON.stringify({ error: `Erro na API do Gemini: ${err}` }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      console.error('Gemini API Error:', response.status, err)
+      return new Response(
+        JSON.stringify({
+          error: 'Erro ao processar o documento. Verifique o arquivo e tente novamente.',
+        }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     const data = await response.json()
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text
 
     if (!text) {
+      console.error('No text returned from Gemini API', data)
       return new Response(
         JSON.stringify({
           error: 'Nenhum dado legível retornado pela IA. Verifique se o PDF contém texto legível.',
@@ -171,8 +178,7 @@ Se uma informação não existir, retorne null ou string vazia.`
       console.error('Failed to parse JSON from Gemini:', cleanText)
       return new Response(
         JSON.stringify({
-          error:
-            'Falha ao interpretar os dados extraídos. O formato retornado não é um JSON válido.',
+          error: 'Erro ao processar o documento. Verifique o arquivo e tente novamente.',
         }),
         {
           status: 422,

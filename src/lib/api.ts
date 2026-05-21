@@ -11,6 +11,19 @@ export interface Part {
   baseName?: string
 }
 
+export async function saveClienteInfo(data: {
+  nome: string
+  email: string
+  telefone: string
+  data_nascimento: string
+}): Promise<void> {
+  const { error } = await supabase.from('informacoes_cliente_ubiqua').insert(data)
+  if (error) {
+    console.error('Error saving client info:', error)
+    throw error
+  }
+}
+
 export async function saveQuoteToSupabase(quoteData: any): Promise<any> {
   const { data, error } = await supabase.from('quotes').insert(quoteData).select().single()
 
