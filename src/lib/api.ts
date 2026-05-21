@@ -16,12 +16,19 @@ export async function saveClienteInfo(data: {
   email: string
   telefone: string
   data_nascimento: string
-}): Promise<void> {
-  const { error } = await supabase.from('informacoes_cliente_ubiqua').insert(data)
+}): Promise<{ id: string }> {
+  const { data: inserted, error } = await supabase
+    .from('informacoes_cliente_ubiqua')
+    .insert(data)
+    .select('id')
+    .single()
+
   if (error) {
     console.error('Error saving client info:', error)
     throw error
   }
+
+  return inserted
 }
 
 export async function saveQuoteToSupabase(quoteData: any): Promise<any> {
@@ -44,7 +51,8 @@ export async function saveQuoteToSupabase(quoteData: any): Promise<any> {
       valor_total: quoteData.valor_total,
       status: 'Rascunho',
       data_emissao: new Date().toISOString(),
-    })
+      informacoes_cliente_id: quoteData.informacoes_cliente_id || null,
+    } as any)
     .select()
     .single()
 

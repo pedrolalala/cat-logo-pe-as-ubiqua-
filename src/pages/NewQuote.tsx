@@ -51,7 +51,6 @@ export default function NewQuote() {
   const [isSendingEmail, setIsSendingEmail] = useState(false)
 
   // Identificação e Cadastro states
-  const [isIdentModalOpen, setIsIdentModalOpen] = useState(false)
   const [clienteInfo, setClienteInfo] = useState({
     nome: '',
     email: '',
@@ -74,26 +73,22 @@ export default function NewQuote() {
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
   const handleInitiateSave = () => {
-    if (!user) {
-      setIsIdentModalOpen(true)
-    } else {
-      executeSaveQuote(false)
+    if (!user && !isIdentValid) {
+      toast.error('Por favor, preencha todos os campos obrigatórios de identificação.')
+      return
     }
+    executeSaveQuote(!user)
   }
 
   const executeSaveQuote = async (saveLead = false) => {
-    if (saveLead) {
-      if (!isIdentValid) {
-        toast.error('Por favor, preencha todos os campos obrigatórios de identificação.')
-        return
-      }
-    }
-
     setIsSaving(true)
     setSaveError(false)
     try {
+      let leadId: string | undefined = undefined
+
       if (saveLead) {
-        await saveClienteInfo(clienteInfo)
+        const lead = await saveClienteInfo(clienteInfo)
+        leadId = lead.id
       }
 
       const quoteData = {
@@ -101,6 +96,7 @@ export default function NewQuote() {
         observacoes,
         valor_total: totalGeral,
         nome_cliente: user ? undefined : clienteInfo.nome,
+        informacoes_cliente_id: leadId,
       }
 
       const saved = await saveQuoteToSupabase(quoteData)
@@ -112,7 +108,6 @@ export default function NewQuote() {
       toast.error('Erro ao processar o orçamento. Verifique os dados e tente novamente.')
     } finally {
       setIsSaving(false)
-      setIsIdentModalOpen(false)
     }
   }
 
@@ -438,6 +433,73 @@ export default function NewQuote() {
         <div className="bg-muted/30 rounded-xl p-6 flex flex-col justify-between border shadow-sm h-full">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold border-b pb-4">Resumo do Orçamento</h3>
+
+            {!user && (
+              <div className="bg-card border rounded-lg p-4 mb-4 shadow-sm">
+                <h4 className="font-medium text-sm mb-3">Seus Dados</h4>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">
+                      Nome Completo <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      value={clienteInfo.nome}
+                      onChange={(e) =>
+                        setClienteInfo((prev) => ({ ...prev, nome: e.target.value }))
+                      }
+                      placeholder="Ex: João da Silva"
+                      required
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">
+                      E-mail <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      type="email"
+                      value={clienteInfo.email}
+                      onChange={(e) =>
+                        setClienteInfo((prev) => ({ ...prev, email: e.target.value }))
+                      }
+                      placeholder="Ex: joao@email.com"
+                      required
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">
+                      Telefone <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      type="tel"
+                      value={clienteInfo.telefone}
+                      onChange={(e) =>
+                        setClienteInfo((prev) => ({ ...prev, telefone: e.target.value }))
+                      }
+                      placeholder="Ex: (11) 99999-9999"
+                      required
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">
+                      Data de Nascimento <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      type="date"
+                      value={clienteInfo.data_nascimento}
+                      onChange={(e) =>
+                        setClienteInfo((prev) => ({ ...prev, data_nascimento: e.target.value }))
+                      }
+                      required
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">
                 Subtotal dos itens ({items.length} {items.length === 1 ? 'item' : 'itens'})
@@ -467,7 +529,7 @@ export default function NewQuote() {
               <Button
                 className="w-full sm:w-2/3 shadow-sm bg-orange-500 hover:bg-orange-600 text-white"
                 onClick={handleInitiateSave}
-                disabled={isSaving}
+                disabled={isSaving || (!user && !isIdentValid)}
               >
                 {isSaving ? (
                   <>
@@ -482,84 +544,6 @@ export default function NewQuote() {
           </div>
         </div>
       </div>
-
-      <Dialog open={isIdentModalOpen} onOpenChange={setIsIdentModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Identificação Necessária</DialogTitle>
-            <DialogDescription>
-              Por favor, informe seus dados para finalizar e gerar o orçamento.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>
-                Nome Completo <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                value={clienteInfo.nome}
-                onChange={(e) => setClienteInfo((prev) => ({ ...prev, nome: e.target.value }))}
-                placeholder="Ex: João da Silva"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>
-                E-mail <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                type="email"
-                value={clienteInfo.email}
-                onChange={(e) => setClienteInfo((prev) => ({ ...prev, email: e.target.value }))}
-                placeholder="Ex: joao@email.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>
-                Telefone <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                type="tel"
-                value={clienteInfo.telefone}
-                onChange={(e) => setClienteInfo((prev) => ({ ...prev, telefone: e.target.value }))}
-                placeholder="Ex: (11) 99999-9999"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>
-                Data de Nascimento <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                type="date"
-                value={clienteInfo.data_nascimento}
-                onChange={(e) =>
-                  setClienteInfo((prev) => ({ ...prev, data_nascimento: e.target.value }))
-                }
-                required
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsIdentModalOpen(false)}
-              disabled={isSaving}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => executeSaveQuote(true)}
-              disabled={!isIdentValid || isSaving}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Continuar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
