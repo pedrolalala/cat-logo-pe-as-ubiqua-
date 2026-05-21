@@ -111,8 +111,8 @@ export default function NewQuote() {
   if (savedQuote) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
-        <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-          <CheckCircle className="w-10 h-10 text-primary" />
+        <div className="h-20 w-20 bg-orange-500/10 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle className="w-10 h-10 text-orange-500" />
         </div>
         <h2 className="text-3xl font-bold mb-4">Orçamento Salvo!</h2>
         <p className="text-muted-foreground mb-8 max-w-md text-lg">
@@ -125,7 +125,7 @@ export default function NewQuote() {
             size="lg"
             onClick={handleDownloadPDF}
             disabled={isGeneratingPDF}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto border-orange-200 text-orange-700 hover:bg-orange-50"
           >
             {isGeneratingPDF ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -134,13 +134,17 @@ export default function NewQuote() {
             )}
             Baixar PDF
           </Button>
-          <Button size="lg" onClick={() => setIsEmailModalOpen(true)} className="w-full sm:w-auto">
+          <Button
+            size="lg"
+            onClick={() => setIsEmailModalOpen(true)}
+            className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white"
+          >
             <Mail className="w-4 h-4 mr-2" />
             Enviar por E-mail
           </Button>
         </div>
 
-        <Button variant="ghost" asChild size="lg">
+        <Button variant="ghost" asChild size="lg" className="hover:text-orange-600">
           <Link to="/">Voltar ao Catálogo</Link>
         </Button>
 
@@ -175,7 +179,11 @@ export default function NewQuote() {
               >
                 Cancelar
               </Button>
-              <Button onClick={handleSendEmail} disabled={isSendingEmail || !emailRecipient}>
+              <Button
+                onClick={handleSendEmail}
+                disabled={isSendingEmail || !emailRecipient}
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
                 {isSendingEmail ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -202,7 +210,7 @@ export default function NewQuote() {
         <p className="text-muted-foreground max-w-md text-lg mb-8">
           Você ainda não adicionou nenhuma peça ao seu orçamento.
         </p>
-        <Button asChild size="lg">
+        <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white">
           <Link to="/">Explorar Catálogo</Link>
         </Button>
       </div>
@@ -279,7 +287,7 @@ export default function NewQuote() {
                   <TableCell className="text-right whitespace-nowrap">
                     {formatCurrency(item.valor_revenda)}
                   </TableCell>
-                  <TableCell className="text-right font-medium whitespace-nowrap text-primary">
+                  <TableCell className="text-right font-medium whitespace-nowrap text-orange-600">
                     {formatCurrency(item.valor_revenda * item.quantity)}
                   </TableCell>
                   <TableCell className="text-center">
@@ -310,7 +318,7 @@ export default function NewQuote() {
             placeholder="Adicione observações ou instruções específicas para este orçamento..."
             value={observacoes}
             onChange={(e) => setObservacoes(e.target.value)}
-            className="flex-1 min-h-[150px] resize-none focus-visible:ring-primary shadow-sm"
+            className="flex-1 min-h-[150px] resize-none focus-visible:ring-orange-500 shadow-sm"
           />
         </div>
 
@@ -325,7 +333,7 @@ export default function NewQuote() {
             </div>
             <div className="flex justify-between items-center font-bold text-xl pt-4 border-t">
               <span>Valor Total Geral</span>
-              <span className="text-primary">{formatCurrency(totalGeral)}</span>
+              <span className="text-orange-600">{formatCurrency(totalGeral)}</span>
             </div>
           </div>
 
@@ -344,7 +352,7 @@ export default function NewQuote() {
                 Limpar Carrinho
               </Button>
               <Button
-                className="w-full sm:w-2/3 shadow-sm"
+                className="w-full sm:w-2/3 shadow-sm bg-orange-500 hover:bg-orange-600 text-white"
                 onClick={handleSave}
                 disabled={isSaving}
               >

@@ -485,13 +485,6 @@ export type Database = {
             foreignKeyName: 'controle_ponto_funcionario_id_fkey'
             columns: ['funcionario_id']
             isOneToOne: false
-            referencedRelation: 'vw_calculo_vt_mensal'
-            referencedColumns: ['funcionario_id']
-          },
-          {
-            foreignKeyName: 'controle_ponto_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
             referencedRelation: 'vw_historico_faltas'
             referencedColumns: ['funcionario_id']
           },
@@ -999,13 +992,6 @@ export type Database = {
             foreignKeyName: 'ferias_funcionario_id_fkey'
             columns: ['funcionario_id']
             isOneToOne: false
-            referencedRelation: 'vw_calculo_vt_mensal'
-            referencedColumns: ['funcionario_id']
-          },
-          {
-            foreignKeyName: 'ferias_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
             referencedRelation: 'vw_historico_faltas'
             referencedColumns: ['funcionario_id']
           },
@@ -1110,13 +1096,6 @@ export type Database = {
             foreignKeyName: 'folha_pagamento_funcionario_id_fkey'
             columns: ['funcionario_id']
             isOneToOne: false
-            referencedRelation: 'vw_calculo_vt_mensal'
-            referencedColumns: ['funcionario_id']
-          },
-          {
-            foreignKeyName: 'folha_pagamento_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
             referencedRelation: 'vw_historico_faltas'
             referencedColumns: ['funcionario_id']
           },
@@ -1133,92 +1112,56 @@ export type Database = {
         Row: {
           cargo: string | null
           codigo_legado: number | null
-          comissao_padrao: number | null
-          cpf: string | null
           created_at: string
           data_admissao: string | null
-          data_aniversario: string | null
           data_demissao: string | null
           data_elegibilidade_ferias: string | null
           departamento_id: string | null
-          email: string
           empresa: string | null
           empresa_id: string | null
-          endereco_completo: string | null
           id: string
           nm_connect: string | null
           nome: string
-          rg: string | null
-          salario_base: number | null
-          salario_liquido: number | null
-          salario_por_fora: number | null
           status: string
-          telefone: string | null
           tipo_contratacao: string | null
           updated_at: string
           usuario_id: string | null
-          valor_vt: number | null
-          valor_vt_dia: number | null
         }
         Insert: {
           cargo?: string | null
           codigo_legado?: number | null
-          comissao_padrao?: number | null
-          cpf?: string | null
           created_at?: string
           data_admissao?: string | null
-          data_aniversario?: string | null
           data_demissao?: string | null
           data_elegibilidade_ferias?: string | null
           departamento_id?: string | null
-          email: string
           empresa?: string | null
           empresa_id?: string | null
-          endereco_completo?: string | null
           id?: string
           nm_connect?: string | null
           nome: string
-          rg?: string | null
-          salario_base?: number | null
-          salario_liquido?: number | null
-          salario_por_fora?: number | null
           status?: string
-          telefone?: string | null
           tipo_contratacao?: string | null
           updated_at?: string
           usuario_id?: string | null
-          valor_vt?: number | null
-          valor_vt_dia?: number | null
         }
         Update: {
           cargo?: string | null
           codigo_legado?: number | null
-          comissao_padrao?: number | null
-          cpf?: string | null
           created_at?: string
           data_admissao?: string | null
-          data_aniversario?: string | null
           data_demissao?: string | null
           data_elegibilidade_ferias?: string | null
           departamento_id?: string | null
-          email?: string
           empresa?: string | null
           empresa_id?: string | null
-          endereco_completo?: string | null
           id?: string
           nm_connect?: string | null
           nome?: string
-          rg?: string | null
-          salario_base?: number | null
-          salario_liquido?: number | null
-          salario_por_fora?: number | null
           status?: string
-          telefone?: string | null
           tipo_contratacao?: string | null
           updated_at?: string
           usuario_id?: string | null
-          valor_vt?: number | null
-          valor_vt_dia?: number | null
         }
         Relationships: [
           {
@@ -1250,6 +1193,159 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      funcionarios_beneficios_empresas: {
+        Row: {
+          empresa: string
+          funcionario_id: string
+          id: string
+          valor_vt_dia: number | null
+        }
+        Insert: {
+          empresa: string
+          funcionario_id: string
+          id?: string
+          valor_vt_dia?: number | null
+        }
+        Update: {
+          empresa?: string
+          funcionario_id?: string
+          id?: string
+          valor_vt_dia?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'funcionarios_beneficios_empresas_funcionario_id_fkey'
+            columns: ['funcionario_id']
+            isOneToOne: false
+            referencedRelation: 'funcionarios_novo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'funcionarios_beneficios_empresas_funcionario_id_fkey'
+            columns: ['funcionario_id']
+            isOneToOne: false
+            referencedRelation: 'vw_funcionarios_completo'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      funcionarios_detalhes: {
+        Row: {
+          cpf: string | null
+          data_nascimento: string | null
+          email: string | null
+          endereco: string | null
+          funcionario_id: string
+          id: string
+          rg: string | null
+          telefone: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          funcionario_id: string
+          id?: string
+          rg?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          funcionario_id?: string
+          id?: string
+          rg?: string | null
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'funcionarios_detalhes_funcionario_id_fkey'
+            columns: ['funcionario_id']
+            isOneToOne: true
+            referencedRelation: 'funcionarios_novo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'funcionarios_detalhes_funcionario_id_fkey'
+            columns: ['funcionario_id']
+            isOneToOne: true
+            referencedRelation: 'vw_funcionarios_completo'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      funcionarios_financeiro: {
+        Row: {
+          comissao_percentual: number | null
+          funcionario_id: string
+          id: string
+          salario_base: number
+          salario_liquido: number | null
+          salario_por_fora: number
+        }
+        Insert: {
+          comissao_percentual?: number | null
+          funcionario_id: string
+          id?: string
+          salario_base?: number
+          salario_liquido?: number | null
+          salario_por_fora?: number
+        }
+        Update: {
+          comissao_percentual?: number | null
+          funcionario_id?: string
+          id?: string
+          salario_base?: number
+          salario_liquido?: number | null
+          salario_por_fora?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'funcionarios_financeiro_funcionario_id_fkey'
+            columns: ['funcionario_id']
+            isOneToOne: true
+            referencedRelation: 'funcionarios_novo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'funcionarios_financeiro_funcionario_id_fkey'
+            columns: ['funcionario_id']
+            isOneToOne: true
+            referencedRelation: 'vw_funcionarios_completo'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      funcionarios_novo: {
+        Row: {
+          ativo: boolean | null
+          cargo: string | null
+          created_at: string | null
+          data_admissao: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          cargo?: string | null
+          created_at?: string | null
+          data_admissao?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean | null
+          cargo?: string | null
+          created_at?: string | null
+          data_admissao?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
       }
       marcas: {
         Row: {
@@ -1359,13 +1455,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'funcionarios'
             referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'negociacoes_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
-            referencedRelation: 'vw_calculo_vt_mensal'
-            referencedColumns: ['funcionario_id']
           },
           {
             foreignKeyName: 'negociacoes_funcionario_id_fkey'
@@ -1634,13 +1723,6 @@ export type Database = {
             foreignKeyName: 'orcamentos_vendedor_id_fkey'
             columns: ['vendedor_id']
             isOneToOne: false
-            referencedRelation: 'vw_calculo_vt_mensal'
-            referencedColumns: ['funcionario_id']
-          },
-          {
-            foreignKeyName: 'orcamentos_vendedor_id_fkey'
-            columns: ['vendedor_id']
-            isOneToOne: false
             referencedRelation: 'vw_historico_faltas'
             referencedColumns: ['funcionario_id']
           },
@@ -1733,13 +1815,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'funcionarios'
             referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'periodos_aquisitivos_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
-            referencedRelation: 'vw_calculo_vt_mensal'
-            referencedColumns: ['funcionario_id']
           },
           {
             foreignKeyName: 'periodos_aquisitivos_funcionario_id_fkey'
@@ -3522,6 +3597,7 @@ export type Database = {
           dt_pagamento: string | null
           dt_vencimento: string | null
           empresa_id: string | null
+          funcionario_id: string | null
           id: string
           negociacao_id: string | null
           num_parc: number | null
@@ -3552,6 +3628,7 @@ export type Database = {
           dt_pagamento?: string | null
           dt_vencimento?: string | null
           empresa_id?: string | null
+          funcionario_id?: string | null
           id?: string
           negociacao_id?: string | null
           num_parc?: number | null
@@ -3582,6 +3659,7 @@ export type Database = {
           dt_pagamento?: string | null
           dt_vencimento?: string | null
           empresa_id?: string | null
+          funcionario_id?: string | null
           id?: string
           negociacao_id?: string | null
           num_parc?: number | null
@@ -3640,6 +3718,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'vw_transacoes_completas'
             referencedColumns: ['empresa_id']
+          },
+          {
+            foreignKeyName: 'transacoes_funcionario_id_fkey'
+            columns: ['funcionario_id']
+            isOneToOne: false
+            referencedRelation: 'funcionarios'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transacoes_funcionario_id_fkey'
+            columns: ['funcionario_id']
+            isOneToOne: false
+            referencedRelation: 'vw_historico_faltas'
+            referencedColumns: ['funcionario_id']
+          },
+          {
+            foreignKeyName: 'transacoes_funcionario_id_fkey'
+            columns: ['funcionario_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['funcionario_id']
           },
           {
             foreignKeyName: 'transacoes_negociacao_id_fkey'
@@ -3935,33 +4034,6 @@ export type Database = {
         }
         Relationships: []
       }
-      vw_calculo_vt_mensal: {
-        Row: {
-          empresa: string | null
-          funcionario_id: string | null
-          funcionario_nome: string | null
-          total_faltas_integrais: number | null
-          total_meio_periodo: number | null
-          valor_vt_dia: number | null
-        }
-        Insert: {
-          empresa?: string | null
-          funcionario_id?: string | null
-          funcionario_nome?: string | null
-          total_faltas_integrais?: never
-          total_meio_periodo?: never
-          valor_vt_dia?: number | null
-        }
-        Update: {
-          empresa?: string | null
-          funcionario_id?: string | null
-          funcionario_nome?: string | null
-          total_faltas_integrais?: never
-          total_meio_periodo?: never
-          valor_vt_dia?: number | null
-        }
-        Relationships: []
-      }
       vw_conferencia_financeira: {
         Row: {
           data_transacao: string | null
@@ -3989,13 +4061,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'funcionarios'
             referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'periodos_aquisitivos_funcionario_id_fkey'
-            columns: ['funcionario_id']
-            isOneToOne: false
-            referencedRelation: 'vw_calculo_vt_mensal'
-            referencedColumns: ['funcionario_id']
           },
           {
             foreignKeyName: 'periodos_aquisitivos_funcionario_id_fkey'
@@ -4125,6 +4190,28 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_funcionarios_completo: {
+        Row: {
+          ativo: boolean | null
+          cargo: string | null
+          comissao_percentual: number | null
+          cpf: string | null
+          data_admissao: string | null
+          data_nascimento: string | null
+          email: string | null
+          empresa: string | null
+          endereco: string | null
+          id: string | null
+          nome: string | null
+          rg: string | null
+          salario_base: number | null
+          salario_liquido: number | null
+          salario_por_fora: number | null
+          telefone: string | null
+          valor_vt_dia: number | null
+        }
+        Relationships: []
+      }
       vw_historico_faltas: {
         Row: {
           data_falta: string | null
@@ -4185,16 +4272,6 @@ export type Database = {
           valor_pago: number | null
           valor_pendente: number | null
           valor_total_vendas: number | null
-        }
-        Relationships: []
-      }
-      vw_rh_resumo: {
-        Row: {
-          ativos: number | null
-          departamento: string | null
-          folha_total: number | null
-          salario_medio: number | null
-          total_funcionarios: number | null
         }
         Relationships: []
       }
@@ -4861,30 +4938,46 @@ export const Constants = {
 //   usuario_id: uuid (nullable)
 //   departamento_id: uuid (nullable)
 //   nome: text (not null)
-//   email: text (not null)
-//   telefone: character varying (nullable)
-//   cpf: character varying (nullable)
-//   rg: character varying (nullable)
 //   cargo: text (nullable)
-//   salario_base: numeric (nullable)
 //   data_admissao: date (nullable)
 //   data_demissao: date (nullable)
 //   status: text (not null, default: 'Ativo'::text)
 //   created_at: timestamp with time zone (not null, default: now())
 //   updated_at: timestamp with time zone (not null, default: now())
-//   comissao_padrao: numeric (nullable, default: 0)
 //   empresa: text (nullable)
-//   valor_vt: numeric (nullable, default: 0)
-//   data_aniversario: date (nullable)
-//   salario_liquido: numeric (nullable, default: 0)
-//   endereco_completo: text (nullable)
-//   salario_por_fora: numeric (nullable, default: 0)
 //   tipo_contratacao: text (nullable)
 //   data_elegibilidade_ferias: date (nullable)
-//   valor_vt_dia: numeric (nullable, default: 0.00)
 //   empresa_id: uuid (nullable)
 //   codigo_legado: integer (nullable)
 //   nm_connect: text (nullable)
+// Table: funcionarios_beneficios_empresas
+//   id: uuid (not null, default: gen_random_uuid())
+//   funcionario_id: uuid (not null)
+//   empresa: character varying (not null)
+//   valor_vt_dia: numeric (nullable, default: 0)
+// Table: funcionarios_detalhes
+//   id: uuid (not null, default: gen_random_uuid())
+//   funcionario_id: uuid (not null)
+//   cpf: character varying (nullable)
+//   rg: character varying (nullable)
+//   data_nascimento: date (nullable)
+//   endereco: text (nullable)
+//   telefone: character varying (nullable)
+//   email: character varying (nullable)
+// Table: funcionarios_financeiro
+//   id: uuid (not null, default: gen_random_uuid())
+//   funcionario_id: uuid (not null)
+//   salario_base: numeric (not null, default: 0)
+//   salario_por_fora: numeric (not null, default: 0)
+//   comissao_percentual: numeric (nullable, default: 0)
+//   salario_liquido: numeric (nullable)
+// Table: funcionarios_novo
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome: character varying (not null)
+//   cargo: character varying (nullable)
+//   data_admissao: date (nullable)
+//   ativo: boolean (nullable, default: true)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: marcas
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -5343,6 +5436,7 @@ export const Constants = {
 //   tipo_pagamento: text (nullable)
 //   acordo: integer (nullable)
 //   empresa_id: uuid (nullable)
+//   funcionario_id: uuid (nullable)
 // Table: usuarios
 //   id: uuid (not null)
 //   email: text (not null)
@@ -5389,13 +5483,6 @@ export const Constants = {
 //   valor_custo: numeric (not null, default: 0)
 //   valor_venda: numeric (not null, default: 0)
 //   created_at: timestamp with time zone (not null, default: now())
-// Table: vw_calculo_vt_mensal
-//   funcionario_id: uuid (nullable)
-//   funcionario_nome: text (nullable)
-//   empresa: text (nullable)
-//   valor_vt_dia: numeric (nullable)
-//   total_faltas_integrais: bigint (nullable)
-//   total_meio_periodo: bigint (nullable)
 // Table: vw_conferencia_financeira
 //   data_transacao: date (nullable)
 //   descricao: text (nullable)
@@ -5479,6 +5566,24 @@ export const Constants = {
 //   atrasado: numeric (nullable)
 //   qtd_pendente: bigint (nullable)
 //   qtd_atrasado: bigint (nullable)
+// Table: vw_funcionarios_completo
+//   id: uuid (nullable)
+//   nome: character varying (nullable)
+//   cargo: character varying (nullable)
+//   data_admissao: date (nullable)
+//   ativo: boolean (nullable)
+//   cpf: character varying (nullable)
+//   rg: character varying (nullable)
+//   data_nascimento: date (nullable)
+//   email: character varying (nullable)
+//   telefone: character varying (nullable)
+//   endereco: text (nullable)
+//   salario_base: numeric (nullable)
+//   salario_por_fora: numeric (nullable)
+//   salario_liquido: numeric (nullable)
+//   comissao_percentual: numeric (nullable)
+//   empresa: character varying (nullable)
+//   valor_vt_dia: numeric (nullable)
 // Table: vw_historico_faltas
 //   funcionario_id: uuid (nullable)
 //   funcionario_nome: text (nullable)
@@ -5511,12 +5616,6 @@ export const Constants = {
 //   valor_total_vendas: numeric (nullable)
 //   valor_pago: numeric (nullable)
 //   valor_pendente: numeric (nullable)
-// Table: vw_rh_resumo
-//   departamento: text (nullable)
-//   total_funcionarios: bigint (nullable)
-//   ativos: bigint (nullable)
-//   salario_medio: numeric (nullable)
-//   folha_total: numeric (nullable)
 // Table: vw_separacoes_agenda
 //   separacao_id: uuid (nullable)
 //   separacao_status: separacao_status (nullable)
@@ -5741,13 +5840,26 @@ export const Constants = {
 // Table: funcionarios
 //   UNIQUE funcionarios_codigo_legado_key: UNIQUE (codigo_legado)
 //   FOREIGN KEY funcionarios_departamento_id_fkey: FOREIGN KEY (departamento_id) REFERENCES departamentos(id) ON DELETE SET NULL
-//   UNIQUE funcionarios_email_key: UNIQUE (email)
 //   FOREIGN KEY funcionarios_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id)
 //   UNIQUE funcionarios_nm_connect_key: UNIQUE (nm_connect)
 //   PRIMARY KEY funcionarios_pkey: PRIMARY KEY (id)
 //   CHECK funcionarios_status_check: CHECK ((status = ANY (ARRAY['Ativo'::text, 'Inativo'::text, 'Afastado'::text, 'Ferias'::text])))
 //   CHECK funcionarios_tipo_contratacao_check: CHECK ((tipo_contratacao = ANY (ARRAY['CLT'::text, 'PJ'::text])))
 //   FOREIGN KEY funcionarios_usuario_id_fkey: FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+// Table: funcionarios_beneficios_empresas
+//   UNIQUE funcionarios_beneficios_empresas_funcionario_id_empresa_key: UNIQUE (funcionario_id, empresa)
+//   FOREIGN KEY funcionarios_beneficios_empresas_funcionario_id_fkey: FOREIGN KEY (funcionario_id) REFERENCES funcionarios_novo(id) ON DELETE CASCADE
+//   PRIMARY KEY funcionarios_beneficios_empresas_pkey: PRIMARY KEY (id)
+// Table: funcionarios_detalhes
+//   FOREIGN KEY funcionarios_detalhes_funcionario_id_fkey: FOREIGN KEY (funcionario_id) REFERENCES funcionarios_novo(id) ON DELETE CASCADE
+//   UNIQUE funcionarios_detalhes_funcionario_id_key: UNIQUE (funcionario_id)
+//   PRIMARY KEY funcionarios_detalhes_pkey: PRIMARY KEY (id)
+// Table: funcionarios_financeiro
+//   FOREIGN KEY funcionarios_financeiro_funcionario_id_fkey: FOREIGN KEY (funcionario_id) REFERENCES funcionarios_novo(id) ON DELETE CASCADE
+//   UNIQUE funcionarios_financeiro_funcionario_id_key: UNIQUE (funcionario_id)
+//   PRIMARY KEY funcionarios_financeiro_pkey: PRIMARY KEY (id)
+// Table: funcionarios_novo
+//   PRIMARY KEY funcionarios_novo_pkey: PRIMARY KEY (id)
 // Table: marcas
 //   UNIQUE marcas_codigo_legado_key: UNIQUE (codigo_legado)
 //   UNIQUE marcas_nome_key: UNIQUE (nome)
@@ -5861,6 +5973,7 @@ export const Constants = {
 //   FOREIGN KEY transacoes_conta_id_fkey: FOREIGN KEY (conta_id) REFERENCES contas_bancarias(id) ON DELETE RESTRICT
 //   FOREIGN KEY transacoes_created_by_fkey: FOREIGN KEY (created_by) REFERENCES usuarios(id) ON DELETE SET NULL
 //   FOREIGN KEY transacoes_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE RESTRICT
+//   FOREIGN KEY transacoes_funcionario_id_fkey: FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
 //   FOREIGN KEY transacoes_negociacao_id_fkey: FOREIGN KEY (negociacao_id) REFERENCES negociacoes(id)
 //   FOREIGN KEY transacoes_parcela_id_fkey: FOREIGN KEY (parcela_id) REFERENCES projeto_parcelas(id) ON DELETE SET NULL
 //   PRIMARY KEY transacoes_pkey: PRIMARY KEY (id)
@@ -6243,6 +6356,16 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role, 'operador'::usuario_role])))))
 //   Policy "vendas_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
+
+// --- WARNING: TABLES WITH RLS ENABLED BUT NO POLICIES ---
+// These tables have Row Level Security enabled but NO policies defined.
+// This means ALL queries (SELECT, INSERT, UPDATE, DELETE) will return ZERO rows
+// for non-superuser roles (including the anon and authenticated roles used by the app).
+// You MUST create RLS policies for these tables to allow data access.
+//   - funcionarios_beneficios_empresas
+//   - funcionarios_detalhes
+//   - funcionarios_financeiro
+//   - funcionarios_novo
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION admin_update_user_password(uuid, text)
@@ -7222,7 +7345,6 @@ export const Constants = {
 //   CREATE INDEX idx_folha_mes_ano ON public.folha_pagamento USING btree (ano DESC, mes DESC)
 // Table: funcionarios
 //   CREATE UNIQUE INDEX funcionarios_codigo_legado_key ON public.funcionarios USING btree (codigo_legado)
-//   CREATE UNIQUE INDEX funcionarios_email_key ON public.funcionarios USING btree (email)
 //   CREATE UNIQUE INDEX funcionarios_nm_connect_key ON public.funcionarios USING btree (nm_connect)
 //   CREATE INDEX idx_func_departamento ON public.funcionarios USING btree (departamento_id)
 //   CREATE INDEX idx_func_status ON public.funcionarios USING btree (status)
@@ -7230,6 +7352,18 @@ export const Constants = {
 //   CREATE INDEX idx_funcionarios_codigo_legado ON public.funcionarios USING btree (codigo_legado)
 //   CREATE INDEX idx_funcionarios_empresa_id ON public.funcionarios USING btree (empresa_id)
 //   CREATE INDEX idx_funcionarios_nm_connect ON public.funcionarios USING btree (nm_connect)
+// Table: funcionarios_beneficios_empresas
+//   CREATE UNIQUE INDEX funcionarios_beneficios_empresas_funcionario_id_empresa_key ON public.funcionarios_beneficios_empresas USING btree (funcionario_id, empresa)
+//   CREATE INDEX idx_funcionarios_beneficios_empresa ON public.funcionarios_beneficios_empresas USING btree (empresa)
+//   CREATE INDEX idx_funcionarios_beneficios_func_id ON public.funcionarios_beneficios_empresas USING btree (funcionario_id)
+// Table: funcionarios_detalhes
+//   CREATE UNIQUE INDEX funcionarios_detalhes_funcionario_id_key ON public.funcionarios_detalhes USING btree (funcionario_id)
+//   CREATE INDEX idx_funcionarios_detalhes_cpf ON public.funcionarios_detalhes USING btree (cpf)
+// Table: funcionarios_financeiro
+//   CREATE UNIQUE INDEX funcionarios_financeiro_funcionario_id_key ON public.funcionarios_financeiro USING btree (funcionario_id)
+//   CREATE INDEX idx_funcionarios_financeiro_func_id ON public.funcionarios_financeiro USING btree (funcionario_id)
+// Table: funcionarios_novo
+//   CREATE INDEX idx_funcionarios_ativo ON public.funcionarios_novo USING btree (ativo)
 // Table: marcas
 //   CREATE UNIQUE INDEX marcas_codigo_legado_key ON public.marcas USING btree (codigo_legado)
 //   CREATE UNIQUE INDEX marcas_nome_key ON public.marcas USING btree (nome)
@@ -7338,6 +7472,7 @@ export const Constants = {
 //   CREATE INDEX idx_sync_history_data ON public.sync_history USING btree (created_at DESC)
 // Table: transacoes
 //   CREATE INDEX idx_tr_dt_vencimento ON public.transacoes USING btree (dt_vencimento)
+//   CREATE INDEX idx_tr_funcionario_id ON public.transacoes USING btree (funcionario_id)
 //   CREATE INDEX idx_tr_negociacao_id ON public.transacoes USING btree (negociacao_id)
 //   CREATE INDEX idx_tr_status_pago ON public.transacoes USING btree (status_pago)
 //   CREATE INDEX idx_tr_tipo_pagamento ON public.transacoes USING btree (tipo_pagamento)

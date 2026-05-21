@@ -15,18 +15,7 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
     currency: 'BRL',
   }).format(part.valor_revenda || 0)
 
-  // Extrair nome da luminária
-  const extractName = (desc: string) => {
-    if (!desc) return 'Peça'
-    const match = desc.match(/^(?:IS\s*-\s*)?([A-Z0-9\s]+?)\s+(?:LUM|LED|MINI|LUMIN)/i)
-    if (match && match[1]) {
-      return match[1].trim()
-    }
-    const words = desc.split(' ')
-    return words.slice(0, 2).join(' ')
-  }
-
-  const lampName = extractName(part.descricao)
+  const lampName = part.baseName || part.descricao.split(' ')[0] || 'Peça'
 
   // Imagem de referência ou fallback
   const imageUrl =
@@ -34,8 +23,8 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
     `https://img.usecurling.com/p/400/400?q=${encodeURIComponent(lampName + ' lamp')}&color=orange`
 
   return (
-    <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-border/50">
-      <div className="relative w-full pt-[80%] bg-muted/20 overflow-hidden">
+    <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-orange-200/50 hover:border-orange-500/30">
+      <div className="relative w-full pt-[80%] bg-orange-50/50 overflow-hidden">
         <img
           src={imageUrl}
           alt={lampName}
@@ -50,10 +39,17 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
           </Badge>
           {part.disponivel !== undefined && (
             <Badge
-              variant={part.disponivel > 0 ? 'default' : 'destructive'}
-              className="text-xs shadow-sm opacity-90 backdrop-blur-sm"
+              className={`text-xs shadow-sm opacity-90 backdrop-blur-sm border-none ${part.disponivel > 0 ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-destructive text-destructive-foreground'}`}
             >
-              {part.disponivel > 0 ? `${part.disponivel} em estoque` : 'Sem estoque'}
+              {part.disponivel > 0 ? `${part.disponivel} disponível` : 'Sem estoque'}
+            </Badge>
+          )}
+          {part.estoque !== undefined && (
+            <Badge
+              variant="outline"
+              className="text-xs shadow-sm opacity-90 backdrop-blur-sm bg-background/80"
+            >
+              Estoque total: {part.estoque}
             </Badge>
           )}
         </div>
@@ -70,12 +66,11 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
         <p className="text-sm text-muted-foreground line-clamp-2" title={part.descricao}>
           {part.descricao}
         </p>
-        <p className="text-2xl font-bold text-primary mt-auto pt-3">{formattedPrice}</p>
+        <p className="text-2xl font-bold text-orange-600 mt-auto pt-3">{formattedPrice}</p>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-0">
         <Button
-          variant="default"
-          className="w-full shadow-sm transition-transform active:scale-95"
+          className="w-full shadow-sm transition-transform active:scale-95 bg-orange-500 hover:bg-orange-600 text-white"
           onClick={onAddBudget}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
