@@ -6,21 +6,26 @@ import { Button } from '@/components/ui/button'
 import { AlertCircle, PackageSearch } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { QuantityModal } from '@/components/QuantityModal'
-import { Part } from '@/lib/api'
+import { PartVariant } from '@/lib/api'
 
 export default function Index() {
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q')?.toLowerCase() || ''
   const { data, loading, error, refetch } = useParts()
-  const [selectedPart, setSelectedPart] = useState<Part | null>(null)
+  const [selectedVariant, setSelectedVariant] = useState<PartVariant | null>(null)
 
   const filteredData = useMemo(() => {
     if (!query) return data
-    return data.filter(
-      (part) =>
-        (part.referencia && part.referencia.toLowerCase().includes(query)) ||
-        (part.descricao && part.descricao.toLowerCase().includes(query)),
-    )
+    return data.filter((group) => {
+      return (
+        group.baseReference.toLowerCase().includes(query) ||
+        group.name.toLowerCase().includes(query) ||
+        group.variants.some(
+          (v) =>
+            v.referencia.toLowerCase().includes(query) || v.descricao.toLowerCase().includes(query),
+        )
+      )
+    })
   }, [data, query])
 
   if (loading) {
@@ -83,21 +88,21 @@ export default function Index() {
   return (
     <div className="animate-fade-in">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredData.map((part, i) => (
+        {filteredData.map((group, i) => (
           <div
-            key={part.id}
+            key={group.baseReference}
             className="animate-fade-in-up"
             style={{ animationDelay: `${i * 50}ms` }}
           >
-            <PartCard part={part} onAddBudget={() => setSelectedPart(part)} />
+            <PartCard group={group} onAddBudget={(variant) => setSelectedVariant(variant)} />
           </div>
         ))}
       </div>
 
       <QuantityModal
-        part={selectedPart}
-        isOpen={!!selectedPart}
-        onClose={() => setSelectedPart(null)}
+        part={selectedVariant as any}
+        isOpen={!!selectedVariant}
+        onClose={() => setSelectedVariant(null)}
       />
     </div>
   )

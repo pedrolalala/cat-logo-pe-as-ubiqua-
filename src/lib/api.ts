@@ -1,22 +1,50 @@
 import { supabase } from '@/lib/supabase/client'
 
-export interface Part {
+export interface PartVariant {
   id: number
   referencia: string
   descricao: string
   valor_revenda: number
   disponivel: number
-  estoque?: number
-  imagem_catalogo_url?: string | null
+  estoque: number
+  imagem_catalogo_url: string | null
+  cor: string | null
+  empresa_id: string | null
   baseName?: string
+}
+
+export interface PartGroup {
+  baseReference: string
+  name: string
+  variants: PartVariant[]
+}
+
+export interface QuoteData {
+  id: string
+  numero_orcamento?: string
+  valor_total: number
+  observacoes: string
+  items: any[]
 }
 
 export async function saveClienteInfo(data: {
   nome: string
   email: string
   telefone: string
-  data_nascimento: string
+  cpf_cnpj: string
+  data_nascimento?: string
 }): Promise<{ id: string }> {
+  const { data: existing } = await supabase
+    .from('informacoes_cliente_ubiqua')
+    .select('id')
+    .eq('email', data.email)
+    .maybeSingle()
+
+  if (existing) {
+    await supabase.from('informacoes_cliente_ubiqua').update(data).eq('id', existing.id)
+    return existing
+  }
+
   const { data: inserted, error } = await supabase
     .from('informacoes_cliente_ubiqua')
     .insert(data)
@@ -31,28 +59,22 @@ export async function saveClienteInfo(data: {
   return inserted
 }
 
-export async function saveQuoteToSupabase(quoteData: any): Promise<any> {
-  const { data: empresa } = await supabase.from('empresas').select('id').limit(1).single()
+export async function saveQuoteToSupabase(quoteData: any): Promise<QuoteData> {
+  let cliente_id = quoteData.informacoes_cliente_id
 
-  if (!empresa) {
-    throw new Error('Nenhuma empresa encontrada para associar ao orçamento.')
-  }
-
-  let observacoesFinal = quoteData.observacoes || ''
-  if (quoteData.nome_cliente) {
-    observacoesFinal = `Lead (Website): ${quoteData.nome_cliente}\n\n${observacoesFinal}`
+  if (!cliente_id) {
+    throw new Error('Cliente ID é obrigatório para gerar o orçamento.')
   }
 
   const { data: orcamento, error: orcError } = await supabase
-    .from('orcamentos')
+    .from('orcamentos_revenda_ubiqua')
     .insert({
-      empresa_id: empresa.id,
-      observacoes: observacoesFinal,
+      cliente_id: cliente_id,
+      valor_subtotal: quoteData.valor_total,
       valor_total: quoteData.valor_total,
-      status: 'Rascunho',
-      data_emissao: new Date().toISOString(),
-      informacoes_cliente_id: quoteData.informacoes_cliente_id || null,
-    } as any)
+      status: 'rascunho',
+      observacoes: quoteData.observacoes,
+    })
     .select()
     .single()
 
@@ -62,15 +84,20 @@ export async function saveQuoteToSupabase(quoteData: any): Promise<any> {
   }
 
   if (quoteData.items && quoteData.items.length > 0) {
-    const itensToInsert = quoteData.items.map((item: any) => ({
+    const itensToInsert = quoteData.items.map((item: any, idx: number) => ({
       orcamento_id: orcamento.id,
-      descricao: item.descricao,
+      produto_id: item.id, // ID from revenda_ubiqua
       quantidade: item.quantity,
-      preco_unitario: item.valor_revenda,
-      custom_id: item.referencia,
+      valor_unitario: item.valor_revenda,
+      valor_total: item.valor_revenda * item.quantity,
+      referencia_snapshot: item.referencia,
+      descricao_snapshot: item.descricao,
+      ordem: idx,
     }))
 
-    const { error: itemsError } = await supabase.from('orcamento_itens').insert(itensToInsert)
+    const { error: itemsError } = await supabase
+      .from('itens_orcamento_ubiqua')
+      .insert(itensToInsert)
 
     if (itemsError) {
       console.error('Error saving orcamento_itens:', itemsError)
@@ -125,10 +152,18 @@ const extractBaseName = (desc: string) => {
   return words.slice(0, 2).join(' ')
 }
 
-export async function fetchParts(): Promise<Part[]> {
+export async function fetchParts(): Promise<PartGroup[]> {
+  const { data: empresas } = await supabase.from('empresas').select('id, nome')
+  const islight = empresas?.find((e) => e.nome.toLowerCase().includes('islight'))?.id
+  const manoella = empresas?.find(
+    (e) => e.nome.toLowerCase().includes('manoella') || e.nome.toLowerCase().includes('lucenera'),
+  )?.id
+
   const { data, error } = await supabase
     .from('revenda_ubiqua')
-    .select('id, referencia, descricao, valor_revenda, disponivel, estoque, imagem_catalogo_url')
+    .select(
+      'id, referencia, descricao, valor_revenda, disponivel, estoque, imagem_catalogo_url, cor, empresa_id',
+    )
     .order('referencia', { ascending: true })
 
   if (error) {
@@ -136,32 +171,35 @@ export async function fetchParts(): Promise<Part[]> {
     return []
   }
 
-  const grouped = new Map<string, Part>()
+  const grouped = new Map<string, PartGroup>()
 
   for (const part of data || []) {
-    const baseName = extractBaseName(part.descricao)
+    const baseReference = part.referencia.replace(/-IS$/i, '').trim()
+    const name = extractBaseName(part.descricao)
 
-    if (grouped.has(baseName)) {
-      const existing = grouped.get(baseName)!
-      existing.disponivel += part.disponivel || 0
-      existing.estoque = (existing.estoque || 0) + (part.estoque || 0)
-      if (
-        part.valor_revenda > 0 &&
-        (existing.valor_revenda === 0 || part.valor_revenda < existing.valor_revenda)
-      ) {
-        existing.valor_revenda = part.valor_revenda
-      }
-    } else {
-      grouped.set(baseName, {
-        ...part,
-        estoque: part.estoque || 0,
-        disponivel: part.disponivel || 0,
-        baseName,
+    let empId = part.empresa_id
+    if (!empId) {
+      empId = part.referencia.toUpperCase().endsWith('-IS') ? islight : manoella
+    }
+
+    const variant: PartVariant = {
+      ...part,
+      empresa_id: empId || null,
+      baseName: name,
+      disponivel: part.disponivel || 0,
+      estoque: part.estoque || 0,
+    }
+
+    if (!grouped.has(baseReference)) {
+      grouped.set(baseReference, {
+        baseReference,
+        name,
+        variants: [variant],
       })
+    } else {
+      grouped.get(baseReference)!.variants.push(variant)
     }
   }
 
-  return Array.from(grouped.values()).sort((a, b) =>
-    (a.baseName || '').localeCompare(b.baseName || ''),
-  )
+  return Array.from(grouped.values()).sort((a, b) => a.baseReference.localeCompare(b.baseReference))
 }

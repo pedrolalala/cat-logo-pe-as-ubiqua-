@@ -89,15 +89,13 @@ Deno.serve(async (req: Request) => {
       if (!id) throw new Error('ID do orçamento não fornecido.')
 
       const { data: budget, error: budgetError } = await supabase
-        .from('orcamentos')
+        .from('orcamentos_revenda_ubiqua')
         .select(`
           *,
-          empresa:empresas(nome, razao_social, logradouro, numero, bairro, cidade, estado, cep, cnpj),
-          cliente:contatos!orcamentos_cliente_id_fkey(nome, endereco, bairro, cidade, estado, cep, telefone, celular, cpf_cnpj),
-          arquiteto:contatos!orcamentos_arquiteto_id_fkey(nome),
-          itens:orcamento_itens(
-            id, produto_id, quantidade, preco_unitario, desconto, custom_id, item_pai_id, descricao,
-            produto:produtos(nome, codigo_produto, codigo_legado, referencia, unidade)
+          cliente:informacoes_cliente_ubiqua!orcamentos_revenda_ubiqua_cliente_id_fkey(nome, email, telefone, cpf_cnpj, data_nascimento),
+          itens:itens_orcamento_ubiqua(
+            id, produto_id, quantidade, valor_unitario, valor_total, desconto_item, referencia_snapshot, descricao_snapshot, observacao_item,
+            produto:revenda_ubiqua(referencia, descricao, cod_produto, empresa:empresas(nome, razao_social, logradouro, numero, bairro, cidade, estado, cep, cnpj))
           )
         `)
         .eq('id', id)
@@ -128,7 +126,6 @@ Deno.serve(async (req: Request) => {
             image = await pdfDoc.embedPng(imageBytes)
           }
 
-          // Container relative centering: logo is centered inside a 140px wide box on the left.
           const scale = Math.min(maxLogoWidth / image.width, maxLogoHeight / image.height)
           const imgWidth = image.width * scale
           const imgHeight = image.height * scale
@@ -144,17 +141,17 @@ Deno.serve(async (req: Request) => {
             height: imgHeight,
           })
 
-          headerTextX = containerX + maxLogoWidth + 20 // Place text to the right of the logo container
-          logoBottomY = height - 40 // Text top aligns with logo container top
+          headerTextX = containerX + maxLogoWidth + 20
+          logoBottomY = height - 40
         } catch (e) {
           console.error('Error embedding logo:', e)
         }
       }
 
-      // Header Text using Empresa Data
-      const empresa = budget.empresa || {}
-      const empresaNomeLogo = 'Luce Nera'
-      const empresaNomeAssinatura = 'Lucenera'
+      const firstItem = budget.itens?.[0]
+      const empresa = firstItem?.produto?.empresa || {}
+      const empresaNomeLogo = empresa.nome || 'Luce Nera'
+      const empresaNomeAssinatura = empresa.nome || 'Lucenera'
       const empresaRazao = empresa.razao_social || 'Manoella Zauith Leite Lopes'
       const empresaEnd = `${empresa.cep || '14.025-270'} ${empresa.logradouro || 'Rua Ayrton Roxo'} ${empresa.numero || '867'}`
       const empresaCidade = `${empresa.bairro || 'Alto Da Boa Vista'}, ${empresa.cidade || 'Ribeirao Preto'}/${empresa.estado || 'SP'}`
@@ -166,7 +163,6 @@ Deno.serve(async (req: Request) => {
       page.drawText(empresaCidade, { x: headerTextX, y: textY - 39, size: 9, font })
       page.drawText('(16) 3442 - 3545', { x: headerTextX, y: textY - 51, size: 9, font })
 
-      // Approval
       page.drawText('1 de 1', { x: width - 60, y: textY, size: 9, font: boldFont })
       page.drawLine({
         start: { x: width - 200, y: textY - 20 },
@@ -196,16 +192,16 @@ Deno.serve(async (req: Request) => {
       const projName = budget.cliente?.nome || 'CLIENTE NÃO INFORMADO'
       page.drawText(projName.toUpperCase(), { x: 40, y: y - 18, size: 13, font: boldFont })
 
-      page.drawText(`CEP: ${budget.cliente?.cep || '-'}`, { x: 40, y: y - 35, size: 9, font })
-      page.drawText(`TEL: ${budget.cliente?.telefone || budget.cliente?.celular || '-'}`, {
+      page.drawText(`CPF/CNPJ: ${budget.cliente?.cpf_cnpj || '-'}`, {
         x: 40,
-        y: y - 47,
+        y: y - 35,
         size: 9,
         font,
       })
+      page.drawText(`TEL: ${budget.cliente?.telefone || '-'}`, { x: 40, y: y - 47, size: 9, font })
 
       page.drawText('Orçamento', { x: width - 120, y, size: 11, font })
-      page.drawText(`#${budget.numero || budget.id.split('-')[0].toUpperCase()}`, {
+      page.drawText(`${budget.numero_orcamento || budget.id.split('-')[0].toUpperCase()}`, {
         x: width - 120,
         y: y - 18,
         size: 13,
@@ -214,33 +210,19 @@ Deno.serve(async (req: Request) => {
 
       y -= 75
 
-      // Vendedor / Arquiteto
       page.drawText('Vendedor', { x: 40, y, size: 9, font })
-      page.drawText('Arquiteto Externo', { x: 200, y, size: 9, font })
 
-      let vendedorNome = 'Não informado'
-      if (budget.vendedor_id) {
-        const { data: v } = await supabase
-          .from('usuarios')
-          .select('nome')
-          .eq('id', budget.vendedor_id)
-          .single()
-        if (v) vendedorNome = v.nome
+      let vendedorNome = 'Equipe Comercial'
+      if (budget.created_by) {
+        vendedorNome = budget.created_by
       }
 
       page.drawText(vendedorNome, { x: 40, y: y - 12, size: 9, font: boldFont })
-      page.drawText(budget.arquiteto?.nome || 'Não informado', {
-        x: 200,
-        y: y - 12,
-        size: 9,
-        font: boldFont,
-      })
 
       y -= 30
 
-      // Headers
-      const headersList = ['ID', 'Código', 'Descrição', 'Qtd.', 'Vl. Unit.', 'Subtotal']
-      const xOffsets = [40, 70, 130, 390, 430, 490]
+      const headersList = ['Código', 'Descrição', 'Qtd.', 'Vl. Unit.', 'Subtotal']
+      const xOffsets = [40, 90, 390, 430, 490]
 
       headersList.forEach((h, i) => {
         page.drawText(h, { x: xOffsets[i], y, size: 9, font: boldFont })
@@ -252,51 +234,30 @@ Deno.serve(async (req: Request) => {
       let subtotal = 0
 
       const items = (budget.itens || []).sort((a: any, b: any) => {
-        const idA = a.custom_id || ''
-        const idB = b.custom_id || ''
-        if (idA === idB) {
-          return (a.created_at || '').localeCompare(b.created_at || '')
-        }
-        return idA.localeCompare(idB)
+        return (a.ordem || 0) - (b.ordem || 0)
       })
-
-      let currentCustomId: string | null = null
 
       items.forEach((item: any) => {
         if (y < 60) {
           page = pdfDoc.addPage()
           y = height - 50
         }
-        const isAccessory = item.custom_id && item.custom_id === currentCustomId
-        currentCustomId = item.custom_id || null
 
-        const cod = isAccessory ? '' : item.custom_id || '-'
-        const produtoCod = item.produto?.codigo_legado || item.produto?.codigo_produto || '-'
-        let desc = String(item.produto?.nome || item.descricao || 'Produto sem nome').substring(
-          0,
-          55,
-        )
-        if (isAccessory) desc = `  -> ${desc}`
+        const cod = item.referencia_snapshot || item.produto?.referencia || '-'
+        let desc = String(
+          item.descricao_snapshot || item.produto?.descricao || 'Produto sem nome',
+        ).substring(0, 55)
 
         const qtd = String(item.quantidade)
-        const preco = Number(item.preco_unitario)
-        const descPerc = Math.round(Number(item.desconto || 0))
+        const preco = Number(item.valor_unitario)
 
-        const gross = Number(item.quantidade) * preco
-        const finalVal = gross * (1 - descPerc / 100)
+        const finalVal = Number(item.valor_total || preco * item.quantidade)
 
         subtotal += finalVal
 
         page.drawText(cod, { x: xOffsets[0], y, size: 8, font: boldFont })
-        page.drawText(String(produtoCod), { x: xOffsets[1], y, size: 8, font })
-        page.drawText(desc, {
-          x: xOffsets[2],
-          y,
-          size: 8,
-          font,
-          color: isAccessory ? rgb(0.3, 0.3, 0.3) : rgb(0, 0, 0),
-        })
-        page.drawText(qtd, { x: xOffsets[3], y, size: 8, font })
+        page.drawText(desc, { x: xOffsets[1], y, size: 8, font })
+        page.drawText(qtd, { x: xOffsets[2], y, size: 8, font })
 
         const fmtPreco = new Intl.NumberFormat('pt-BR', {
           style: 'currency',
@@ -306,17 +267,17 @@ Deno.serve(async (req: Request) => {
           style: 'currency',
           currency: 'BRL',
         }).format(finalVal)
-        page.drawText(fmtPreco, { x: xOffsets[4], y, size: 8, font })
-        page.drawText(fmtFinalVal, { x: xOffsets[5], y, size: 8, font })
+        page.drawText(fmtPreco, { x: xOffsets[3], y, size: 8, font })
+        page.drawText(fmtFinalVal, { x: xOffsets[4], y, size: 8, font })
 
         y -= 15
       })
 
       y -= 5
 
-      const globalDescPerc = Number(budget.desconto_global || 0)
-      const globalDesc = subtotal * (globalDescPerc / 100)
-      const finalTotal = subtotal - globalDesc
+      const globalDescPerc = Number(budget.desconto_percentual || 0)
+      const globalDesc = Number(budget.valor_desconto || 0)
+      const finalTotal = Number(budget.valor_total || subtotal - globalDesc)
 
       if (y < 200) {
         page = pdfDoc.addPage()
@@ -371,20 +332,9 @@ Deno.serve(async (req: Request) => {
       })
 
       y -= 80
-      page.drawText('Forma de Pagamento:', { x: width - 250, y, size: 8, font })
+      page.drawText('Condições de Pagamento:', { x: width - 250, y, size: 8, font })
 
-      const formatPaymentMethod = (method: string) => {
-        if (!method) return 'Dinheiro'
-        const map: Record<string, string> = {
-          pix: 'Pix',
-          cartao: 'Cartão',
-          boleto: 'Boleto',
-          dinheiro: 'Dinheiro',
-        }
-        return map[method.toLowerCase()] || method
-      }
-
-      page.drawText(formatPaymentMethod(budget.forma_pagamento || budget.condicoes_pagamento), {
+      page.drawText(budget.condicoes_pagamento || 'A Combinar', {
         x: width - 250,
         y: y - 12,
         size: 9,
@@ -400,13 +350,13 @@ Deno.serve(async (req: Request) => {
       })
       y -= 15
 
-      const validadeDate = budget.validade
-        ? new Date(budget.validade)
-        : new Date(new Date(budget.data_emissao || new Date()).getTime() + 10 * 24 * 60 * 60 * 1000)
+      const validadeDate = budget.data_validade
+        ? new Date(budget.data_validade)
+        : new Date(new Date(budget.created_at || new Date()).getTime() + 10 * 24 * 60 * 60 * 1000)
       const validadeStr = validadeDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })
 
       const obsLines = [
-        `1- Este orçamento tem validade de 10 dias (${validadeStr}).`,
+        `1- Este orçamento tem validade até ${validadeStr}.`,
         '2- A LuceNera se reserva no direito de não aceitar trocas e devoluções, de acordo com o Código de Defesa do Consumidor.',
         '3- O prazo de entrega padrão dos materiais é de 30 dias, a partir da aprovação das fichas técnicas.',
         '    Pelos materiais especiais, prazo a consultar.',

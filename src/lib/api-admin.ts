@@ -1,17 +1,19 @@
 import { supabase } from '@/lib/supabase/client'
 
 export interface QuoteItem {
-  part_id: string
-  referencia: string
-  descricao?: string
+  produto_id?: number
+  referencia_snapshot?: string
+  descricao_snapshot?: string
   quantidade: number
-  preco_unitario: number
-  subtotal: number
+  valor_unitario: number
+  valor_total: number
 }
 
 export interface Quote {
   id: string
+  numero_orcamento?: string
   empresa?: string
+  faturamento?: string
   created_at?: string
   data_criacao?: string
   valor_total: number
@@ -131,44 +133,60 @@ export async function uploadCatalogImageExact(file: File, referencia: string): P
 
 export async function fetchQuotes(): Promise<Quote[]> {
   const { data, error } = await supabase
-    .from('quotes')
-    .select('*')
+    .from('orcamentos_revenda_ubiqua')
+    .select(`
+      id,
+      numero_orcamento,
+      created_at,
+      valor_total,
+      status,
+      cliente:informacoes_cliente_ubiqua(nome),
+      itens:itens_orcamento_ubiqua(
+        produto:revenda_ubiqua(
+          empresa:empresas(nome)
+        )
+      )
+    `)
     .order('created_at', { ascending: false })
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
-  return (data || []) as Quote[]
+  return (data || []).map((q: any) => {
+    const companies = new Set<string>()
+    if (Array.isArray(q.itens)) {
+      q.itens.forEach((i: any) => {
+        const empName = i.produto?.empresa?.nome
+        if (empName) companies.add(empName)
+      })
+    }
+    const faturamento = Array.from(companies).join(', ') || 'Não especificado'
+
+    return {
+      id: q.id,
+      numero_orcamento: q.numero_orcamento,
+      empresa: q.cliente?.nome || 'Cliente não informado',
+      faturamento,
+      created_at: q.created_at,
+      data_criacao: q.created_at,
+      valor_total: q.valor_total,
+      status: q.status,
+      items: [],
+    } as Quote
+  })
 }
 
 export async function approvePurchase(quoteId: string) {
   try {
     const { error: updateError } = await supabase
-      .from('quotes')
+      .from('orcamentos_revenda_ubiqua')
       .update({
         status: 'aprovado',
-        data_aprovacao: new Date().toISOString(),
+        aprovado_em: new Date().toISOString(),
       })
       .eq('id', quoteId)
 
-    if (updateError) {
-      throw updateError
-    }
+    if (updateError) throw updateError
 
-    const { data: userData } = await supabase.auth.getUser()
-
-    const { error: historyError } = await supabase.from('quote_history').insert([
-      {
-        quote_id: quoteId,
-        acao: 'aprovado',
-        created_by: userData?.user?.id,
-      },
-    ])
-
-    if (historyError) throw historyError
-
-    // Chama a Edge Function
     const { error: invokeError } = await supabase.functions.invoke('enviar-confirmacao-email', {
       body: {
         quote_id: quoteId,

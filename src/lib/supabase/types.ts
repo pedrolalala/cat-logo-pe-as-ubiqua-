@@ -3012,11 +3012,13 @@ export type Database = {
           cod_fornecedor: number | null
           cod_marca: number | null
           cod_produto: number | null
+          cor: string | null
           created_at: string | null
           desc_marca: string | null
           desc_produto: string | null
           descricao: string | null
           disponivel: number | null
+          empresa_id: string | null
           estoque: number | null
           fonte_planilha1: boolean | null
           fonte_planilha2: boolean | null
@@ -3037,11 +3039,13 @@ export type Database = {
           cod_fornecedor?: number | null
           cod_marca?: number | null
           cod_produto?: number | null
+          cor?: string | null
           created_at?: string | null
           desc_marca?: string | null
           desc_produto?: string | null
           descricao?: string | null
           disponivel?: number | null
+          empresa_id?: string | null
           estoque?: number | null
           fonte_planilha1?: boolean | null
           fonte_planilha2?: boolean | null
@@ -3062,11 +3066,13 @@ export type Database = {
           cod_fornecedor?: number | null
           cod_marca?: number | null
           cod_produto?: number | null
+          cor?: string | null
           created_at?: string | null
           desc_marca?: string | null
           desc_produto?: string | null
           descricao?: string | null
           disponivel?: number | null
+          empresa_id?: string | null
           estoque?: number | null
           fonte_planilha1?: boolean | null
           fonte_planilha2?: boolean | null
@@ -3083,7 +3089,22 @@ export type Database = {
           vl_custo_total_tabela?: number | null
           vl_venda_produto?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'fk_empresa'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'empresas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'fk_empresa'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['empresa_id']
+          },
+        ]
       }
       separacao_itens: {
         Row: {
@@ -5510,6 +5531,8 @@ export const Constants = {
 //   fonte_planilha3: boolean (nullable, default: false)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   updated_at: timestamp with time zone (nullable, default: now())
+//   cor: text (nullable)
+//   empresa_id: uuid (nullable)
 // Table: separacao_itens
 //   id: uuid (not null, default: gen_random_uuid())
 //   separacao_id: uuid (not null)
@@ -6255,6 +6278,7 @@ export const Constants = {
 // Table: quotes
 //   PRIMARY KEY quotes_pkey: PRIMARY KEY (id)
 // Table: revenda_ubiqua
+//   FOREIGN KEY fk_empresa: FOREIGN KEY (empresa_id) REFERENCES empresas(id)
 //   PRIMARY KEY revenda_ubiqua_pkey: PRIMARY KEY (id)
 // Table: separacao_itens
 //   PRIMARY KEY separacao_itens_pkey: PRIMARY KEY (id)
@@ -6609,13 +6633,15 @@ export const Constants = {
 //     USING: true
 //     WITH CHECK: true
 // Table: revenda_ubiqua
-//   Policy "revenda_ubiqua_insert_policy" (INSERT, PERMISSIVE) roles={public}
-//     WITH CHECK: true
-//   Policy "revenda_ubiqua_select_policy" (SELECT, PERMISSIVE) roles={public}
+//   Policy "revenda_ubiqua_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
+//   Policy "revenda_ubiqua_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
+//   Policy "revenda_ubiqua_select" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
-//   Policy "revenda_ubiqua_update_policy" (UPDATE, PERMISSIVE) roles={public}
-//     USING: true
-//     WITH CHECK: true
+//   Policy "revenda_ubiqua_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
+//     WITH CHECK: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 // Table: separacao_itens
 //   Policy "sep_itens_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))

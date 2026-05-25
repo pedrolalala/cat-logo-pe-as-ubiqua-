@@ -1,27 +1,32 @@
-import { useState } from 'react'
-import { Part } from '@/lib/api'
+import { useState, useEffect } from 'react'
+import { PartGroup, PartVariant } from '@/lib/api'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ShoppingCart, ImageOff } from 'lucide-react'
+import { ShoppingCart, ImageOff, Building2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface PartCardProps {
-  part: Part
-  onAddBudget: () => void
+  group: PartGroup
+  onAddBudget: (variant: PartVariant) => void
 }
 
-export function PartCard({ part, onAddBudget }: PartCardProps) {
+export function PartCard({ group, onAddBudget }: PartCardProps) {
+  const [selectedVariant, setSelectedVariant] = useState<PartVariant>(group.variants[0])
   const [imageError, setImageError] = useState(false)
+
+  useEffect(() => {
+    setImageError(false)
+  }, [selectedVariant])
 
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(part.valor_revenda || 0)
+  }).format(selectedVariant.valor_revenda || 0)
 
-  const lampName = part.baseName || part.descricao.split(' ')[0] || 'Peça'
+  const lampName = group.name || 'Peça'
 
-  // Dynamic Image Mapping: maps to the storage bucket folder 'catalogos' using the first 6 digits
-  const getSixDigits = (p: Part) => {
+  const getSixDigits = (p: PartVariant) => {
     const codProd = (p as any).cod_produto
     if (codProd) {
       const codStr = String(codProd)
@@ -34,12 +39,25 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
     return null
   }
 
-  const sixDigits = getSixDigits(part)
+  const sixDigits = getSixDigits(selectedVariant)
 
   const storageBaseUrl =
     'https://vcvcwzmbiftcawncibke.supabase.co/storage/v1/object/public/revenda-ubiqua-images/catalogos/'
   const mappedImageUrl =
-    part.imagem_catalogo_url || (sixDigits ? `${storageBaseUrl}${sixDigits}_catalogo.jpg` : null)
+    selectedVariant.imagem_catalogo_url ||
+    (sixDigits ? `${storageBaseUrl}${sixDigits}_catalogo.jpg` : null)
+
+  const companyName = selectedVariant.referencia.toUpperCase().endsWith('-IS')
+    ? 'Islight'
+    : 'Manoella'
+
+  const colorMap: Record<string, string> = {
+    BRANCA: '#FFFFFF',
+    PRETA: '#000000',
+    AREIA: '#D2B48C',
+    'VERDE SÁLVIA': '#77815C',
+    'VERMELHO CHAMA': '#E25822',
+  }
 
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-orange-200/50 hover:border-orange-500/30">
@@ -65,23 +83,21 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
             variant="secondary"
             className="font-mono font-bold text-xs bg-background/90 backdrop-blur-sm text-foreground shadow-sm"
           >
-            {part.referencia}
+            {group.baseReference}
           </Badge>
-          {part.disponivel !== undefined && (
+          {selectedVariant.disponivel !== undefined && (
             <Badge
-              className={`text-xs shadow-sm opacity-90 backdrop-blur-sm border-none ${part.disponivel > 0 ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-destructive text-destructive-foreground'}`}
+              className={`text-xs shadow-sm opacity-90 backdrop-blur-sm border-none ${selectedVariant.disponivel > 0 ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-destructive text-destructive-foreground'}`}
             >
-              {part.disponivel > 0 ? `${part.disponivel} disponível` : 'Sem estoque'}
+              {selectedVariant.disponivel > 0
+                ? `${selectedVariant.disponivel} disponível`
+                : 'Sem estoque'}
             </Badge>
           )}
-          {part.estoque !== undefined && (
-            <Badge
-              variant="outline"
-              className="text-xs shadow-sm opacity-90 backdrop-blur-sm bg-background/80"
-            >
-              Estoque total: {part.estoque}
-            </Badge>
-          )}
+        </div>
+        <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md border shadow-sm">
+          <Building2 className="w-3 h-3 text-muted-foreground" />
+          <span className="text-[10px] font-medium text-foreground">{companyName}</span>
         </div>
       </div>
       <CardHeader className="pb-2 pt-4">
@@ -92,16 +108,43 @@ export function PartCard({ part, onAddBudget }: PartCardProps) {
           {lampName}
         </h3>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-1 pb-4">
-        <p className="text-sm text-muted-foreground line-clamp-2" title={part.descricao}>
-          {part.descricao}
+      <CardContent className="flex-1 flex flex-col gap-3 pb-4">
+        <p className="text-sm text-muted-foreground line-clamp-2" title={selectedVariant.descricao}>
+          {selectedVariant.descricao}
         </p>
-        <p className="text-2xl font-bold text-orange-600 mt-auto pt-3">{formattedPrice}</p>
+
+        {group.variants.length > 1 && (
+          <div className="flex flex-wrap gap-2 mt-auto">
+            {group.variants.map((v) => {
+              const colorName = v.cor?.toUpperCase().trim() || 'PADRÃO'
+              const hex = colorMap[colorName] || '#CCCCCC'
+              return (
+                <button
+                  key={v.id}
+                  className={cn(
+                    'w-6 h-6 rounded-full border-2 transition-all shadow-sm',
+                    selectedVariant.id === v.id
+                      ? 'border-orange-500 scale-110 shadow-md'
+                      : 'border-transparent opacity-80 hover:opacity-100',
+                  )}
+                  style={{ backgroundColor: hex }}
+                  title={v.cor || 'Padrão'}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setSelectedVariant(v)
+                  }}
+                />
+              )
+            })}
+          </div>
+        )}
+
+        <p className="text-2xl font-bold text-orange-600 mt-2">{formattedPrice}</p>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-0">
         <Button
           className="w-full shadow-sm transition-transform active:scale-95 bg-orange-500 hover:bg-orange-600 text-white"
-          onClick={onAddBudget}
+          onClick={() => onAddBudget(selectedVariant)}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
           Adicionar ao Orçamento

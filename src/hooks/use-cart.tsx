@@ -1,16 +1,16 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { Part } from '@/lib/api'
+import { PartVariant } from '@/lib/api'
 
-export interface CartItem extends Part {
+export interface CartItem extends PartVariant {
   quantity: number
 }
 
 interface CartContextType {
   items: CartItem[]
-  addToCart: (part: Part, quantity: number) => void
-  removeFromCart: (partId: string) => void
+  addToCart: (part: PartVariant, quantity: number) => void
+  removeFromCart: (partId: string | number) => void
   clearCart: () => void
-  updateQuantity: (partId: string, quantity: number) => void
+  updateQuantity: (partId: string | number, quantity: number) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -29,7 +29,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('ubiqua_cart', JSON.stringify(items))
   }, [items])
 
-  const addToCart = (part: Part, quantity: number) => {
+  const addToCart = (part: PartVariant, quantity: number) => {
     setItems((current) => {
       const existing = current.find((item) => item.id === part.id)
       if (existing) {
@@ -41,7 +41,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const removeFromCart = (partId: string) => {
+  const removeFromCart = (partId: string | number) => {
     setItems((current) => current.filter((item) => item.id !== partId))
   }
 
@@ -49,7 +49,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([])
   }
 
-  const updateQuantity = (partId: string, quantity: number) => {
+  const updateQuantity = (partId: string | number, quantity: number) => {
     setItems((current) =>
       current.map((item) => (item.id === partId ? { ...item, quantity } : item)),
     )

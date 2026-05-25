@@ -1,6 +1,7 @@
 import { useCart } from '@/hooks/use-cart'
 import { useAuth } from '@/hooks/use-auth'
 import { useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 import {
   Table,
   TableBody,
@@ -44,17 +45,16 @@ export default function NewQuote() {
   const [saveError, setSaveError] = useState(false)
   const [savedQuote, setSavedQuote] = useState<QuoteData | null>(null)
 
-  // PDF / E-mail states
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [emailRecipient, setEmailRecipient] = useState('')
   const [isSendingEmail, setIsSendingEmail] = useState(false)
 
-  // Identificação e Cadastro states
   const [clienteInfo, setClienteInfo] = useState({
     nome: '',
     email: '',
     telefone: '',
+    cpf_cnpj: '',
     data_nascimento: '',
   })
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
@@ -65,7 +65,7 @@ export default function NewQuote() {
     clienteInfo.nome.trim() !== '' &&
     clienteInfo.email.trim() !== '' &&
     clienteInfo.telefone.trim() !== '' &&
-    clienteInfo.data_nascimento.trim() !== ''
+    clienteInfo.cpf_cnpj.trim() !== ''
 
   const totalGeral = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
 
@@ -77,16 +77,40 @@ export default function NewQuote() {
       toast.error('Por favor, preencha todos os campos obrigatórios de identificação.')
       return
     }
-    executeSaveQuote(!user)
+    executeSaveQuote()
   }
 
-  const executeSaveQuote = async (saveLead = false) => {
+  const executeSaveQuote = async () => {
     setIsSaving(true)
     setSaveError(false)
 
     let leadId: string | undefined = undefined
 
-    if (saveLead) {
+    if (user) {
+      try {
+        const { data: existing } = await supabase
+          .from('informacoes_cliente_ubiqua')
+          .select('id')
+          .eq('email', user.email)
+          .maybeSingle()
+
+        if (existing) {
+          leadId = existing.id
+        } else {
+          const { data: inserted } = await supabase
+            .from('informacoes_cliente_ubiqua')
+            .insert({
+              nome: user.user_metadata?.nome || user.email?.split('@')[0] || 'Usuário',
+              email: user.email,
+            })
+            .select('id')
+            .single()
+          if (inserted) leadId = inserted.id
+        }
+      } catch (e) {
+        console.error('Failed to resolve user client info', e)
+      }
+    } else {
       try {
         const lead = await saveClienteInfo(clienteInfo)
         leadId = lead.id
@@ -99,11 +123,12 @@ export default function NewQuote() {
     }
 
     try {
+      if (!leadId) throw new Error('Falha ao identificar o cliente.')
+
       const quoteData = {
         items,
         observacoes,
         valor_total: totalGeral,
-        nome_cliente: user ? undefined : clienteInfo.nome,
         informacoes_cliente_id: leadId,
       }
 
@@ -112,14 +137,9 @@ export default function NewQuote() {
       clearCart()
       toast.success('Orçamento gerado com sucesso!')
     } catch (e) {
+      console.error(e)
       setSaveError(true)
-      if (leadId) {
-        toast.error(
-          'Erro ao salvar o orçamento. Seus dados foram salvos, mas houve um problema com o pedido.',
-        )
-      } else {
-        toast.error('Erro ao processar o orçamento. Verifique os dados e tente novamente.')
-      }
+      toast.error('Erro ao processar o orçamento. Verifique os dados e tente novamente.')
     } finally {
       setIsSaving(false)
     }
@@ -144,7 +164,6 @@ export default function NewQuote() {
     if (!savedQuote) return
     setIsGeneratingPDF(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800))
       await downloadMockPDF(savedQuote)
       toast.success('Documento gerado com sucesso.')
     } catch (error) {
@@ -394,7 +413,14 @@ export default function NewQuote() {
               {items.map((item) => (
                 <TableRow key={item.id} className="group">
                   <TableCell className="font-mono font-medium">{item.referencia}</TableCell>
-                  <TableCell className="font-medium">{item.descricao}</TableCell>
+                  <TableCell className="font-medium">
+                    {item.descricao}
+                    {item.cor && (
+                      <span className="block text-xs text-muted-foreground mt-1">
+                        Cor: {item.cor}
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center">
                       <Input
@@ -468,6 +494,20 @@ export default function NewQuote() {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">
+                      CPF / CNPJ <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      value={clienteInfo.cpf_cnpj}
+                      onChange={(e) =>
+                        setClienteInfo((prev) => ({ ...prev, cpf_cnpj: e.target.value }))
+                      }
+                      placeholder="Ex: 000.000.000-00"
+                      required
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">
                       E-mail <span className="text-destructive">*</span>
                     </Label>
                     <Input
@@ -492,20 +532,6 @@ export default function NewQuote() {
                         setClienteInfo((prev) => ({ ...prev, telefone: e.target.value }))
                       }
                       placeholder="Ex: (11) 99999-9999"
-                      required
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">
-                      Data de Nascimento <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      type="date"
-                      value={clienteInfo.data_nascimento}
-                      onChange={(e) =>
-                        setClienteInfo((prev) => ({ ...prev, data_nascimento: e.target.value }))
-                      }
                       required
                       className="h-8 text-sm"
                     />
