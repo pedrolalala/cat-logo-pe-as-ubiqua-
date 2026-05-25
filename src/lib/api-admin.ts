@@ -7,6 +7,11 @@ export interface QuoteItem {
   quantidade: number
   valor_unitario: number
   valor_total: number
+  referencia?: string
+  descricao?: string
+  preco_unitario?: number
+  subtotal?: number
+  empresa?: string
 }
 
 export interface Quote {
@@ -174,7 +179,26 @@ export async function fetchQuotes(): Promise<Quote[]> {
       data_criacao: q.created_at,
       valor_total: q.valor_total,
       status: q.status,
-      items: [],
+      items: (q.itens || []).map((i: any) => {
+        let empName = i.produto?.empresa?.nome
+        if (!empName) {
+          const ref = i.referencia_snapshot || ''
+          empName = ref.toUpperCase().endsWith('-IS') ? 'Islight' : 'Manoella'
+        }
+        return {
+          produto_id: i.produto_id,
+          referencia_snapshot: i.referencia_snapshot,
+          descricao_snapshot: i.descricao_snapshot,
+          referencia: i.referencia_snapshot || '',
+          descricao: i.descricao_snapshot || '',
+          quantidade: i.quantidade,
+          valor_unitario: i.valor_unitario,
+          valor_total: i.valor_total,
+          preco_unitario: i.valor_unitario,
+          subtotal: i.valor_total,
+          empresa: empName,
+        }
+      }),
     } as Quote
   })
 }

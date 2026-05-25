@@ -71,6 +71,7 @@ export function QuoteDetailsSheet({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Item</TableHead>
+                    <TableHead>Empresa</TableHead>
                     <TableHead className="text-right">Qtd</TableHead>
                     <TableHead className="text-right">Preço</TableHead>
                     <TableHead className="text-right">Subtotal</TableHead>
@@ -80,18 +81,28 @@ export function QuoteDetailsSheet({
                   {quote.items?.map((item, idx) => (
                     <TableRow key={idx}>
                       <TableCell>
-                        <div className="font-medium text-sm">{item.referencia}</div>
-                        {item.descricao && (
-                          <div className="text-xs text-muted-foreground">{item.descricao}</div>
+                        <div className="font-medium text-sm">
+                          {item.referencia || item.referencia_snapshot}
+                        </div>
+                        {(item.descricao || item.descricao_snapshot) && (
+                          <div className="text-xs text-muted-foreground">
+                            {item.descricao || item.descricao_snapshot}
+                          </div>
                         )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {item.empresa || 'Não informada'}
                       </TableCell>
                       <TableCell className="text-right text-sm">{item.quantidade}</TableCell>
                       <TableCell className="text-right text-sm text-muted-foreground">
-                        {formatCurrency(item.preco_unitario || 0)}
+                        {formatCurrency(item.preco_unitario || item.valor_unitario || 0)}
                       </TableCell>
                       <TableCell className="text-right text-sm font-medium">
                         {formatCurrency(
-                          item.quantidade * (item.preco_unitario || 0) || item.subtotal || 0,
+                          item.quantidade * (item.preco_unitario || item.valor_unitario || 0) ||
+                            item.subtotal ||
+                            item.valor_total ||
+                            0,
                         )}
                       </TableCell>
                     </TableRow>

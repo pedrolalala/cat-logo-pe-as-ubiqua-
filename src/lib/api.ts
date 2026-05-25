@@ -17,6 +17,7 @@ export interface PartGroup {
   baseReference: string
   name: string
   variants: PartVariant[]
+  totalAvailable?: number
 }
 
 export interface QuoteData {
@@ -202,6 +203,12 @@ export async function fetchParts(): Promise<PartGroup[]> {
   }
 
   for (const group of grouped.values()) {
+    let totalDisp = 0
+    for (const v of group.variants) {
+      totalDisp += v.disponivel || 0
+    }
+    group.totalAvailable = totalDisp
+
     const colorMap = new Map<string, PartVariant>()
     for (const v of group.variants) {
       const color = v.cor?.toUpperCase().trim() || 'PADRÃO'
