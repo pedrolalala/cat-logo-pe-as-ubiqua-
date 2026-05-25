@@ -30,9 +30,67 @@ export async function checkAdminRole(): Promise<boolean> {
 
     const { data } = await supabase.from('usuarios').select('role').eq('id', user.id).single()
 
-    return data?.role === 'admin'
+    return data?.role === 'admin' || data?.role === 'gerente'
   } catch {
     return false
+  }
+}
+
+export interface CatalogItem {
+  id: number
+  referencia: string
+  descricao: string
+  imagem_catalogo_url: string | null
+}
+
+export async function fetchCatalogItems(search: string = ''): Promise<CatalogItem[]> {
+  let query = supabase
+    .from('revenda_ubiqua')
+    .select('id, referencia, descricao, imagem_catalogo_url')
+    .limit(50)
+  if (search) {
+    query = query.or(`referencia.ilike.%${search}%,descricao.ilike.%${search}%`)
+  }
+  const { data, error } = await query.order('id', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data || []) as CatalogItem[]
+}
+
+export async function uploadCatalogImage(file: File, filePrefix: string): Promise<string> {
+  const ext = file.name.split('.').pop()
+  const fileName = `${filePrefix}_${Date.now()}.${ext}`
+  const filePath = `catalogos/${fileName}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('revenda-ubiqua-images')
+    .upload(filePath, file, {
+      upsert: true,
+      cacheControl: '3600',
+    })
+
+  if (uploadError) {
+    throw uploadError
+  }
+
+  const { data } = supabase.storage.from('revenda-ubiqua-images').getPublicUrl(filePath)
+  return data.publicUrl
+}
+
+export async function updateCatalogImageUrl(id: number, url: string | null) {
+  const { error } = await supabase
+    .from('revenda_ubiqua')
+    .update({
+      imagem_catalogo_url: url,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) {
+    throw error
   }
 }
 

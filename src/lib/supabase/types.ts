@@ -1347,6 +1347,44 @@ export type Database = {
         }
         Relationships: []
       }
+      historico_status_orcamento: {
+        Row: {
+          created_at: string | null
+          id: string
+          observacao: string | null
+          orcamento_id: string
+          status_anterior: string | null
+          status_novo: string
+          usuario: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          observacao?: string | null
+          orcamento_id: string
+          status_anterior?: string | null
+          status_novo: string
+          usuario?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          observacao?: string | null
+          orcamento_id?: string
+          status_anterior?: string | null
+          status_novo?: string
+          usuario?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'historico_status_orcamento_orcamento_id_fkey'
+            columns: ['orcamento_id']
+            isOneToOne: false
+            referencedRelation: 'orcamentos_revenda_ubiqua'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       informacoes_cliente_ubiqua: {
         Row: {
           created_at: string | null
@@ -1373,6 +1411,69 @@ export type Database = {
           telefone?: string | null
         }
         Relationships: []
+      }
+      itens_orcamento_ubiqua: {
+        Row: {
+          created_at: string | null
+          desconto_item: number | null
+          descricao_snapshot: string | null
+          id: string
+          marca_snapshot: string | null
+          observacao_item: string | null
+          orcamento_id: string
+          ordem: number | null
+          produto_id: number
+          quantidade: number
+          referencia_snapshot: string | null
+          valor_total: number | null
+          valor_unitario: number
+        }
+        Insert: {
+          created_at?: string | null
+          desconto_item?: number | null
+          descricao_snapshot?: string | null
+          id?: string
+          marca_snapshot?: string | null
+          observacao_item?: string | null
+          orcamento_id: string
+          ordem?: number | null
+          produto_id: number
+          quantidade: number
+          referencia_snapshot?: string | null
+          valor_total?: number | null
+          valor_unitario: number
+        }
+        Update: {
+          created_at?: string | null
+          desconto_item?: number | null
+          descricao_snapshot?: string | null
+          id?: string
+          marca_snapshot?: string | null
+          observacao_item?: string | null
+          orcamento_id?: string
+          ordem?: number | null
+          produto_id?: number
+          quantidade?: number
+          referencia_snapshot?: string | null
+          valor_total?: number | null
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'itens_orcamento_ubiqua_orcamento_id_fkey'
+            columns: ['orcamento_id']
+            isOneToOne: false
+            referencedRelation: 'orcamentos_revenda_ubiqua'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'itens_orcamento_ubiqua_produto_id_fkey'
+            columns: ['produto_id']
+            isOneToOne: false
+            referencedRelation: 'revenda_ubiqua'
+            referencedColumns: ['id']
+          },
+        ]
       }
       marcas: {
         Row: {
@@ -1769,6 +1870,95 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'vw_transacoes_completas'
             referencedColumns: ['funcionario_id']
+          },
+        ]
+      }
+      orcamentos_revenda_ubiqua: {
+        Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
+          cancelado_em: string | null
+          cliente_id: string
+          condicoes_pagamento: string | null
+          created_at: string | null
+          created_by: string | null
+          data_validade: string
+          desconto_percentual: number | null
+          enviado_em: string | null
+          id: string
+          motivo_cancelamento: string | null
+          motivo_rejeicao: string | null
+          numero_orcamento: string
+          observacoes: string | null
+          prazo_entrega: string | null
+          rejeitado_em: string | null
+          status: string
+          updated_at: string | null
+          updated_by: string | null
+          valor_desconto: number
+          valor_subtotal: number
+          valor_total: number
+          versao: number | null
+        }
+        Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          cancelado_em?: string | null
+          cliente_id: string
+          condicoes_pagamento?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data_validade?: string
+          desconto_percentual?: number | null
+          enviado_em?: string | null
+          id?: string
+          motivo_cancelamento?: string | null
+          motivo_rejeicao?: string | null
+          numero_orcamento: string
+          observacoes?: string | null
+          prazo_entrega?: string | null
+          rejeitado_em?: string | null
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          valor_desconto?: number
+          valor_subtotal?: number
+          valor_total?: number
+          versao?: number | null
+        }
+        Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          cancelado_em?: string | null
+          cliente_id?: string
+          condicoes_pagamento?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data_validade?: string
+          desconto_percentual?: number | null
+          enviado_em?: string | null
+          id?: string
+          motivo_cancelamento?: string | null
+          motivo_rejeicao?: string | null
+          numero_orcamento?: string
+          observacoes?: string | null
+          prazo_entrega?: string | null
+          rejeitado_em?: string | null
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          valor_desconto?: number
+          valor_subtotal?: number
+          valor_total?: number
+          versao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'orcamentos_revenda_ubiqua_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'informacoes_cliente_ubiqua'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -4509,6 +4699,7 @@ export type Database = {
         }
         Returns: string
       }
+      fn_gerar_numero_orcamento: { Args: never; Returns: string }
       get_dashboard_crm_by_closing: {
         Args: { data_final: string; data_inicial: string }
         Returns: {
@@ -5015,6 +5206,14 @@ export const Constants = {
 //   data_admissao: date (nullable)
 //   ativo: boolean (nullable, default: true)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: historico_status_orcamento
+//   id: uuid (not null, default: gen_random_uuid())
+//   orcamento_id: uuid (not null)
+//   status_anterior: text (nullable)
+//   status_novo: text (not null)
+//   usuario: text (nullable)
+//   observacao: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: informacoes_cliente_ubiqua
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -5022,6 +5221,20 @@ export const Constants = {
 //   telefone: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   data_nascimento: date (nullable)
+// Table: itens_orcamento_ubiqua
+//   id: uuid (not null, default: gen_random_uuid())
+//   orcamento_id: uuid (not null)
+//   produto_id: integer (not null)
+//   quantidade: integer (not null)
+//   valor_unitario: numeric (not null)
+//   desconto_item: numeric (nullable, default: 0)
+//   valor_total: numeric (nullable)
+//   observacao_item: text (nullable)
+//   referencia_snapshot: text (nullable)
+//   descricao_snapshot: text (nullable)
+//   marca_snapshot: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   ordem: integer (nullable, default: 0)
 // Table: marcas
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -5071,6 +5284,31 @@ export const Constants = {
 //   desconto_global: numeric (nullable, default: 0)
 //   forma_pagamento: pagamento_forma (nullable)
 //   informacoes_cliente_id: uuid (nullable)
+// Table: orcamentos_revenda_ubiqua
+//   id: uuid (not null, default: gen_random_uuid())
+//   cliente_id: uuid (not null)
+//   numero_orcamento: text (not null)
+//   status: text (not null, default: 'rascunho'::text)
+//   data_validade: date (not null, default: (CURRENT_DATE + '30 days'::interval))
+//   desconto_percentual: numeric (nullable, default: 0)
+//   valor_subtotal: numeric (not null, default: 0)
+//   valor_desconto: numeric (not null, default: 0)
+//   valor_total: numeric (not null, default: 0)
+//   observacoes: text (nullable)
+//   condicoes_pagamento: text (nullable)
+//   prazo_entrega: text (nullable)
+//   enviado_em: timestamp with time zone (nullable)
+//   aprovado_em: timestamp with time zone (nullable)
+//   aprovado_por: text (nullable)
+//   rejeitado_em: timestamp with time zone (nullable)
+//   motivo_rejeicao: text (nullable)
+//   cancelado_em: timestamp with time zone (nullable)
+//   motivo_cancelamento: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
+//   created_by: text (nullable)
+//   updated_by: text (nullable)
+//   versao: integer (nullable, default: 1)
 // Table: pedido_compra
 //   id: uuid (not null, default: gen_random_uuid())
 //   codigo_pedido: integer (not null)
@@ -5905,8 +6143,18 @@ export const Constants = {
 //   PRIMARY KEY funcionarios_financeiro_pkey: PRIMARY KEY (id)
 // Table: funcionarios_novo
 //   PRIMARY KEY funcionarios_novo_pkey: PRIMARY KEY (id)
+// Table: historico_status_orcamento
+//   FOREIGN KEY historico_status_orcamento_orcamento_id_fkey: FOREIGN KEY (orcamento_id) REFERENCES orcamentos_revenda_ubiqua(id) ON DELETE CASCADE
+//   PRIMARY KEY historico_status_orcamento_pkey: PRIMARY KEY (id)
 // Table: informacoes_cliente_ubiqua
 //   PRIMARY KEY informacoes_cliente_ubiqua_pkey: PRIMARY KEY (id)
+// Table: itens_orcamento_ubiqua
+//   CHECK itens_orcamento_ubiqua_desconto_item_check: CHECK ((desconto_item >= (0)::numeric))
+//   FOREIGN KEY itens_orcamento_ubiqua_orcamento_id_fkey: FOREIGN KEY (orcamento_id) REFERENCES orcamentos_revenda_ubiqua(id) ON DELETE CASCADE
+//   PRIMARY KEY itens_orcamento_ubiqua_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY itens_orcamento_ubiqua_produto_id_fkey: FOREIGN KEY (produto_id) REFERENCES revenda_ubiqua(id) ON DELETE RESTRICT
+//   CHECK itens_orcamento_ubiqua_quantidade_check: CHECK ((quantidade > 0))
+//   CHECK itens_orcamento_ubiqua_valor_unitario_check: CHECK ((valor_unitario >= (0)::numeric))
 // Table: marcas
 //   UNIQUE marcas_codigo_legado_key: UNIQUE (codigo_legado)
 //   UNIQUE marcas_nome_key: UNIQUE (nome)
@@ -5931,6 +6179,11 @@ export const Constants = {
 //   FOREIGN KEY orcamentos_informacoes_cliente_id_fkey: FOREIGN KEY (informacoes_cliente_id) REFERENCES informacoes_cliente_ubiqua(id) ON DELETE SET NULL
 //   PRIMARY KEY orcamentos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY orcamentos_vendedor_id_fkey: FOREIGN KEY (vendedor_id) REFERENCES funcionarios(id) ON DELETE SET NULL
+// Table: orcamentos_revenda_ubiqua
+//   FOREIGN KEY orcamentos_revenda_ubiqua_cliente_id_fkey: FOREIGN KEY (cliente_id) REFERENCES informacoes_cliente_ubiqua(id) ON DELETE RESTRICT
+//   CHECK orcamentos_revenda_ubiqua_desconto_percentual_check: CHECK (((desconto_percentual >= (0)::numeric) AND (desconto_percentual <= (100)::numeric)))
+//   PRIMARY KEY orcamentos_revenda_ubiqua_pkey: PRIMARY KEY (id)
+//   CHECK orcamentos_revenda_ubiqua_status_check: CHECK ((status = ANY (ARRAY['rascunho'::text, 'enviado'::text, 'aprovado'::text, 'rejeitado'::text, 'cancelado'::text])))
 // Table: pedido_compra
 //   UNIQUE pedido_compra_codigo_pedido_key: UNIQUE (codigo_pedido)
 //   PRIMARY KEY pedido_compra_pkey: PRIMARY KEY (id)
@@ -6196,8 +6449,6 @@ export const Constants = {
 //   Policy "func_update_admin" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 // Table: informacoes_cliente_ubiqua
-//   Policy "Permitir inserção anon" (INSERT, PERMISSIVE) roles={anon,authenticated}
-//     WITH CHECK: true
 //   Policy "Permitir leitura admin_gerente" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 //   Policy "Permitir leitura anon e auth" (SELECT, PERMISSIVE) roles={anon,authenticated}
@@ -6430,6 +6681,9 @@ export const Constants = {
 //   - funcionarios_detalhes
 //   - funcionarios_financeiro
 //   - funcionarios_novo
+//   - historico_status_orcamento
+//   - itens_orcamento_ubiqua
+//   - orcamentos_revenda_ubiqua
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION admin_update_user_password(uuid, text)
@@ -6541,6 +6795,54 @@ export const Constants = {
 //     ON CONFLICT (id) DO UPDATE SET nome = p_nome, role = p_role;
 //
 //     RETURN v_new_id;
+//   END;
+//   $function$
+//
+// FUNCTION fn_auto_numero_orcamento()
+//   CREATE OR REPLACE FUNCTION public.fn_auto_numero_orcamento()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//       IF NEW.numero_orcamento IS NULL OR NEW.numero_orcamento = '' THEN
+//           NEW.numero_orcamento := fn_gerar_numero_orcamento();
+//       END IF;
+//       RETURN NEW;
+//   END;
+//   $function$
+//
+// FUNCTION fn_gerar_numero_orcamento()
+//   CREATE OR REPLACE FUNCTION public.fn_gerar_numero_orcamento()
+//    RETURNS text
+//    LANGUAGE plpgsql
+//   AS $function$
+//   DECLARE
+//       ano_atual TEXT;
+//       sequencial INTEGER;
+//       numero TEXT;
+//   BEGIN
+//       ano_atual := EXTRACT(YEAR FROM CURRENT_DATE)::TEXT;
+//
+//       -- Busca o próximo número sequencial do ano
+//       SELECT COALESCE(MAX(CAST(SPLIT_PART(numero_orcamento, '-', 3) AS INTEGER)), 0) + 1
+//       INTO sequencial
+//       FROM orcamentos_revenda_ubiqua
+//       WHERE numero_orcamento LIKE 'ORC-' || ano_atual || '-%';
+//
+//       numero := 'ORC-' || ano_atual || '-' || LPAD(sequencial::TEXT, 6, '0');
+//
+//       RETURN numero;
+//   END;
+//   $function$
+//
+// FUNCTION fn_update_orcamento_timestamp()
+//   CREATE OR REPLACE FUNCTION public.fn_update_orcamento_timestamp()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//       NEW.updated_at = NOW();
+//       RETURN NEW;
 //   END;
 //   $function$
 //
@@ -7296,6 +7598,9 @@ export const Constants = {
 //   funcionarios_updated_at: CREATE TRIGGER funcionarios_updated_at BEFORE UPDATE ON public.funcionarios FOR EACH ROW EXECUTE FUNCTION set_updated_at()
 // Table: orcamentos
 //   trigger_set_orcamento_numero: CREATE TRIGGER trigger_set_orcamento_numero BEFORE INSERT ON public.orcamentos FOR EACH ROW EXECUTE FUNCTION set_orcamento_numero()
+// Table: orcamentos_revenda_ubiqua
+//   trigger_auto_numero_orcamento: CREATE TRIGGER trigger_auto_numero_orcamento BEFORE INSERT ON public.orcamentos_revenda_ubiqua FOR EACH ROW EXECUTE FUNCTION fn_auto_numero_orcamento()
+//   trigger_orcamento_updated_at: CREATE TRIGGER trigger_orcamento_updated_at BEFORE UPDATE ON public.orcamentos_revenda_ubiqua FOR EACH ROW EXECUTE FUNCTION fn_update_orcamento_timestamp()
 // Table: produtos
 //   produtos_updated_at: CREATE TRIGGER produtos_updated_at BEFORE UPDATE ON public.produtos FOR EACH ROW EXECUTE FUNCTION set_updated_at()
 //   update_produtos_updated_at: CREATE TRIGGER update_produtos_updated_at BEFORE UPDATE ON public.produtos FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
@@ -7428,6 +7733,13 @@ export const Constants = {
 //   CREATE INDEX idx_funcionarios_financeiro_func_id ON public.funcionarios_financeiro USING btree (funcionario_id)
 // Table: funcionarios_novo
 //   CREATE INDEX idx_funcionarios_ativo ON public.funcionarios_novo USING btree (ativo)
+// Table: historico_status_orcamento
+//   CREATE INDEX idx_historico_data ON public.historico_status_orcamento USING btree (created_at DESC)
+//   CREATE INDEX idx_historico_orcamento ON public.historico_status_orcamento USING btree (orcamento_id)
+// Table: itens_orcamento_ubiqua
+//   CREATE INDEX idx_itens_orcamento ON public.itens_orcamento_ubiqua USING btree (orcamento_id)
+//   CREATE INDEX idx_itens_ordem ON public.itens_orcamento_ubiqua USING btree (orcamento_id, ordem)
+//   CREATE INDEX idx_itens_produto ON public.itens_orcamento_ubiqua USING btree (produto_id)
 // Table: marcas
 //   CREATE UNIQUE INDEX marcas_codigo_legado_key ON public.marcas USING btree (codigo_legado)
 //   CREATE UNIQUE INDEX marcas_nome_key ON public.marcas USING btree (nome)
@@ -7442,6 +7754,12 @@ export const Constants = {
 //   CREATE INDEX idx_neg_projeto_id ON public.negociacoes USING btree (projeto_id)
 //   CREATE INDEX idx_neg_tipo ON public.negociacoes USING btree (tipo)
 //   CREATE UNIQUE INDEX uq_negociacoes_empresa_cod_dup_tipo ON public.negociacoes USING btree (empresa_id, cod_duplicata, tipo)
+// Table: orcamentos_revenda_ubiqua
+//   CREATE INDEX idx_orcamentos_cliente ON public.orcamentos_revenda_ubiqua USING btree (cliente_id)
+//   CREATE INDEX idx_orcamentos_data_criacao ON public.orcamentos_revenda_ubiqua USING btree (created_at DESC)
+//   CREATE INDEX idx_orcamentos_data_validade ON public.orcamentos_revenda_ubiqua USING btree (data_validade)
+//   CREATE INDEX idx_orcamentos_numero ON public.orcamentos_revenda_ubiqua USING btree (numero_orcamento)
+//   CREATE INDEX idx_orcamentos_status ON public.orcamentos_revenda_ubiqua USING btree (status)
 // Table: pedido_compra
 //   CREATE INDEX idx_pedido_compra_codigo ON public.pedido_compra USING btree (codigo_pedido)
 //   CREATE INDEX idx_pedido_compra_data ON public.pedido_compra USING btree (data_emissao)

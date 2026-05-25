@@ -15,6 +15,9 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { QuotesTable } from './QuotesTable'
 import { QuoteDetailsSheet } from './QuoteDetailsSheet'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AdminImages } from './AdminImages'
+import { Package, Receipt } from 'lucide-react'
 
 export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
@@ -90,69 +93,98 @@ export default function AdminPage() {
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestão de Orçamentos</h1>
-          <p className="text-muted-foreground mt-1">Aprove e gerencie solicitações de compra</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={loadQuotes} disabled={loading}>
-          <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
-          Atualizar
-        </Button>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
-        <div className="w-full sm:max-w-xs">
-          <Input
-            placeholder="Buscar por empresa..."
-            value={empresaFilter}
-            onChange={(e) => setEmpresaFilter(e.target.value)}
-            className="bg-background"
-          />
-        </div>
-        <div className="w-full sm:w-48">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="bg-background">
-              <SelectValue placeholder="Filtrar por Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
-              <SelectItem value="aberto">Aberto</SelectItem>
-              <SelectItem value="aprovado">Aprovado</SelectItem>
-            </SelectContent>
-          </Select>
+          <h1 className="text-3xl font-bold tracking-tight">Painel Administrativo</h1>
+          <p className="text-muted-foreground mt-1">Gerencie orçamentos e imagens do catálogo</p>
         </div>
       </div>
 
-      {error ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-destructive/5 rounded-lg border border-destructive/20 text-center space-y-4">
-          <AlertCircle className="w-10 h-10 text-destructive" />
-          <div className="space-y-1">
-            <h3 className="font-medium text-destructive">Falha ao carregar dados</h3>
-            <p className="text-sm text-destructive/80">Ocorreu um erro ao buscar os orçamentos.</p>
+      <Tabs defaultValue="quotes" className="w-full">
+        <TabsList className="grid w-full sm:w-[400px] grid-cols-2 mb-6">
+          <TabsTrigger value="quotes" className="flex items-center gap-2">
+            <Receipt className="w-4 h-4" />
+            Orçamentos
+          </TabsTrigger>
+          <TabsTrigger value="images" className="flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            Imagens (Catálogo)
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="quotes" className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 bg-muted/20 p-4 rounded-lg border border-border/50 flex-1 w-full">
+              <div className="w-full sm:max-w-xs">
+                <Input
+                  placeholder="Buscar por empresa..."
+                  value={empresaFilter}
+                  onChange={(e) => setEmpresaFilter(e.target.value)}
+                  className="bg-background"
+                />
+              </div>
+              <div className="w-full sm:w-48">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Filtrar por Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os status</SelectItem>
+                    <SelectItem value="aberto">Aberto</SelectItem>
+                    <SelectItem value="aprovado">Aprovado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadQuotes}
+              disabled={loading}
+              className="shrink-0"
+            >
+              <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
+              Atualizar
+            </Button>
           </div>
-          <Button
-            onClick={loadQuotes}
-            variant="outline"
-            className="mt-4 border-destructive/30 hover:bg-destructive/10"
-          >
-            Tentar novamente
-          </Button>
-        </div>
-      ) : loading ? (
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : filteredQuotes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-muted/30 rounded-lg border border-dashed text-center space-y-2">
-          <p className="text-muted-foreground font-medium">Nenhum orçamento encontrado.</p>
-          <p className="text-sm text-muted-foreground/70">
-            Ajuste os filtros ou verifique novamente mais tarde.
-          </p>
-        </div>
-      ) : (
-        <QuotesTable quotes={filteredQuotes} onSelectQuote={setSelectedQuote} />
-      )}
+
+          {error ? (
+            <div className="flex flex-col items-center justify-center p-12 bg-destructive/5 rounded-lg border border-destructive/20 text-center space-y-4">
+              <AlertCircle className="w-10 h-10 text-destructive" />
+              <div className="space-y-1">
+                <h3 className="font-medium text-destructive">Falha ao carregar dados</h3>
+                <p className="text-sm text-destructive/80">
+                  Ocorreu um erro ao buscar os orçamentos.
+                </p>
+              </div>
+              <Button
+                onClick={loadQuotes}
+                variant="outline"
+                className="mt-4 border-destructive/30 hover:bg-destructive/10"
+              >
+                Tentar novamente
+              </Button>
+            </div>
+          ) : loading ? (
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : filteredQuotes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 bg-muted/30 rounded-lg border border-dashed text-center space-y-2">
+              <p className="text-muted-foreground font-medium">Nenhum orçamento encontrado.</p>
+              <p className="text-sm text-muted-foreground/70">
+                Ajuste os filtros ou verifique novamente mais tarde.
+              </p>
+            </div>
+          ) : (
+            <QuotesTable quotes={filteredQuotes} onSelectQuote={setSelectedQuote} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="images">
+          <AdminImages />
+        </TabsContent>
+      </Tabs>
 
       <QuoteDetailsSheet
         quote={selectedQuote}

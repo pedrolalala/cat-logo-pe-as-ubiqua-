@@ -1,1 +1,8 @@
-{}
+{
+  "_versions": {
+    "salvar-projeto": 15,
+    "update-project": 6,
+    "sync-fechamentos-automatica": 6,
+    "chat-consulta": 3
+  }
+}
