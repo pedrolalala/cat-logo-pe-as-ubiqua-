@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { PartGroup, PartVariant } from '@/lib/api'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -55,6 +55,16 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     'VERMELHO CHAMA': '#E25822',
   }
 
+  const uniqueColorVariants = useMemo(() => {
+    const seen = new Set<string>()
+    return group.variants.filter((v) => {
+      const colorName = v.cor?.toUpperCase().trim() || 'PADRÃO'
+      if (seen.has(colorName)) return false
+      seen.add(colorName)
+      return true
+    })
+  }, [group.variants])
+
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-orange-200/50 hover:border-orange-500/30">
       <div className="relative w-full pt-[80%] bg-white overflow-hidden flex items-center justify-center">
@@ -105,19 +115,21 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           {selectedVariant.descricao}
         </p>
 
-        {group.variants.length > 1 && (
+        {uniqueColorVariants.length > 1 && (
           <div className="flex flex-wrap gap-2 mt-auto">
-            {group.variants.map((v) => {
+            {uniqueColorVariants.map((v) => {
               const colorName = v.cor?.toUpperCase().trim() || 'PADRÃO'
               const hex = colorMap[colorName] || '#CCCCCC'
+              const isWhite = hex === '#FFFFFF'
               return (
                 <button
                   key={v.id}
                   className={cn(
-                    'w-6 h-6 rounded-full border-2 transition-all shadow-sm',
+                    'w-6 h-6 rounded-full transition-all shadow-sm ring-offset-background',
+                    isWhite ? 'border border-slate-300' : 'border border-transparent',
                     selectedVariant.id === v.id
-                      ? 'border-orange-500 scale-110 shadow-md'
-                      : 'border-transparent opacity-80 hover:opacity-100',
+                      ? 'ring-2 ring-orange-500 ring-offset-2 scale-110 shadow-md'
+                      : 'opacity-80 hover:opacity-100 hover:scale-105',
                   )}
                   style={{ backgroundColor: hex }}
                   title={v.cor || 'Padrão'}
