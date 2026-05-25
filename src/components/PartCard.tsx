@@ -7,11 +7,13 @@ import { ShoppingCart, ImageOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface PartCardProps {
-  group: PartGroup
+  group: PartGroup & { totalAvailable?: number }
   onAddBudget: (variant: PartVariant) => void
 }
 
 export function PartCard({ group, onAddBudget }: PartCardProps) {
+  const totalAvailable =
+    group.totalAvailable ?? group.variants.reduce((sum, v) => sum + (v.disponivel || 0), 0)
   const variantsByColor = useMemo(() => {
     const map = new Map<string, PartVariant[]>()
     for (const v of group.variants) {
@@ -77,6 +79,10 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
 
   const lampName = group.name || 'Peça'
 
+  const cleanDescription = selectedVariant.descricao
+    ? selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim()
+    : ''
+
   const getSixDigits = (p: PartVariant) => {
     const codProd = (p as any).cod_produto
     if (codProd) {
@@ -132,13 +138,11 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           >
             {group.baseReference}
           </Badge>
-          {selectedVariant.disponivel !== undefined && (
+          {totalAvailable !== undefined && (
             <Badge
-              className={`text-xs shadow-sm opacity-90 backdrop-blur-sm border-none ${selectedVariant.disponivel > 0 ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-destructive text-destructive-foreground'}`}
+              className={`text-xs shadow-sm opacity-90 backdrop-blur-sm border-none ${totalAvailable > 0 ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-destructive text-destructive-foreground'}`}
             >
-              {selectedVariant.disponivel > 0
-                ? `${selectedVariant.disponivel} disponível`
-                : 'Sem estoque'}
+              {totalAvailable > 0 ? `${totalAvailable} disponível` : 'Sem estoque'}
             </Badge>
           )}
         </div>
@@ -152,8 +156,8 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
         </h3>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3 pb-4">
-        <p className="text-sm text-muted-foreground line-clamp-2" title={selectedVariant.descricao}>
-          {selectedVariant.descricao}
+        <p className="text-sm text-muted-foreground line-clamp-2" title={cleanDescription}>
+          {cleanDescription}
         </p>
 
         {colorOptions.length > 1 && (

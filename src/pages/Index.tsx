@@ -22,7 +22,8 @@ export default function Index() {
         group.name.toLowerCase().includes(query) ||
         group.variants.some(
           (v) =>
-            v.referencia.toLowerCase().includes(query) || v.descricao.toLowerCase().includes(query),
+            (v.referencia || '').toLowerCase().includes(query) ||
+            (v.descricao || '').toLowerCase().includes(query),
         )
       )
     })
