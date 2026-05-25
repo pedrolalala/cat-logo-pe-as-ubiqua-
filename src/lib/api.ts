@@ -18,6 +18,8 @@ export interface PartGroup {
   name: string
   variants: PartVariant[]
   totalAvailable?: number
+  coresDisponiveis?: string[]
+  imagemPrincipal?: string | null
 }
 
 export interface QuoteData {
@@ -123,102 +125,45 @@ export async function sendQuoteEmail(payload: any): Promise<void> {
   }
 }
 
-const extractBaseName = (desc: string) => {
-  if (!desc) return 'PEÇA'
-  let d = desc.toUpperCase()
-  d = d.replace(/^IS\s*-\s*/, '')
-
-  const targets = [
-    'PLISSE',
-    'BLOK',
-    'STANDY',
-    'TWIGGY',
-    'GOOD NIGHT',
-    'ZOOM DESK',
-    'CRYSTAL',
-    'FLORA',
-    'CUBOX',
-    'TORUS DESK',
-  ]
-
-  for (const t of targets) {
-    if (d.includes(t)) return t
-  }
-
-  const match = d.match(/^([A-Z0-9\s]+?)\s+(?:LUM|LED|MINI|LUMIN|DE)/)
-  if (match && match[1]) {
-    return match[1].trim()
-  }
-  const words = d.split(' ')
-  return words.slice(0, 2).join(' ')
-}
-
+// `fetchParts` foi preterido em favor do uso direto de `useParts` hook
+// mantido por compatibilidade
 export async function fetchParts(): Promise<PartGroup[]> {
-  const { data: empresas } = await supabase.from('empresas').select('id, nome')
-  const islight = empresas?.find((e) => e.nome.toLowerCase().includes('islight'))?.id
-  const manoella = empresas?.find(
-    (e) => e.nome.toLowerCase().includes('manoella') || e.nome.toLowerCase().includes('lucenera'),
-  )?.id
+  const [viewResult, variantsResult] = await Promise.all([
+    supabase.from('vw_catalogo_unificado').select('*'),
+    supabase.from('revenda_ubiqua').select('*'),
+  ])
 
-  const { data, error } = await supabase
-    .from('revenda_ubiqua')
-    .select(
-      'id, referencia, descricao, valor_revenda, disponivel, estoque, imagem_catalogo_url, cor, empresa_id',
-    )
-    .order('referencia', { ascending: true })
-
-  if (error) {
-    console.error('Error fetching parts:', error)
+  if (viewResult.error || variantsResult.error) {
+    console.error('Error fetching parts:', viewResult.error || variantsResult.error)
     return []
   }
 
-  const grouped = new Map<string, PartGroup>()
-
-  for (const part of data || []) {
-    const baseReference = part.referencia.replace(/-IS$/i, '').trim()
-    const name = extractBaseName(part.descricao)
-
-    let empId = part.empresa_id
-    if (!empId) {
-      empId = part.referencia.toUpperCase().endsWith('-IS') ? islight : manoella
+  const variantsByBaseRef = new Map<string, PartVariant[]>()
+  for (const row of variantsResult.data || []) {
+    const baseReference = (row.referencia || '').replace(/-IS$/i, '').trim()
+    if (!variantsByBaseRef.has(baseReference)) {
+      variantsByBaseRef.set(baseReference, [])
     }
-
-    const variant: PartVariant = {
-      ...part,
-      empresa_id: empId || null,
-      baseName: name,
-      disponivel: part.disponivel || 0,
-      estoque: part.estoque || 0,
-    }
-
-    if (!grouped.has(baseReference)) {
-      grouped.set(baseReference, {
-        baseReference,
-        name,
-        variants: [variant],
-      })
-    } else {
-      grouped.get(baseReference)!.variants.push(variant)
-    }
+    variantsByBaseRef.get(baseReference)!.push(row as PartVariant)
   }
 
-  for (const group of grouped.values()) {
-    let totalDisp = 0
-    for (const v of group.variants) {
-      totalDisp += v.disponivel || 0
-    }
-    group.totalAvailable = totalDisp
+  const groupsMap = new Map<string, PartGroup>()
 
-    const colorMap = new Map<string, PartVariant>()
-    for (const v of group.variants) {
-      const color = v.cor?.toUpperCase().trim() || 'PADRÃO'
-      const existing = colorMap.get(color)
-      if (!existing || (v.disponivel || 0) > (existing.disponivel || 0)) {
-        colorMap.set(color, v)
-      }
-    }
-    group.variants = Array.from(colorMap.values())
+  for (const row of viewResult.data || []) {
+    const baseRef = row.referencia_base || ''
+    const variants = variantsByBaseRef.get(baseRef) || []
+
+    groupsMap.set(baseRef, {
+      baseReference: baseRef,
+      name: row.nome_exibicao || baseRef,
+      totalAvailable: Number(row.estoque_total) || 0,
+      coresDisponiveis: row.cores_disponiveis || [],
+      imagemPrincipal: row.imagem_principal,
+      variants,
+    })
   }
 
-  return Array.from(grouped.values()).sort((a, b) => a.baseReference.localeCompare(b.baseReference))
+  return Array.from(groupsMap.values()).sort((a, b) =>
+    a.baseReference.localeCompare(b.baseReference),
+  )
 }
