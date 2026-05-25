@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { PartGroup, PartVariant } from '@/lib/api'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -12,7 +12,58 @@ interface PartCardProps {
 }
 
 export function PartCard({ group, onAddBudget }: PartCardProps) {
-  const [selectedVariant, setSelectedVariant] = useState<PartVariant>(group.variants[0])
+  const variantsByColor = useMemo(() => {
+    const map = new Map<string, PartVariant[]>()
+    for (const v of group.variants) {
+      const color = v.cor?.toUpperCase().trim() || 'PADRÃO'
+      if (!map.has(color)) {
+        map.set(color, [])
+      }
+      map.get(color)!.push(v)
+    }
+    return map
+  }, [group.variants])
+
+  const uniqueColors = Array.from(variantsByColor.keys())
+
+  const getBestVariantForColor = useCallback(
+    (color: string) => {
+      const variants = variantsByColor.get(color) || []
+      if (variants.length === 0) return group.variants[0]
+
+      return variants.reduce((prev, current) => {
+        const prevDisp = prev.disponivel || 0
+        const currDisp = current.disponivel || 0
+        return currDisp > prevDisp ? current : prev
+      })
+    },
+    [variantsByColor, group.variants],
+  )
+
+  const bestInitialVariant = useMemo(() => {
+    if (group.variants.length === 0) return null
+    return group.variants.reduce((prev, current) => {
+      const prevDisp = prev.disponivel || 0
+      const currDisp = current.disponivel || 0
+      return currDisp > prevDisp ? current : prev
+    })
+  }, [group.variants])
+
+  const [selectedColor, setSelectedColor] = useState<string>(() => {
+    return bestInitialVariant?.cor?.toUpperCase().trim() || 'PADRÃO'
+  })
+
+  const selectedVariant = useMemo(() => {
+    return getBestVariantForColor(selectedColor) || group.variants[0]
+  }, [selectedColor, getBestVariantForColor, group.variants])
+
+  const colorOptions = useMemo(() => {
+    return uniqueColors.map((color) => ({
+      colorName: color,
+      bestVariant: getBestVariantForColor(color),
+    }))
+  }, [uniqueColors, getBestVariantForColor])
+
   const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
@@ -54,8 +105,6 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     'VERDE SÁLVIA': '#77815C',
     'VERMELHO CHAMA': '#E25822',
   }
-
-  const uniqueColorVariants = group.variants
 
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-orange-200/50 hover:border-orange-500/30">
@@ -107,27 +156,27 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           {selectedVariant.descricao}
         </p>
 
-        {uniqueColorVariants.length > 1 && (
+        {colorOptions.length > 1 && (
           <div className="flex flex-wrap gap-2 mt-auto">
-            {uniqueColorVariants.map((v) => {
-              const colorName = v.cor?.toUpperCase().trim() || 'PADRÃO'
+            {colorOptions.map((opt) => {
+              const colorName = opt.colorName
               const hex = colorMap[colorName] || '#CCCCCC'
               const isWhite = hex === '#FFFFFF'
               return (
                 <button
-                  key={v.id}
+                  key={colorName}
                   className={cn(
                     'w-6 h-6 rounded-full transition-all shadow-sm ring-offset-background',
                     isWhite ? 'border border-slate-300' : 'border border-transparent',
-                    selectedVariant.id === v.id
+                    selectedColor === colorName
                       ? 'ring-2 ring-orange-500 ring-offset-2 scale-110 shadow-md'
                       : 'opacity-80 hover:opacity-100 hover:scale-105',
                   )}
                   style={{ backgroundColor: hex }}
-                  title={v.cor || 'Padrão'}
+                  title={colorName}
                   onClick={(e) => {
                     e.preventDefault()
-                    setSelectedVariant(v)
+                    setSelectedColor(colorName)
                   }}
                 />
               )

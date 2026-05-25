@@ -6497,15 +6497,19 @@ export const Constants = {
 //     USING: true
 //   Policy "all_select_informacoes_cliente" (SELECT, PERMISSIVE) roles={anon,authenticated}
 //     USING: true
-//   Policy "anon_insert_informacoes_cliente" (INSERT, PERMISSIVE) roles={anon,authenticated}
+//   Policy "anon_insert_informacoes_cliente" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
 //   Policy "anon_update_informacoes_cliente" (UPDATE, PERMISSIVE) roles={anon,authenticated}
 //     USING: true
 //     WITH CHECK: true
+//   Policy "auth_insert_informacoes_cliente" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
 // Table: itens_orcamento_ubiqua
 //   Policy "all_select_itens_orcamento_ubiqua" (SELECT, PERMISSIVE) roles={anon,authenticated}
 //     USING: true
-//   Policy "anon_insert_itens_orcamento_ubiqua" (INSERT, PERMISSIVE) roles={anon,authenticated}
+//   Policy "anon_insert_itens_orcamento_ubiqua" (INSERT, PERMISSIVE) roles={anon}
+//     WITH CHECK: true
+//   Policy "auth_insert_itens_orcamento_ubiqua" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
 // Table: marcas
 //   Policy "marcas_delete" (DELETE, PERMISSIVE) roles={authenticated}
@@ -6564,7 +6568,9 @@ export const Constants = {
 // Table: orcamentos_revenda_ubiqua
 //   Policy "all_select_orcamentos_revenda_ubiqua" (SELECT, PERMISSIVE) roles={anon,authenticated}
 //     USING: true
-//   Policy "anon_insert_orcamentos_revenda_ubiqua" (INSERT, PERMISSIVE) roles={anon,authenticated}
+//   Policy "anon_insert_orcamentos_revenda_ubiqua" (INSERT, PERMISSIVE) roles={anon}
+//     WITH CHECK: true
+//   Policy "auth_insert_orcamentos_revenda_ubiqua" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
 //   Policy "update_orcamentos_revenda_ubiqua" (UPDATE, PERMISSIVE) roles={anon,authenticated}
 //     USING: true
