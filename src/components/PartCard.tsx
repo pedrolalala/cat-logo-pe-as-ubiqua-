@@ -3,7 +3,7 @@ import { PartGroup, PartVariant } from '@/lib/api'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ShoppingCart, ImageOff, Building2 } from 'lucide-react'
+import { ShoppingCart, ImageOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface PartCardProps {
@@ -46,10 +46,6 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
   const mappedImageUrl =
     selectedVariant.imagem_catalogo_url ||
     (sixDigits ? `${storageBaseUrl}${sixDigits}_catalogo.jpg` : null)
-
-  const companyName = selectedVariant.referencia.toUpperCase().endsWith('-IS')
-    ? 'Islight'
-    : 'Manoella'
 
   const colorMap: Record<string, string> = {
     BRANCA: '#FFFFFF',
@@ -94,10 +90,6 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
                 : 'Sem estoque'}
             </Badge>
           )}
-        </div>
-        <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md border shadow-sm">
-          <Building2 className="w-3 h-3 text-muted-foreground" />
-          <span className="text-[10px] font-medium text-foreground">{companyName}</span>
         </div>
       </div>
       <CardHeader className="pb-2 pt-4">

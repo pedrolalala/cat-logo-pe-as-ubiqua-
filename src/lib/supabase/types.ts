@@ -1387,6 +1387,7 @@ export type Database = {
       }
       informacoes_cliente_ubiqua: {
         Row: {
+          cpf_cnpj: string | null
           created_at: string | null
           data_nascimento: string | null
           email: string | null
@@ -1395,6 +1396,7 @@ export type Database = {
           telefone: string | null
         }
         Insert: {
+          cpf_cnpj?: string | null
           created_at?: string | null
           data_nascimento?: string | null
           email?: string | null
@@ -1403,6 +1405,7 @@ export type Database = {
           telefone?: string | null
         }
         Update: {
+          cpf_cnpj?: string | null
           created_at?: string | null
           data_nascimento?: string | null
           email?: string | null
@@ -4282,6 +4285,15 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_catalogo_unificado: {
+        Row: {
+          cores_disponiveis: string[] | null
+          imagem_principal: string | null
+          nome_peca: string | null
+          referencia_base: string | null
+        }
+        Relationships: []
+      }
       vw_conferencia_financeira: {
         Row: {
           data_transacao: string | null
@@ -5242,6 +5254,7 @@ export const Constants = {
 //   telefone: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
 //   data_nascimento: date (nullable)
+//   cpf_cnpj: text (nullable)
 // Table: itens_orcamento_ubiqua
 //   id: uuid (not null, default: gen_random_uuid())
 //   orcamento_id: uuid (not null)
@@ -5789,6 +5802,11 @@ export const Constants = {
 //   valor_custo: numeric (not null, default: 0)
 //   valor_venda: numeric (not null, default: 0)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: vw_catalogo_unificado
+//   referencia_base: text (nullable)
+//   cores_disponiveis: _text (nullable)
+//   nome_peca: text (nullable)
+//   imagem_principal: text (nullable)
 // Table: vw_conferencia_financeira
 //   data_transacao: date (nullable)
 //   descricao: text (nullable)
@@ -6477,7 +6495,17 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 //   Policy "Permitir leitura anon e auth" (SELECT, PERMISSIVE) roles={anon,authenticated}
 //     USING: true
+//   Policy "all_select_informacoes_cliente" (SELECT, PERMISSIVE) roles={anon,authenticated}
+//     USING: true
 //   Policy "anon_insert_informacoes_cliente" (INSERT, PERMISSIVE) roles={anon,authenticated}
+//     WITH CHECK: true
+//   Policy "anon_update_informacoes_cliente" (UPDATE, PERMISSIVE) roles={anon,authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: itens_orcamento_ubiqua
+//   Policy "all_select_itens_orcamento_ubiqua" (SELECT, PERMISSIVE) roles={anon,authenticated}
+//     USING: true
+//   Policy "anon_insert_itens_orcamento_ubiqua" (INSERT, PERMISSIVE) roles={anon,authenticated}
 //     WITH CHECK: true
 // Table: marcas
 //   Policy "marcas_delete" (DELETE, PERMISSIVE) roles={authenticated}
@@ -6533,6 +6561,14 @@ export const Constants = {
 //     USING: true
 //   Policy "orcamentos_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: true
+// Table: orcamentos_revenda_ubiqua
+//   Policy "all_select_orcamentos_revenda_ubiqua" (SELECT, PERMISSIVE) roles={anon,authenticated}
+//     USING: true
+//   Policy "anon_insert_orcamentos_revenda_ubiqua" (INSERT, PERMISSIVE) roles={anon,authenticated}
+//     WITH CHECK: true
+//   Policy "update_orcamentos_revenda_ubiqua" (UPDATE, PERMISSIVE) roles={anon,authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: pedido_compra
 //   Policy "Permitir leitura para autenticados" (SELECT, PERMISSIVE) roles={public}
 //     USING: (auth.role() = 'authenticated'::text)
@@ -6637,7 +6673,7 @@ export const Constants = {
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 //   Policy "revenda_ubiqua_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
-//   Policy "revenda_ubiqua_select" (SELECT, PERMISSIVE) roles={public}
+//   Policy "revenda_ubiqua_select" (SELECT, PERMISSIVE) roles={anon,authenticated}
 //     USING: true
 //   Policy "revenda_ubiqua_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
@@ -6708,8 +6744,6 @@ export const Constants = {
 //   - funcionarios_financeiro
 //   - funcionarios_novo
 //   - historico_status_orcamento
-//   - itens_orcamento_ubiqua
-//   - orcamentos_revenda_ubiqua
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION admin_update_user_password(uuid, text)
