@@ -65,7 +65,8 @@ export default function NewQuote() {
     clienteInfo.nome.trim() !== '' &&
     clienteInfo.email.trim() !== '' &&
     clienteInfo.telefone.trim() !== '' &&
-    clienteInfo.cpf_cnpj.trim() !== ''
+    clienteInfo.cpf_cnpj.trim() !== '' &&
+    clienteInfo.data_nascimento.trim() !== ''
 
   const totalGeral = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
 
@@ -532,6 +533,20 @@ export default function NewQuote() {
                         setClienteInfo((prev) => ({ ...prev, telefone: e.target.value }))
                       }
                       placeholder="Ex: (11) 99999-9999"
+                      required
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">
+                      Data de Nascimento <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      type="date"
+                      value={clienteInfo.data_nascimento}
+                      onChange={(e) =>
+                        setClienteInfo((prev) => ({ ...prev, data_nascimento: e.target.value }))
+                      }
                       required
                       className="h-8 text-sm"
                     />

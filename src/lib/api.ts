@@ -201,5 +201,17 @@ export async function fetchParts(): Promise<PartGroup[]> {
     }
   }
 
+  for (const group of grouped.values()) {
+    const colorMap = new Map<string, PartVariant>()
+    for (const v of group.variants) {
+      const color = v.cor?.toUpperCase().trim() || 'PADRÃO'
+      const existing = colorMap.get(color)
+      if (!existing || (v.disponivel || 0) > (existing.disponivel || 0)) {
+        colorMap.set(color, v)
+      }
+    }
+    group.variants = Array.from(colorMap.values())
+  }
+
   return Array.from(grouped.values()).sort((a, b) => a.baseReference.localeCompare(b.baseReference))
 }

@@ -155,7 +155,11 @@ export async function fetchQuotes(): Promise<Quote[]> {
     const companies = new Set<string>()
     if (Array.isArray(q.itens)) {
       q.itens.forEach((i: any) => {
-        const empName = i.produto?.empresa?.nome
+        let empName = i.produto?.empresa?.nome
+        if (!empName) {
+          const ref = i.referencia_snapshot || ''
+          empName = ref.toUpperCase().endsWith('-IS') ? 'Islight' : 'Manoella'
+        }
         if (empName) companies.add(empName)
       })
     }

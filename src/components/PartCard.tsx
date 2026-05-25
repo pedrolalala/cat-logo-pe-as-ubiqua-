@@ -55,15 +55,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     'VERMELHO CHAMA': '#E25822',
   }
 
-  const uniqueColorVariants = useMemo(() => {
-    const seen = new Set<string>()
-    return group.variants.filter((v) => {
-      const colorName = v.cor?.toUpperCase().trim() || 'PADRÃO'
-      if (seen.has(colorName)) return false
-      seen.add(colorName)
-      return true
-    })
-  }, [group.variants])
+  const uniqueColorVariants = group.variants
 
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-orange-200/50 hover:border-orange-500/30">
