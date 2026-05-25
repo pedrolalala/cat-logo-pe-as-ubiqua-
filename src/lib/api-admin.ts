@@ -40,16 +40,19 @@ export interface CatalogItem {
   id: number
   referencia: string
   descricao: string
+  desc_produto: string | null
   imagem_catalogo_url: string | null
 }
 
 export async function fetchCatalogItems(search: string = ''): Promise<CatalogItem[]> {
   let query = supabase
     .from('revenda_ubiqua')
-    .select('id, referencia, descricao, imagem_catalogo_url')
+    .select('id, referencia, descricao, desc_produto, imagem_catalogo_url')
     .limit(50)
   if (search) {
-    query = query.or(`referencia.ilike.%${search}%,descricao.ilike.%${search}%`)
+    query = query.or(
+      `referencia.ilike.%${search}%,descricao.ilike.%${search}%,desc_produto.ilike.%${search}%`,
+    )
   }
   const { data, error } = await query.order('id', { ascending: false })
 
@@ -92,6 +95,38 @@ export async function updateCatalogImageUrl(id: number, url: string | null) {
   if (error) {
     throw error
   }
+}
+
+export async function updateCatalogImageUrlByReferencia(referencia: string, url: string | null) {
+  const { error } = await supabase
+    .from('revenda_ubiqua')
+    .update({
+      imagem_catalogo_url: url,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('referencia', referencia)
+
+  if (error) {
+    throw error
+  }
+}
+
+export async function uploadCatalogImageExact(file: File, referencia: string): Promise<string> {
+  const filePath = `catalogos/${referencia}_catalogo.jpg`
+
+  const { error: uploadError } = await supabase.storage
+    .from('revenda-ubiqua-images')
+    .upload(filePath, file, {
+      upsert: true,
+      cacheControl: '3600',
+    })
+
+  if (uploadError) {
+    throw uploadError
+  }
+
+  const { data } = supabase.storage.from('revenda-ubiqua-images').getPublicUrl(filePath)
+  return data.publicUrl
 }
 
 export async function fetchQuotes(): Promise<Quote[]> {

@@ -3,11 +3,13 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
-import { Search, Upload, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Search, Upload, Trash2, Image as ImageIcon, Loader2, Files } from 'lucide-react'
 import {
   fetchCatalogItems,
   uploadCatalogImage,
   updateCatalogImageUrl,
+  updateCatalogImageUrlByReferencia,
+  uploadCatalogImageExact,
   CatalogItem,
 } from '@/lib/api-admin'
 import {
@@ -25,7 +27,9 @@ export function AdminImages() {
   const [search, setSearch] = useState('')
   const [uploadingId, setUploadingId] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const batchFileInputRef = useRef<HTMLInputElement>(null)
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null)
+  const [isBatchUploading, setIsBatchUploading] = useState(false)
 
   const loadItems = async (q: string = '') => {
     setLoading(true)
@@ -63,9 +67,9 @@ export function AdminImages() {
 
     setUploadingId(selectedItem.id)
     try {
-      const safePrefix = selectedItem.referencia.replace(/[^a-zA-Z0-9]/g, '_')
-      const url = await uploadCatalogImage(file, safePrefix)
-      await updateCatalogImageUrl(selectedItem.id, url)
+      const safeReferencia = selectedItem.referencia.replace(/[^a-zA-Z0-9-]/g, '')
+      const url = await uploadCatalogImageExact(file, safeReferencia)
+      await updateCatalogImageUrl(selectedItem.id, `${url}?t=${Date.now()}`)
       toast.success('Imagem enviada com sucesso!')
       loadItems(search)
     } catch (error) {
@@ -90,9 +94,61 @@ export function AdminImages() {
     }
   }
 
+  const handleBatchUploadClick = () => {
+    if (batchFileInputRef.current) {
+      batchFileInputRef.current.value = ''
+      batchFileInputRef.current.click()
+    }
+  }
+
+  const handleBatchFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setIsBatchUploading(true)
+    let successCount = 0
+    let errorCount = 0
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+
+      if (!['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type)) {
+        errorCount++
+        continue
+      }
+
+      // Expected pattern: [referencia]_catalogo.jpg or just starts with [referencia]
+      const match = file.name.match(/^([A-Za-z0-9-]+)/)
+      if (!match) {
+        errorCount++
+        continue
+      }
+
+      const referencia = match[1]
+
+      try {
+        const url = await uploadCatalogImageExact(file, referencia)
+        await updateCatalogImageUrlByReferencia(referencia, `${url}?t=${Date.now()}`)
+        successCount++
+      } catch (error) {
+        console.error('Error uploading batch file', file.name, error)
+        errorCount++
+      }
+    }
+
+    setIsBatchUploading(false)
+    if (successCount > 0) {
+      toast.success(`Upload em lote concluído! ${successCount} imagens enviadas.`)
+      loadItems(search)
+    }
+    if (errorCount > 0) {
+      toast.error(`${errorCount} arquivo(s) falharam no upload. Verifique os formatos e nomes.`)
+    }
+  }
+
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex flex-col sm:flex-row gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-muted/20 p-4 rounded-lg border border-border/50">
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -102,6 +158,19 @@ export function AdminImages() {
             className="pl-9 bg-background"
           />
         </div>
+        <Button
+          variant="default"
+          onClick={handleBatchUploadClick}
+          disabled={isBatchUploading || loading}
+          className="w-full sm:w-auto shrink-0"
+        >
+          {isBatchUploading ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Files className="w-4 h-4 mr-2" />
+          )}
+          {isBatchUploading ? 'Enviando Lote...' : 'Upload em Lote'}
+        </Button>
       </div>
 
       <input
@@ -109,6 +178,14 @@ export function AdminImages() {
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
+        accept=".jpg,.jpeg,.png,.webp"
+      />
+      <input
+        type="file"
+        ref={batchFileInputRef}
+        onChange={handleBatchFileChange}
+        className="hidden"
+        multiple
         accept=".jpg,.jpeg,.png,.webp"
       />
 
@@ -165,8 +242,11 @@ export function AdminImages() {
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{item.referencia}</TableCell>
-                  <TableCell className="max-w-[400px] truncate" title={item.descricao}>
-                    {item.descricao}
+                  <TableCell
+                    className="max-w-[400px] truncate"
+                    title={item.desc_produto || item.descricao}
+                  >
+                    {item.desc_produto || item.descricao || '-'}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
