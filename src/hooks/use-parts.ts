@@ -40,7 +40,7 @@ export function useParts() {
 
       const groupsMap = new Map<string, GroupedPart>()
 
-      // Add items from the view
+      // Add items from the view ONLY
       for (const row of viewResult.data || []) {
         const baseRef = row.nome_exibicao || ''
         const variants = variantsByBaseRef.get(baseRef) || []
@@ -53,26 +53,6 @@ export function useParts() {
           imagemPrincipal: row.imagem_principal,
           variants,
         })
-      }
-
-      // Add fallback for variants not in the view (safety check)
-      for (const [baseRef, variants] of variantsByBaseRef.entries()) {
-        if (!groupsMap.has(baseRef) && variants.length > 0) {
-          let name = variants[0].descricao || baseRef
-          name = name.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim()
-
-          groupsMap.set(baseRef, {
-            baseReference: baseRef,
-            name,
-            totalAvailable: variants.reduce((sum, v) => sum + (v.disponivel || 0), 0),
-            coresDisponiveis: Array.from(
-              new Set(variants.map((v) => v.cor?.toUpperCase().trim() || 'PADRÃO')),
-            ),
-            imagemPrincipal:
-              variants.find((v) => v.imagem_catalogo_url)?.imagem_catalogo_url || null,
-            variants,
-          })
-        }
       }
 
       setData(
