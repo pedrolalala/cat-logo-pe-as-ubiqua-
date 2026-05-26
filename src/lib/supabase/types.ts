@@ -4288,10 +4288,22 @@ export type Database = {
       vw_catalogo_ubiqua: {
         Row: {
           cores_disponiveis: string[] | null
+          detalhes_por_cor: Json[] | null
+          estoque_total: number | null
+          imagem_principal: string | null
+          nome_exibicao: string | null
+          valor_revenda: number | null
+        }
+        Relationships: []
+      }
+      vw_catalogo_unificado: {
+        Row: {
+          cores_disponiveis: string[] | null
           estoque_total: number | null
           imagem_principal: string | null
           nome_exibicao: string | null
           referencia_base: string | null
+          valor_minimo: number | null
         }
         Relationships: []
       }
@@ -5804,11 +5816,19 @@ export const Constants = {
 //   valor_venda: numeric (not null, default: 0)
 //   created_at: timestamp with time zone (not null, default: now())
 // Table: vw_catalogo_ubiqua
-//   referencia_base: text (nullable)
+//   nome_exibicao: text (nullable)
 //   cores_disponiveis: _text (nullable)
+//   estoque_total: bigint (nullable)
+//   valor_revenda: numeric (nullable)
+//   imagem_principal: text (nullable)
+//   detalhes_por_cor: _json (nullable)
+// Table: vw_catalogo_unificado
+//   referencia_base: text (nullable)
 //   nome_exibicao: text (nullable)
 //   estoque_total: bigint (nullable)
+//   cores_disponiveis: _text (nullable)
 //   imagem_principal: text (nullable)
+//   valor_minimo: numeric (nullable)
 // Table: vw_conferencia_financeira
 //   data_transacao: date (nullable)
 //   descricao: text (nullable)

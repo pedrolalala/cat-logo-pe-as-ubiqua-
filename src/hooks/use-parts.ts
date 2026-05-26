@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { PartVariant } from '@/lib/api'
 import { supabase } from '@/lib/supabase/client'
 
 export type GroupedPart = {
@@ -8,13 +7,7 @@ export type GroupedPart = {
   totalAvailable: number
   coresDisponiveis: string[]
   imagemPrincipal: string | null
-  valorRevenda: number
-  detalhesPorCor: Array<{
-    cor: string
-    disponivel: number
-    referencia: string
-  }>
-  variants: PartVariant[]
+  valorMinimo: number
 }
 
 export function useParts() {
@@ -27,14 +20,14 @@ export function useParts() {
       setLoading(true)
       setError(null)
 
-      const viewResult = await supabase.from('vw_catalogo_ubiqua').select('*')
+      const viewResult = await supabase.from('vw_catalogo_unificado').select('*')
 
       if (viewResult.error) throw viewResult.error
 
       const groupsMap = new Map<string, GroupedPart>()
 
       for (const row of viewResult.data || []) {
-        const baseRef = row.nome_exibicao || ''
+        const baseRef = row.referencia_base || ''
 
         groupsMap.set(baseRef, {
           baseReference: baseRef,
@@ -42,9 +35,7 @@ export function useParts() {
           totalAvailable: Number(row.estoque_total) || 0,
           coresDisponiveis: row.cores_disponiveis || [],
           imagemPrincipal: row.imagem_principal,
-          valorRevenda: Number(row.valor_revenda) || 0,
-          detalhesPorCor: row.detalhes_por_cor || [],
-          variants: [],
+          valorMinimo: Number(row.valor_minimo) || 0,
         })
       }
 

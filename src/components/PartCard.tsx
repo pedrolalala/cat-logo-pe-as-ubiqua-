@@ -22,50 +22,56 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     return ['PADRÃO']
   }, [coresDisponiveis])
 
-  const [selectedColor, setSelectedColor] = useState<string>(() => uniqueColors[0] || 'PADRÃO')
-  const [selectedVariant, setSelectedVariant] = useState<PartVariant | null>(null)
-  const [loadingVariant, setLoadingVariant] = useState(false)
+  const [selectedColor, setSelectedColor] = useState<string | null>(() =>
+    uniqueColors.length === 1 ? uniqueColors[0] : null,
+  )
+  const [allVariants, setAllVariants] = useState<any[]>([])
+  const [loadingVariants, setLoadingVariants] = useState(false)
   const [imageError, setImageError] = useState(false)
 
-  // Invisible Selection Logic: Query revenda_ubiqua to find the specific variant based on color
   useEffect(() => {
     let isMounted = true
-    async function fetchVariant() {
-      setLoadingVariant(true)
-
+    async function fetchVariants() {
+      setLoadingVariants(true)
       const { data } = await supabase
         .from('revenda_ubiqua')
-        .select('*')
+        .select('*, empresa:empresas!fk_empresa(nome)')
         .or(
           `referencia.eq.${baseReference},referencia.eq.${baseReference}-IS,referencia.ilike.${baseReference} -%`,
         )
 
       if (isMounted && data) {
-        const colorVariants = data.filter((v) => {
-          const c = v.cor?.toUpperCase().trim() || 'PADRÃO'
-          return c === selectedColor
+        const mappedData = data.map((v) => {
+          const emp = Array.isArray(v.empresa) ? v.empresa[0] : v.empresa
+          return {
+            ...v,
+            empresa: emp?.nome || 'Não informada',
+          }
         })
-
-        if (colorVariants.length > 0) {
-          // Picks the best variant with highest individual stock
-          const best = colorVariants.reduce((prev, curr) =>
-            (curr.disponivel || 0) > (prev.disponivel || 0) ? curr : prev,
-          )
-          setSelectedVariant(best as PartVariant)
-        } else if (data.length > 0) {
-          setSelectedVariant(data[0] as PartVariant)
-        } else {
-          setSelectedVariant(null)
-        }
+        setAllVariants(mappedData)
       }
-      if (isMounted) setLoadingVariant(false)
+      if (isMounted) setLoadingVariants(false)
     }
 
-    fetchVariant()
+    fetchVariants()
     return () => {
       isMounted = false
     }
-  }, [baseReference, selectedColor])
+  }, [baseReference])
+
+  const selectedVariant = useMemo(() => {
+    if (!selectedColor) return null
+    const colorVariants = allVariants.filter((v) => {
+      const c = v.cor?.toUpperCase().trim() || 'PADRÃO'
+      return c === selectedColor.toUpperCase().trim()
+    })
+
+    if (colorVariants.length === 0) return null
+
+    return colorVariants.reduce((prev, curr) =>
+      (curr.disponivel || 0) > (prev.disponivel || 0) ? curr : prev,
+    )
+  }, [selectedColor, allVariants])
 
   useEffect(() => {
     setImageError(false)
@@ -109,6 +115,15 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     'VERDE SÁLVIA': '#77815C',
   }
 
+  let stockDisplay = ''
+  if (selectedColor && selectedVariant) {
+    stockDisplay = `${selectedVariant.disponivel || 0} disponível em ${selectedColor}`
+  } else {
+    stockDisplay = `${totalAvailable || 0} disponível`
+  }
+
+  const isOutOfStock = selectedColor ? (selectedVariant?.disponivel || 0) <= 0 : totalAvailable <= 0
+
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-orange-200/50 hover:border-orange-500/30">
       <div className="relative w-full pt-[80%] bg-white overflow-hidden flex items-center justify-center">
@@ -135,18 +150,16 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           >
             {baseReference}
           </Badge>
-          {totalAvailable !== undefined && (
-            <Badge
-              className={cn(
-                'text-xs shadow-sm opacity-90 backdrop-blur-sm border-none',
-                totalAvailable > 0
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                  : 'bg-destructive text-destructive-foreground',
-              )}
-            >
-              {totalAvailable > 0 ? `${totalAvailable} disponível` : 'Sem estoque'}
-            </Badge>
-          )}
+          <Badge
+            className={cn(
+              'text-xs shadow-sm opacity-90 backdrop-blur-sm border-none',
+              !isOutOfStock
+                ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                : 'bg-destructive text-destructive-foreground',
+            )}
+          >
+            {isOutOfStock ? 'Sem estoque' : stockDisplay}
+          </Badge>
         </div>
       </div>
       <CardHeader className="pb-2 pt-4">
@@ -165,7 +178,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
         {uniqueColors.length > 1 && (
           <div className="flex flex-wrap gap-2 mt-auto">
             {uniqueColors.map((colorName) => {
-              const hex = colorMap[colorName] || '#CCCCCC'
+              const hex = colorMap[colorName.toUpperCase()] || '#CCCCCC'
               const isWhite = hex === '#FFFFFF'
               return (
                 <button
@@ -181,7 +194,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
                   title={colorName}
                   onClick={(e) => {
                     e.preventDefault()
-                    setSelectedColor(colorName)
+                    setSelectedColor(selectedColor === colorName ? null : colorName)
                   }}
                 />
               )
@@ -191,14 +204,14 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
 
         <div className="flex items-center gap-2 mt-2">
           <p className="text-2xl font-bold text-orange-600">{formattedPrice}</p>
-          {loadingVariant && <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />}
+          {loadingVariants && <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-0">
         <Button
           className="w-full shadow-sm transition-transform active:scale-95 bg-orange-500 hover:bg-orange-600 text-white"
           onClick={() => selectedVariant && onAddBudget(selectedVariant)}
-          disabled={!selectedVariant || loadingVariant}
+          disabled={!selectedVariant || loadingVariants}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
           Adicionar ao Orçamento
