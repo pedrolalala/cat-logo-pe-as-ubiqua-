@@ -8,6 +8,12 @@ export type GroupedPart = {
   totalAvailable: number
   coresDisponiveis: string[]
   imagemPrincipal: string | null
+  valorRevenda: number
+  detalhesPorCor: Array<{
+    cor: string
+    disponivel: number
+    referencia: string
+  }>
   variants: PartVariant[]
 }
 
@@ -21,29 +27,14 @@ export function useParts() {
       setLoading(true)
       setError(null)
 
-      const [viewResult, variantsResult] = await Promise.all([
-        supabase.from('vw_catalogo_ubiqua').select('*'),
-        supabase.from('revenda_ubiqua').select('*'),
-      ])
+      const viewResult = await supabase.from('vw_catalogo_ubiqua').select('*')
 
       if (viewResult.error) throw viewResult.error
-      if (variantsResult.error) throw variantsResult.error
-
-      const variantsByBaseRef = new Map<string, PartVariant[]>()
-      for (const row of variantsResult.data || []) {
-        const baseReference = (row.referencia || '').replace(/-IS$/i, '').trim()
-        if (!variantsByBaseRef.has(baseReference)) {
-          variantsByBaseRef.set(baseReference, [])
-        }
-        variantsByBaseRef.get(baseReference)!.push(row as PartVariant)
-      }
 
       const groupsMap = new Map<string, GroupedPart>()
 
-      // Add items from the view ONLY
       for (const row of viewResult.data || []) {
         const baseRef = row.nome_exibicao || ''
-        const variants = variantsByBaseRef.get(baseRef) || []
 
         groupsMap.set(baseRef, {
           baseReference: baseRef,
@@ -51,7 +42,9 @@ export function useParts() {
           totalAvailable: Number(row.estoque_total) || 0,
           coresDisponiveis: row.cores_disponiveis || [],
           imagemPrincipal: row.imagem_principal,
-          variants,
+          valorRevenda: Number(row.valor_revenda) || 0,
+          detalhesPorCor: row.detalhes_por_cor || [],
+          variants: [],
         })
       }
 
