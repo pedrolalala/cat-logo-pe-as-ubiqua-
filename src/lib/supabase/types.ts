@@ -4285,7 +4285,7 @@ export type Database = {
         }
         Relationships: []
       }
-      vw_catalogo_unificado: {
+      vw_catalogo_ubiqua: {
         Row: {
           cores_disponiveis: string[] | null
           estoque_total: number | null
@@ -5803,7 +5803,7 @@ export const Constants = {
 //   valor_custo: numeric (not null, default: 0)
 //   valor_venda: numeric (not null, default: 0)
 //   created_at: timestamp with time zone (not null, default: now())
-// Table: vw_catalogo_unificado
+// Table: vw_catalogo_ubiqua
 //   referencia_base: text (nullable)
 //   cores_disponiveis: _text (nullable)
 //   nome_exibicao: text (nullable)

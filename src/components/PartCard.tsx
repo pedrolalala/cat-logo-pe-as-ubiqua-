@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { PartVariant } from '@/lib/api'
 import { GroupedPart } from '@/hooks/use-parts'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ShoppingCart, ImageOff } from 'lucide-react'
+import { ShoppingCart, ImageOff, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 interface PartCardProps {
   group: GroupedPart
@@ -13,80 +14,85 @@ interface PartCardProps {
 }
 
 export function PartCard({ group, onAddBudget }: PartCardProps) {
-  const { variants, coresDisponiveis, imagemPrincipal, totalAvailable, name, baseReference } = group
+  const { coresDisponiveis, imagemPrincipal, totalAvailable, name, baseReference, valorMinimo } =
+    group
 
   const uniqueColors = useMemo(() => {
     if (coresDisponiveis && coresDisponiveis.length > 0) return coresDisponiveis
-    const map = new Set<string>()
-    for (const v of variants) {
-      const color = v.cor?.toUpperCase().trim() || 'PADRÃO'
-      map.add(color)
-    }
-    return Array.from(map)
-  }, [coresDisponiveis, variants])
+    return ['PADRÃO']
+  }, [coresDisponiveis])
 
-  const getBestVariantForColor = useCallback(
-    (color: string) => {
-      const colorVariants = variants.filter(
-        (v) => (v.cor?.toUpperCase().trim() || 'PADRÃO') === color,
-      )
-      if (colorVariants.length === 0) return variants[0] || null
-
-      return colorVariants.reduce((prev, current) => {
-        const prevDisp = prev.disponivel || 0
-        const currDisp = current.disponivel || 0
-        return currDisp > prevDisp ? current : prev
-      })
-    },
-    [variants],
-  )
-
-  const [selectedColor, setSelectedColor] = useState<string>(() => {
-    return uniqueColors[0] || 'PADRÃO'
-  })
-
-  const selectedVariant = useMemo(() => {
-    return getBestVariantForColor(selectedColor)
-  }, [selectedColor, getBestVariantForColor])
-
-  const colorOptions = useMemo(() => {
-    return uniqueColors.map((color) => ({
-      colorName: color,
-      bestVariant: getBestVariantForColor(color),
-    }))
-  }, [uniqueColors, getBestVariantForColor])
-
+  const [selectedColor, setSelectedColor] = useState<string>(() => uniqueColors[0] || 'PADRÃO')
+  const [selectedVariant, setSelectedVariant] = useState<PartVariant | null>(null)
+  const [loadingVariant, setLoadingVariant] = useState(false)
   const [imageError, setImageError] = useState(false)
+
+  // Invisible Selection Logic: Query revenda_ubiqua to find the specific variant based on color
+  useEffect(() => {
+    let isMounted = true
+    async function fetchVariant() {
+      setLoadingVariant(true)
+
+      const { data } = await supabase
+        .from('revenda_ubiqua')
+        .select('*')
+        .or(
+          `referencia.eq.${baseReference},referencia.eq.${baseReference}-IS,referencia.ilike.${baseReference} -%`,
+        )
+
+      if (isMounted && data) {
+        const colorVariants = data.filter((v) => {
+          const c = v.cor?.toUpperCase().trim() || 'PADRÃO'
+          return c === selectedColor
+        })
+
+        if (colorVariants.length > 0) {
+          // Picks the best variant with highest individual stock
+          const best = colorVariants.reduce((prev, curr) =>
+            (curr.disponivel || 0) > (prev.disponivel || 0) ? curr : prev,
+          )
+          setSelectedVariant(best as PartVariant)
+        } else if (data.length > 0) {
+          setSelectedVariant(data[0] as PartVariant)
+        } else {
+          setSelectedVariant(null)
+        }
+      }
+      if (isMounted) setLoadingVariant(false)
+    }
+
+    fetchVariant()
+    return () => {
+      isMounted = false
+    }
+  }, [baseReference, selectedColor])
 
   useEffect(() => {
     setImageError(false)
   }, [selectedVariant])
 
+  const displayPrice = selectedVariant?.valor_revenda ?? valorMinimo ?? 0
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(selectedVariant?.valor_revenda || 0)
+  }).format(displayPrice)
 
   const lampName = name || 'Peça'
 
   const cleanDescription = selectedVariant?.descricao
     ? selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim()
-    : ''
+    : lampName
 
-  const getSixDigits = (p: PartVariant) => {
-    const codProd = (p as any).cod_produto
-    if (codProd) {
-      const codStr = String(codProd)
-      if (codStr.length >= 6) return codStr.substring(0, 6)
-    }
-    if (p.referencia) {
-      const match = p.referencia.match(/^[0-9]{6}/)
-      if (match) return match[0]
-    }
+  const getSixDigits = (ref: string | null) => {
+    if (!ref) return null
+    const match = ref.match(/^[0-9]{6}/)
+    if (match) return match[0]
     return null
   }
 
-  const sixDigits = selectedVariant ? getSixDigits(selectedVariant) : null
+  const sixDigits = selectedVariant
+    ? getSixDigits(selectedVariant.referencia)
+    : getSixDigits(baseReference)
 
   const storageBaseUrl =
     'https://vcvcwzmbiftcawncibke.supabase.co/storage/v1/object/public/revenda-ubiqua-images/catalogos/'
@@ -101,7 +107,6 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     PRETA: '#000000',
     AREIA: '#D2B48C',
     'VERDE SÁLVIA': '#77815C',
-    'VERMELHO CHAMA': '#E25822',
   }
 
   return (
@@ -132,7 +137,12 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           </Badge>
           {totalAvailable !== undefined && (
             <Badge
-              className={`text-xs shadow-sm opacity-90 backdrop-blur-sm border-none ${totalAvailable > 0 ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-destructive text-destructive-foreground'}`}
+              className={cn(
+                'text-xs shadow-sm opacity-90 backdrop-blur-sm border-none',
+                totalAvailable > 0
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                  : 'bg-destructive text-destructive-foreground',
+              )}
             >
               {totalAvailable > 0 ? `${totalAvailable} disponível` : 'Sem estoque'}
             </Badge>
@@ -152,10 +162,9 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           {cleanDescription}
         </p>
 
-        {colorOptions.length > 1 && (
+        {uniqueColors.length > 1 && (
           <div className="flex flex-wrap gap-2 mt-auto">
-            {colorOptions.map((opt) => {
-              const colorName = opt.colorName
+            {uniqueColors.map((colorName) => {
               const hex = colorMap[colorName] || '#CCCCCC'
               const isWhite = hex === '#FFFFFF'
               return (
@@ -180,13 +189,16 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           </div>
         )}
 
-        <p className="text-2xl font-bold text-orange-600 mt-2">{formattedPrice}</p>
+        <div className="flex items-center gap-2 mt-2">
+          <p className="text-2xl font-bold text-orange-600">{formattedPrice}</p>
+          {loadingVariant && <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />}
+        </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-0">
         <Button
           className="w-full shadow-sm transition-transform active:scale-95 bg-orange-500 hover:bg-orange-600 text-white"
           onClick={() => selectedVariant && onAddBudget(selectedVariant)}
-          disabled={!selectedVariant}
+          disabled={!selectedVariant || loadingVariant}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
           Adicionar ao Orçamento

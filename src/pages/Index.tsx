@@ -19,12 +19,7 @@ export default function Index() {
     return data.filter((group) => {
       return (
         group.baseReference.toLowerCase().includes(query) ||
-        group.name.toLowerCase().includes(query) ||
-        group.variants.some(
-          (v) =>
-            (v.referencia || '').toLowerCase().includes(query) ||
-            (v.descricao || '').toLowerCase().includes(query),
-        )
+        group.name.toLowerCase().includes(query)
       )
     })
   }, [data, query])

@@ -22,7 +22,7 @@ export function useParts() {
       setError(null)
 
       const [viewResult, variantsResult] = await Promise.all([
-        supabase.from('vw_catalogo_unificado').select('*'),
+        supabase.from('vw_catalogo_ubiqua').select('*'),
         supabase.from('revenda_ubiqua').select('*'),
       ])
 
@@ -42,7 +42,7 @@ export function useParts() {
 
       // Add items from the view
       for (const row of viewResult.data || []) {
-        const baseRef = row.referencia_base || ''
+        const baseRef = row.nome_exibicao || ''
         const variants = variantsByBaseRef.get(baseRef) || []
 
         groupsMap.set(baseRef, {

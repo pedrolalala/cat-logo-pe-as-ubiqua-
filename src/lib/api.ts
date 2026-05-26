@@ -16,7 +16,7 @@ export interface PartVariant {
 export interface PartGroup {
   baseReference: string
   name: string
-  variants: PartVariant[]
+  variants?: PartVariant[]
   totalAvailable?: number
   coresDisponiveis?: string[]
   imagemPrincipal?: string | null
@@ -128,30 +128,19 @@ export async function sendQuoteEmail(payload: any): Promise<void> {
 // `fetchParts` foi preterido em favor do uso direto de `useParts` hook
 // mantido por compatibilidade
 export async function fetchParts(): Promise<PartGroup[]> {
-  const [viewResult, variantsResult] = await Promise.all([
-    supabase.from('vw_catalogo_unificado').select('*'),
-    supabase.from('revenda_ubiqua').select('*'),
-  ])
+  const { data: viewResult, error: viewError } = await supabase
+    .from('vw_catalogo_unificado' as any)
+    .select('*')
 
-  if (viewResult.error || variantsResult.error) {
-    console.error('Error fetching parts:', viewResult.error || variantsResult.error)
+  if (viewError) {
+    console.error('Error fetching parts:', viewError)
     return []
-  }
-
-  const variantsByBaseRef = new Map<string, PartVariant[]>()
-  for (const row of variantsResult.data || []) {
-    const baseReference = (row.referencia || '').replace(/-IS$/i, '').trim()
-    if (!variantsByBaseRef.has(baseReference)) {
-      variantsByBaseRef.set(baseReference, [])
-    }
-    variantsByBaseRef.get(baseReference)!.push(row as PartVariant)
   }
 
   const groupsMap = new Map<string, PartGroup>()
 
-  for (const row of viewResult.data || []) {
+  for (const row of viewResult || []) {
     const baseRef = row.referencia_base || ''
-    const variants = variantsByBaseRef.get(baseRef) || []
 
     groupsMap.set(baseRef, {
       baseReference: baseRef,
@@ -159,7 +148,7 @@ export async function fetchParts(): Promise<PartGroup[]> {
       totalAvailable: Number(row.estoque_total) || 0,
       coresDisponiveis: row.cores_disponiveis || [],
       imagemPrincipal: row.imagem_principal,
-      variants,
+      variants: [],
     })
   }
 
