@@ -14,8 +14,15 @@ interface PartCardProps {
 }
 
 export function PartCard({ group, onAddBudget }: PartCardProps) {
-  const { coresDisponiveis, imagemPrincipal, totalAvailable, name, baseReference, valorMinimo } =
-    group
+  const {
+    coresDisponiveis,
+    imagemPrincipal,
+    totalAvailable,
+    name,
+    baseReference,
+    valorMinimo,
+    detalhesPorCor,
+  } = group
 
   const uniqueColors = useMemo(() => {
     if (coresDisponiveis && coresDisponiveis.length > 0) return coresDisponiveis
@@ -25,17 +32,24 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
   const [selectedColor, setSelectedColor] = useState<string | null>(() =>
     uniqueColors.length === 1 ? uniqueColors[0] : null,
   )
-  const [allVariants, setAllVariants] = useState<any[]>([])
+  const [allVariants, setAllVariants] = useState<any[]>(detalhesPorCor || [])
   const [loadingVariants, setLoadingVariants] = useState(false)
   const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
+    if (detalhesPorCor && detalhesPorCor.length > 0) {
+      setAllVariants(detalhesPorCor)
+      return
+    }
+
     let isMounted = true
     async function fetchVariants() {
       setLoadingVariants(true)
       const { data } = await supabase
         .from('revenda_ubiqua')
-        .select('*, empresa:empresas!fk_empresa(nome)')
+        .select(
+          'id, referencia, descricao, valor_revenda, cor, disponivel, imagem_catalogo_url, empresa:empresas!fk_empresa(nome)',
+        )
         .or(
           `referencia.eq.${baseReference},referencia.eq.${baseReference}-IS,referencia.ilike.${baseReference} -%`,
         )
@@ -57,7 +71,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     return () => {
       isMounted = false
     }
-  }, [baseReference])
+  }, [baseReference, detalhesPorCor])
 
   const selectedVariant = useMemo(() => {
     if (!selectedColor) return null
@@ -83,7 +97,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     currency: 'BRL',
   }).format(displayPrice)
 
-  const lampName = name || 'Peça'
+  const lampName = name || baseReference || 'Peça'
 
   const cleanDescription = selectedVariant?.descricao
     ? selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim()
@@ -115,14 +129,26 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     'VERDE SÁLVIA': '#77815C',
   }
 
+  const getVariantStockForColor = (colorName: string) => {
+    const colorVariants = allVariants.filter((v) => {
+      const c = v.cor?.toUpperCase().trim() || 'PADRÃO'
+      return c === colorName.toUpperCase().trim()
+    })
+    if (colorVariants.length === 0) return 0
+    return colorVariants.reduce((sum, curr) => sum + (curr.disponivel || 0), 0)
+  }
+
   let stockDisplay = ''
   if (selectedColor && selectedVariant) {
-    stockDisplay = `${selectedVariant.disponivel || 0} disponível em ${selectedColor}`
+    const qty = getVariantStockForColor(selectedColor)
+    stockDisplay = `${qty} disponível em ${selectedColor}`
   } else {
     stockDisplay = `${totalAvailable || 0} disponível`
   }
 
-  const isOutOfStock = selectedColor ? (selectedVariant?.disponivel || 0) <= 0 : totalAvailable <= 0
+  const isOutOfStock = selectedColor
+    ? getVariantStockForColor(selectedColor) <= 0
+    : totalAvailable <= 0
 
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-orange-200/50 hover:border-orange-500/30">
@@ -180,6 +206,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
             {uniqueColors.map((colorName) => {
               const hex = colorMap[colorName.toUpperCase()] || '#CCCCCC'
               const isWhite = hex === '#FFFFFF'
+              const qty = getVariantStockForColor(colorName)
               return (
                 <button
                   key={colorName}
@@ -191,7 +218,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
                       : 'opacity-80 hover:opacity-100 hover:scale-105',
                   )}
                   style={{ backgroundColor: hex }}
-                  title={colorName}
+                  title={`${colorName} - ${qty} disponível`}
                   onClick={(e) => {
                     e.preventDefault()
                     setSelectedColor(selectedColor === colorName ? null : colorName)

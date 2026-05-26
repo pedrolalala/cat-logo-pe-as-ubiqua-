@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { PartVariant } from '@/lib/api'
 
 export type GroupedPart = {
   baseReference: string
@@ -8,6 +9,7 @@ export type GroupedPart = {
   coresDisponiveis: string[]
   imagemPrincipal: string | null
   valorMinimo: number
+  detalhesPorCor: PartVariant[]
 }
 
 export function useParts() {
@@ -36,6 +38,7 @@ export function useParts() {
           coresDisponiveis: row.cores_disponiveis || [],
           imagemPrincipal: row.imagem_principal,
           valorMinimo: Number(row.valor_minimo) || 0,
+          detalhesPorCor: ((row as any).detalhes_por_cor as PartVariant[]) || [],
         })
       }
 
