@@ -1,16 +1,14 @@
 import { useState, useEffect, useMemo } from 'react'
-import { PartVariant } from '@/lib/api'
 import { GroupedPart } from '@/hooks/use-parts'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ShoppingCart, ImageOff, Loader2 } from 'lucide-react'
+import { ShoppingCart, ImageOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { supabase } from '@/lib/supabase/client'
 
 interface PartCardProps {
   group: GroupedPart
-  onAddBudget: (variant: PartVariant) => void
+  onAddBudget: (variant: any) => void
 }
 
 export function PartCard({ group, onAddBudget }: PartCardProps) {
@@ -18,9 +16,8 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     coresDisponiveis,
     imagemPrincipal,
     totalAvailable,
-    name,
-    baseReference,
-    valorMinimo,
+    nomeExibicao,
+    valorRevenda,
     detalhesPorCor,
   } = group
 
@@ -32,50 +29,15 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
   const [selectedColor, setSelectedColor] = useState<string | null>(() =>
     uniqueColors.length === 1 ? uniqueColors[0] : null,
   )
-  const [allVariants, setAllVariants] = useState<any[]>(detalhesPorCor || [])
-  const [loadingVariants, setLoadingVariants] = useState(false)
   const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
-    if (detalhesPorCor && detalhesPorCor.length > 0) {
-      setAllVariants(detalhesPorCor)
-      return
-    }
-
-    let isMounted = true
-    async function fetchVariants() {
-      setLoadingVariants(true)
-      const { data } = await supabase
-        .from('revenda_ubiqua')
-        .select(
-          'id, referencia, descricao, valor_revenda, cor, disponivel, imagem_catalogo_url, empresa:empresas!fk_empresa(nome)',
-        )
-        .or(
-          `referencia.eq.${baseReference},referencia.eq.${baseReference}-IS,referencia.ilike.${baseReference} -%`,
-        )
-
-      if (isMounted && data) {
-        const mappedData = data.map((v) => {
-          const emp = Array.isArray(v.empresa) ? v.empresa[0] : v.empresa
-          return {
-            ...v,
-            empresa: emp?.nome || 'Não informada',
-          }
-        })
-        setAllVariants(mappedData)
-      }
-      if (isMounted) setLoadingVariants(false)
-    }
-
-    fetchVariants()
-    return () => {
-      isMounted = false
-    }
-  }, [baseReference, detalhesPorCor])
+    setImageError(false)
+  }, [selectedColor])
 
   const selectedVariant = useMemo(() => {
     if (!selectedColor) return null
-    const colorVariants = allVariants.filter((v) => {
+    const colorVariants = detalhesPorCor.filter((v) => {
       const c = v.cor?.toUpperCase().trim() || 'PADRÃO'
       return c === selectedColor.toUpperCase().trim()
     })
@@ -85,19 +47,15 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     return colorVariants.reduce((prev, curr) =>
       (curr.disponivel || 0) > (prev.disponivel || 0) ? curr : prev,
     )
-  }, [selectedColor, allVariants])
+  }, [selectedColor, detalhesPorCor])
 
-  useEffect(() => {
-    setImageError(false)
-  }, [selectedVariant])
-
-  const displayPrice = selectedVariant?.valor_revenda ?? valorMinimo ?? 0
+  const displayPrice = selectedVariant?.valor_revenda ?? valorRevenda ?? 0
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
   }).format(displayPrice)
 
-  const lampName = name || baseReference || 'Peça'
+  const lampName = nomeExibicao || 'Peça'
 
   const cleanDescription = selectedVariant?.descricao
     ? selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim()
@@ -110,15 +68,14 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     return null
   }
 
-  const sixDigits = selectedVariant
-    ? getSixDigits(selectedVariant.referencia)
-    : getSixDigits(baseReference)
+  const sixDigits = selectedVariant ? getSixDigits(selectedVariant.referencia) : null
 
   const storageBaseUrl =
     'https://vcvcwzmbiftcawncibke.supabase.co/storage/v1/object/public/revenda-ubiqua-images/catalogos/'
 
   const mappedImageUrl =
     selectedVariant?.imagem_catalogo_url ||
+    selectedVariant?.imagem_url ||
     (sixDigits ? `${storageBaseUrl}${sixDigits}_catalogo.jpg` : null) ||
     imagemPrincipal
 
@@ -127,15 +84,36 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     PRETA: '#000000',
     AREIA: '#D2B48C',
     'VERDE SÁLVIA': '#77815C',
+    'VERDE SALVIA': '#77815C',
+    'OURO VELHO': '#CFB53B',
+    PRATA: '#C0C0C0',
+    COBRE: '#B87333',
+    DOURADA: '#D4AF37',
+    DOURADO: '#D4AF37',
+    CORTEN: '#B87333',
+    NÍQUEL: '#727472',
+    NIQUEL: '#727472',
+    AMARELA: '#FFFF00',
+    AMARELO: '#FFFF00',
+    AZUL: '#0000FF',
+    VERMELHA: '#FF0000',
+    VERMELHO: '#FF0000',
+    VERDE: '#008000',
+    ROSA: '#FFC0CB',
+    LILAS: '#C8A2C8',
+    MARROM: '#964B00',
+    LARANJA: '#FFA500',
+    GRAFITE: '#383428',
+    CHUMBO: '#5A5A5A',
   }
 
   const getVariantStockForColor = (colorName: string) => {
-    const colorVariants = allVariants.filter((v) => {
+    const colorVariants = detalhesPorCor.filter((v) => {
       const c = v.cor?.toUpperCase().trim() || 'PADRÃO'
       return c === colorName.toUpperCase().trim()
     })
     if (colorVariants.length === 0) return 0
-    return colorVariants.reduce((sum, curr) => sum + (curr.disponivel || 0), 0)
+    return colorVariants.reduce((sum, curr) => sum + (Number(curr.disponivel) || 0), 0)
   }
 
   let stockDisplay = ''
@@ -174,7 +152,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
             variant="secondary"
             className="font-mono font-bold text-xs bg-background/90 backdrop-blur-sm text-foreground shadow-sm"
           >
-            {baseReference}
+            {selectedVariant?.referencia || detalhesPorCor[0]?.referencia || 'N/A'}
           </Badge>
           <Badge
             className={cn(
@@ -231,14 +209,16 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
 
         <div className="flex items-center gap-2 mt-2">
           <p className="text-2xl font-bold text-orange-600">{formattedPrice}</p>
-          {loadingVariants && <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-0">
         <Button
           className="w-full shadow-sm transition-transform active:scale-95 bg-orange-500 hover:bg-orange-600 text-white"
-          onClick={() => selectedVariant && onAddBudget(selectedVariant)}
-          disabled={!selectedVariant || loadingVariants}
+          onClick={() => {
+            const variantToAdd = selectedVariant || detalhesPorCor[0]
+            if (variantToAdd) onAddBudget(variantToAdd)
+          }}
+          disabled={!selectedVariant && detalhesPorCor.length === 0}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
           Adicionar ao Orçamento

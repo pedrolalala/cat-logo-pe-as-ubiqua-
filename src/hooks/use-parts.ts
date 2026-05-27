@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { PartVariant } from '@/lib/api'
 
 export type GroupedPart = {
-  baseReference: string
-  name: string
+  nomeExibicao: string
   totalAvailable: number
   coresDisponiveis: string[]
   imagemPrincipal: string | null
-  valorMinimo: number
-  detalhesPorCor: PartVariant[]
+  valorRevenda: number
+  detalhesPorCor: any[]
 }
 
 export function useParts() {
@@ -22,30 +20,26 @@ export function useParts() {
       setLoading(true)
       setError(null)
 
-      const viewResult = await supabase.from('vw_catalogo_unificado').select('*')
+      const viewResult = await supabase.from('vw_catalogo_ubiqua').select('*')
 
       if (viewResult.error) throw viewResult.error
 
       const groupsMap = new Map<string, GroupedPart>()
 
       for (const row of viewResult.data || []) {
-        const baseRef = row.referencia_base || ''
-
-        groupsMap.set(baseRef, {
-          baseReference: baseRef,
-          name: row.nome_exibicao || baseRef,
+        const nome = row.nome_exibicao || 'Sem nome'
+        groupsMap.set(nome, {
+          nomeExibicao: nome,
           totalAvailable: Number(row.estoque_total) || 0,
           coresDisponiveis: row.cores_disponiveis || [],
           imagemPrincipal: row.imagem_principal,
-          valorMinimo: Number(row.valor_minimo) || 0,
-          detalhesPorCor: ((row as any).detalhes_por_cor as PartVariant[]) || [],
+          valorRevenda: Number(row.valor_revenda) || 0,
+          detalhesPorCor: (row.detalhes_por_cor as any[]) || [],
         })
       }
 
       setData(
-        Array.from(groupsMap.values()).sort((a, b) =>
-          a.baseReference.localeCompare(b.baseReference),
-        ),
+        Array.from(groupsMap.values()).sort((a, b) => a.nomeExibicao.localeCompare(b.nomeExibicao)),
       )
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error occurred'))

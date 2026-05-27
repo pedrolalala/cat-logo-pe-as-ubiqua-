@@ -6,21 +6,17 @@ import { Button } from '@/components/ui/button'
 import { AlertCircle, PackageSearch } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { QuantityModal } from '@/components/QuantityModal'
-import { PartVariant } from '@/lib/api'
 
 export default function Index() {
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q')?.toLowerCase() || ''
   const { data, loading, error, refetch } = useParts()
-  const [selectedVariant, setSelectedVariant] = useState<PartVariant | null>(null)
+  const [selectedVariant, setSelectedVariant] = useState<any | null>(null)
 
   const filteredData = useMemo(() => {
     if (!query) return data
     return data.filter((group) => {
-      return (
-        group.baseReference.toLowerCase().includes(query) ||
-        group.name.toLowerCase().includes(query)
-      )
+      return group.nomeExibicao.toLowerCase().includes(query)
     })
   }, [data, query])
 
@@ -75,7 +71,7 @@ export default function Index() {
         <p className="text-muted-foreground max-w-md text-lg">
           Não encontramos nenhum resultado para{' '}
           <span className="font-semibold text-foreground">"{query}"</span>. Tente buscar por outros
-          termos de referência ou descrição.
+          termos de descrição.
         </p>
       </div>
     )
@@ -86,7 +82,7 @@ export default function Index() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredData.map((group, i) => (
           <div
-            key={group.baseReference}
+            key={group.nomeExibicao + i}
             className="animate-fade-in-up"
             style={{ animationDelay: `${i * 50}ms` }}
           >
@@ -95,11 +91,13 @@ export default function Index() {
         ))}
       </div>
 
-      <QuantityModal
-        part={selectedVariant as any}
-        isOpen={!!selectedVariant}
-        onClose={() => setSelectedVariant(null)}
-      />
+      {selectedVariant && (
+        <QuantityModal
+          part={selectedVariant}
+          isOpen={!!selectedVariant}
+          onClose={() => setSelectedVariant(null)}
+        />
+      )}
     </div>
   )
 }
