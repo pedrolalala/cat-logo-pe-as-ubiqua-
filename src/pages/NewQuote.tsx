@@ -43,7 +43,19 @@ export default function NewQuote() {
   const [observacoes, setObservacoes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const [savedQuote, setSavedQuote] = useState<QuoteData | null>(null)
+
+  const colorMap: Record<string, string> = {
+    'UV BRONZE': '#A87932',
+    'UV CHROME': '#D1D1D1',
+    'UV DOURADA': '#D4AF37',
+    'MÁRMORE VERDE': '#2E473B',
+    'MÁRMORE PRETO': '#1A1A1A',
+    'MÁRMORE BRANCO': '#F2F2F2',
+    CIMENTO: '#8E9089',
+    'VERMELHO CHAMA': '#CF352E',
+  }
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
@@ -64,9 +76,7 @@ export default function NewQuote() {
   const isIdentValid =
     clienteInfo.nome.trim() !== '' &&
     clienteInfo.email.trim() !== '' &&
-    clienteInfo.telefone.trim() !== '' &&
-    clienteInfo.cpf_cnpj.trim() !== '' &&
-    clienteInfo.data_nascimento.trim() !== ''
+    clienteInfo.telefone.trim() !== ''
 
   const totalGeral = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
 
@@ -75,7 +85,11 @@ export default function NewQuote() {
 
   const handleInitiateSave = () => {
     if (!user && !isIdentValid) {
-      toast.error('Por favor, preencha todos os campos obrigatórios de identificação.')
+      toast.error('Por favor, preencha Nome, E-mail e Telefone para continuar.')
+      return
+    }
+    if (!user && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clienteInfo.email)) {
+      toast.error('Formato de e-mail inválido.')
       return
     }
     executeSaveQuote()
@@ -115,9 +129,11 @@ export default function NewQuote() {
       try {
         const lead = await saveClienteInfo(clienteInfo)
         leadId = lead.id
-      } catch (err) {
+      } catch (err: any) {
         setSaveError(true)
-        toast.error('Não foi possível salvar seus dados de contato.')
+        const msg = err.message || err.details || 'Não foi possível salvar seus dados de contato.'
+        setErrorMessage(msg)
+        toast.error(`Erro ao salvar dados de contato: ${msg}`)
         setIsSaving(false)
         return
       }
@@ -137,10 +153,21 @@ export default function NewQuote() {
       setSavedQuote(saved)
       clearCart()
       toast.success('Orçamento gerado com sucesso!')
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
       setSaveError(true)
-      toast.error('Erro ao processar o orçamento. Verifique os dados e tente novamente.')
+      const msg =
+        e.message ||
+        e.details ||
+        e.hint ||
+        'Erro ao processar o orçamento. Verifique os dados e tente novamente.'
+      if (msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('network')) {
+        setErrorMessage('Tempo de conexão esgotado. Verifique sua internet e tente novamente.')
+        toast.error('Tempo de conexão esgotado. Verifique sua internet e tente novamente.')
+      } else {
+        setErrorMessage(msg)
+        toast.error(`Falha na solicitação: ${msg}`)
+      }
     } finally {
       setIsSaving(false)
     }
@@ -197,9 +224,15 @@ export default function NewQuote() {
           <CheckCircle className="w-10 h-10 text-orange-500" />
         </div>
         <h2 className="text-3xl font-bold mb-4">Orçamento Salvo!</h2>
-        <p className="text-muted-foreground mb-8 max-w-md text-lg">
+        <p className="text-muted-foreground mb-4 max-w-md text-lg">
           O seu orçamento foi registrado com sucesso e já está disponível no sistema.
         </p>
+
+        {savedQuote?.numero_orcamento && (
+          <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-2 rounded-lg font-mono text-lg font-semibold mb-8">
+            Nº {savedQuote.numero_orcamento}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-4 mb-10 w-full max-w-md justify-center">
           <Button
@@ -382,8 +415,8 @@ export default function NewQuote() {
           <div className="flex-1">
             <h3 className="font-semibold">Erro ao salvar o orçamento</h3>
             <p className="text-sm mt-1 mb-3">
-              Não foi possível conectar ao servidor para salvar o seu orçamento. Verifique sua
-              conexão e tente novamente.
+              {errorMessage ||
+                'Não foi possível conectar ao servidor para salvar o seu orçamento. Verifique sua conexão e tente novamente.'}
             </p>
             <Button
               variant="outline"
@@ -417,7 +450,11 @@ export default function NewQuote() {
                   <TableCell className="font-medium">
                     {item.descricao}
                     {item.cor && (
-                      <span className="block text-xs text-muted-foreground mt-1">
+                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                        <span
+                          className="w-3 h-3 rounded-full inline-block border border-black/10"
+                          style={{ backgroundColor: colorMap[item.cor.toUpperCase()] || '#ccc' }}
+                        />
                         Cor: {item.cor}
                       </span>
                     )}
@@ -494,16 +531,13 @@ export default function NewQuote() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">
-                      CPF / CNPJ <span className="text-destructive">*</span>
-                    </Label>
+                    <Label className="text-xs">CPF / CNPJ</Label>
                     <Input
                       value={clienteInfo.cpf_cnpj}
                       onChange={(e) =>
                         setClienteInfo((prev) => ({ ...prev, cpf_cnpj: e.target.value }))
                       }
-                      placeholder="Ex: 000.000.000-00"
-                      required
+                      placeholder="Ex: 000.000.000-00 (Opcional)"
                       className="h-8 text-sm"
                     />
                   </div>
@@ -538,17 +572,14 @@ export default function NewQuote() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">
-                      Data de Nascimento <span className="text-destructive">*</span>
-                    </Label>
+                    <Label className="text-xs">Data de Nascimento</Label>
                     <Input
                       type="date"
                       value={clienteInfo.data_nascimento}
                       onChange={(e) =>
                         setClienteInfo((prev) => ({ ...prev, data_nascimento: e.target.value }))
                       }
-                      required
-                      className="h-8 text-sm"
+                      className="h-8 text-sm text-muted-foreground"
                     />
                   </div>
                 </div>

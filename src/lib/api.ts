@@ -37,6 +37,14 @@ export async function saveClienteInfo(data: {
   cpf_cnpj: string
   data_nascimento?: string
 }): Promise<{ id: string }> {
+  const payload = {
+    nome: data.nome,
+    email: data.email,
+    telefone: data.telefone,
+    ...(data.cpf_cnpj ? { cpf_cnpj: data.cpf_cnpj } : {}),
+    ...(data.data_nascimento ? { data_nascimento: data.data_nascimento } : {}),
+  }
+
   const { data: existing } = await supabase
     .from('informacoes_cliente_ubiqua')
     .select('id')
@@ -44,19 +52,26 @@ export async function saveClienteInfo(data: {
     .maybeSingle()
 
   if (existing) {
-    await supabase.from('informacoes_cliente_ubiqua').update(data).eq('id', existing.id)
+    const { error } = await supabase
+      .from('informacoes_cliente_ubiqua')
+      .update(payload)
+      .eq('id', existing.id)
+    if (error) {
+      console.error('Error updating client info:', error)
+      throw new Error(error.message || 'Falha ao atualizar dados do cliente.')
+    }
     return existing
   }
 
   const { data: inserted, error } = await supabase
     .from('informacoes_cliente_ubiqua')
-    .insert(data)
+    .insert(payload)
     .select('id')
     .single()
 
   if (error) {
     console.error('Error saving client info:', error)
-    throw error
+    throw new Error(error.message || 'Falha ao cadastrar cliente.')
   }
 
   return inserted
@@ -73,6 +88,7 @@ export async function saveQuoteToSupabase(quoteData: any): Promise<QuoteData> {
     .from('orcamentos_revenda_ubiqua')
     .insert({
       cliente_id: cliente_id,
+      numero_orcamento: '', // Trigger fn_auto_numero_orcamento will generate this
       valor_subtotal: quoteData.valor_total,
       valor_total: quoteData.valor_total,
       status: 'rascunho',
@@ -83,7 +99,7 @@ export async function saveQuoteToSupabase(quoteData: any): Promise<QuoteData> {
 
   if (orcError) {
     console.error('Error saving orcamento:', orcError)
-    throw orcError
+    throw new Error(orcError.message || 'Falha ao salvar orçamento.')
   }
 
   if (quoteData.items && quoteData.items.length > 0) {
@@ -104,7 +120,7 @@ export async function saveQuoteToSupabase(quoteData: any): Promise<QuoteData> {
 
     if (itemsError) {
       console.error('Error saving orcamento_itens:', itemsError)
-      throw itemsError
+      throw new Error(itemsError.message || 'Falha ao salvar itens do orçamento.')
     }
   }
 
