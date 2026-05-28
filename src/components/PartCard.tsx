@@ -87,10 +87,11 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     : totalAvailable <= 0
 
   const handleViewDetails = () => {
+    const state = { fromCatalog: true }
     if (selectedColor && selectedColor !== 'PADRÃO') {
-      navigate(`/produto/${group.slug}?cor=${encodeURIComponent(selectedColor)}`)
+      navigate(`/produto/${group.slug}?cor=${encodeURIComponent(selectedColor)}`, { state })
     } else {
-      navigate(`/produto/${group.slug}`)
+      navigate(`/produto/${group.slug}`, { state })
     }
   }
 

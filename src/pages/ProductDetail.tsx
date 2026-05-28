@@ -133,7 +133,7 @@ export default function ProductDetail() {
         variant="ghost"
         className="mb-6 -ml-4 text-muted-foreground hover:text-foreground"
         onClick={() => {
-          if (location.key !== 'default') {
+          if (location.state?.fromCatalog) {
             navigate(-1)
           } else {
             navigate('/')
