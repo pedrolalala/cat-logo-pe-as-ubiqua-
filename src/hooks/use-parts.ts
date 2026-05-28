@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase/client'
 
 export type GroupedPart = {
   id: string
+  slug: string
   nomeExibicao: string
   totalAvailable: number
   coresDisponiveis: string[]
@@ -10,6 +11,53 @@ export type GroupedPart = {
   valorRevenda: number
   detalhesPorCor: any[]
   ordem: number
+}
+
+export function getVariantImage(variant: any, fallbackImage: string | null) {
+  const getSixDigits = (ref: string | null) => {
+    if (!ref) return null
+    const match = ref.match(/^[0-9]{6}/)
+    if (match) return match[0]
+    return null
+  }
+  const sixDigits = variant ? getSixDigits(variant.referencia) : null
+  const storageBaseUrl =
+    'https://vcvcwzmbiftcawncibke.supabase.co/storage/v1/object/public/revenda-ubiqua-images/catalogos/'
+
+  return (
+    variant?.imagem_catalogo_url ||
+    variant?.imagem_url ||
+    fallbackImage ||
+    (sixDigits ? `${storageBaseUrl}${sixDigits}_catalogo.jpg` : null)
+  )
+}
+
+export const colorMap: Record<string, string> = {
+  BRANCA: '#FFFFFF',
+  PRETA: '#000000',
+  AREIA: '#D2B48C',
+  'VERDE SÁLVIA': '#77815C',
+  'VERDE SALVIA': '#77815C',
+  'OURO VELHO': '#CFB53B',
+  PRATA: '#C0C0C0',
+  COBRE: '#B87333',
+  DOURADA: '#D4AF37',
+  DOURADO: '#D4AF37',
+  CORTEN: '#B87333',
+  NÍQUEL: '#727472',
+  NIQUEL: '#727472',
+  AMARELA: '#FFFF00',
+  AMARELO: '#FFFF00',
+  AZUL: '#0000FF',
+  VERMELHA: '#FF0000',
+  VERMELHO: '#FF0000',
+  VERDE: '#008000',
+  ROSA: '#FFC0CB',
+  LILAS: '#C8A2C8',
+  MARROM: '#964B00',
+  LARANJA: '#FFA500',
+  GRAFITE: '#383428',
+  CHUMBO: '#5A5A5A',
 }
 
 export function groupCatalogItems(items: any[]): GroupedPart[] {
@@ -21,8 +69,17 @@ export function groupCatalogItems(items: any[]): GroupedPart[] {
     const key = `${desc.toLowerCase()}_${price.toFixed(2)}`
 
     if (!groups.has(key)) {
+      const slugBase = desc
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+      const slug = `${slugBase}-${price.toFixed(2).replace('.', '-')}`
+
       groups.set(key, {
         id: key,
+        slug,
         nomeExibicao: desc,
         totalAvailable: 0,
         coresDisponiveis: [],

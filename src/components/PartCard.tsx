@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
-import { GroupedPart } from '@/hooks/use-parts'
+import { useNavigate } from 'react-router-dom'
+import { GroupedPart, getVariantImage, colorMap } from '@/hooks/use-parts'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,10 +10,10 @@ import { cn } from '@/lib/utils'
 interface PartCardProps {
   group: GroupedPart
   onAddBudget: (variant: any) => void
-  onViewDetails: (variant: any) => void
 }
 
-export function PartCard({ group, onAddBudget, onViewDetails }: PartCardProps) {
+export function PartCard({ group, onAddBudget }: PartCardProps) {
+  const navigate = useNavigate()
   const {
     coresDisponiveis,
     imagemPrincipal,
@@ -62,51 +63,7 @@ export function PartCard({ group, onAddBudget, onViewDetails }: PartCardProps) {
     ? selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim()
     : lampName
 
-  const getSixDigits = (ref: string | null) => {
-    if (!ref) return null
-    const match = ref.match(/^[0-9]{6}/)
-    if (match) return match[0]
-    return null
-  }
-
-  const sixDigits = selectedVariant ? getSixDigits(selectedVariant.referencia) : null
-
-  const storageBaseUrl =
-    'https://vcvcwzmbiftcawncibke.supabase.co/storage/v1/object/public/revenda-ubiqua-images/catalogos/'
-
-  const mappedImageUrl =
-    selectedVariant?.imagem_catalogo_url ||
-    selectedVariant?.imagem_url ||
-    imagemPrincipal ||
-    (sixDigits ? `${storageBaseUrl}${sixDigits}_catalogo.jpg` : null)
-
-  const colorMap: Record<string, string> = {
-    BRANCA: '#FFFFFF',
-    PRETA: '#000000',
-    AREIA: '#D2B48C',
-    'VERDE SÁLVIA': '#77815C',
-    'VERDE SALVIA': '#77815C',
-    'OURO VELHO': '#CFB53B',
-    PRATA: '#C0C0C0',
-    COBRE: '#B87333',
-    DOURADA: '#D4AF37',
-    DOURADO: '#D4AF37',
-    CORTEN: '#B87333',
-    NÍQUEL: '#727472',
-    NIQUEL: '#727472',
-    AMARELA: '#FFFF00',
-    AMARELO: '#FFFF00',
-    AZUL: '#0000FF',
-    VERMELHA: '#FF0000',
-    VERMELHO: '#FF0000',
-    VERDE: '#008000',
-    ROSA: '#FFC0CB',
-    LILAS: '#C8A2C8',
-    MARROM: '#964B00',
-    LARANJA: '#FFA500',
-    GRAFITE: '#383428',
-    CHUMBO: '#5A5A5A',
-  }
+  const mappedImageUrl = getVariantImage(selectedVariant, imagemPrincipal)
 
   const getVariantStockForColor = (colorName: string) => {
     const colorVariants = detalhesPorCor.filter((v) => {
@@ -130,8 +87,11 @@ export function PartCard({ group, onAddBudget, onViewDetails }: PartCardProps) {
     : totalAvailable <= 0
 
   const handleViewDetails = () => {
-    const variantToView = selectedVariant || detalhesPorCor[0]
-    if (variantToView) onViewDetails(variantToView)
+    if (selectedColor && selectedColor !== 'PADRÃO') {
+      navigate(`/produto/${group.slug}?cor=${encodeURIComponent(selectedColor)}`)
+    } else {
+      navigate(`/produto/${group.slug}`)
+    }
   }
 
   return (

@@ -7,6 +7,7 @@ import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import NewQuote from './pages/NewQuote'
 import AdminPage from './pages/admin/AdminPage'
+import ProductDetail from './pages/ProductDetail'
 import { CartProvider } from './hooks/use-cart'
 import { AuthProvider } from './hooks/use-auth'
 import { AuthWrapper } from './components/AuthWrapper'
@@ -22,6 +23,7 @@ const App = () => (
             <Route element={<Layout />}>
               <Route path="/" element={<Index />} />
               <Route path="/produtos" element={<Index />} />
+              <Route path="/produto/:slug" element={<ProductDetail />} />
               <Route path="/novo-orcamento" element={<NewQuote />} />
               <Route path="/carrinho" element={<NewQuote />} />
               <Route

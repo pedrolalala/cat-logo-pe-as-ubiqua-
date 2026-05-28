@@ -6,18 +6,12 @@ import { Button } from '@/components/ui/button'
 import { AlertCircle, PackageSearch } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { QuantityModal } from '@/components/QuantityModal'
-import { PartDetailSheet } from '@/components/PartDetailSheet'
 
 export default function Index() {
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q')?.toLowerCase() || ''
   const { data, loading, error, refetch } = useParts()
   const [selectedVariant, setSelectedVariant] = useState<any | null>(null)
-  const [detailVariant, setDetailVariant] = useState<{
-    variant: any
-    groupName: string
-    groupImage: string | null
-  } | null>(null)
 
   const filteredData = useMemo(() => {
     if (!query) return data
@@ -92,17 +86,7 @@ export default function Index() {
             className="animate-fade-in-up"
             style={{ animationDelay: `${i * 50}ms` }}
           >
-            <PartCard
-              group={group}
-              onAddBudget={(variant) => setSelectedVariant(variant)}
-              onViewDetails={(variant) =>
-                setDetailVariant({
-                  variant,
-                  groupName: group.nomeExibicao,
-                  groupImage: group.imagemPrincipal,
-                })
-              }
-            />
+            <PartCard group={group} onAddBudget={(variant) => setSelectedVariant(variant)} />
           </div>
         ))}
       </div>
@@ -112,17 +96,6 @@ export default function Index() {
           part={selectedVariant}
           isOpen={!!selectedVariant}
           onClose={() => setSelectedVariant(null)}
-        />
-      )}
-
-      {detailVariant && (
-        <PartDetailSheet
-          variant={detailVariant.variant}
-          groupName={detailVariant.groupName}
-          groupImage={detailVariant.groupImage}
-          isOpen={!!detailVariant}
-          onClose={() => setDetailVariant(null)}
-          onAddBudget={(variant) => setSelectedVariant(variant)}
         />
       )}
     </div>
