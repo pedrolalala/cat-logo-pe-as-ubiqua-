@@ -1,40 +1,47 @@
-import { useState, useEffect, useRef } from 'react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from 'sonner'
-import {
-  Search,
-  Upload,
-  Trash2,
-  Image as ImageIcon,
-  Loader2,
-  Files,
-  GripVertical,
-} from 'lucide-react'
+import { useEffect, useState } from 'react'
 import {
   fetchCatalogItems,
-  uploadCatalogImage,
-  updateCatalogImageUrl,
-  updateCatalogImageUrlByReferencia,
-  uploadCatalogImageExact,
   updateCatalogOrder,
+  updateCatalogImageUrl,
+  uploadCatalogImage,
+  updateCatalogItemDetails,
+  createCatalogItem,
   CatalogItem,
 } from '@/lib/api-admin'
-import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
+import { toast } from 'sonner'
+import {
+  Loader2,
+  Search,
+  Upload,
+  Image as ImageIcon,
+  ArrowUp,
+  ArrowDown,
+  Edit,
+  Plus,
+} from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 
 export function AdminImages() {
   const [items, setItems] = useState<CatalogItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [uploadingId, setUploadingId] = useState<number | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const batchFileInputRef = useRef<HTMLInputElement>(null)
-  const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null)
-  const [isBatchUploading, setIsBatchUploading] = useState(false)
-  const [savingOrder, setSavingOrder] = useState(false)
 
-  const [draggedItem, setDraggedItem] = useState<CatalogItem | null>(null)
+  const [editingItem, setEditingItem] = useState<CatalogItem | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
+  const [formState, setFormState] = useState({ referencia: '', descricao: '', cor: '' })
+  const [savingEdit, setSavingEdit] = useState(false)
 
   const loadItems = async (q: string = '') => {
     setLoading(true)
@@ -42,163 +49,119 @@ export function AdminImages() {
       const data = await fetchCatalogItems(q)
       setItems(data)
     } catch (error) {
-      toast.error('Erro ao buscar itens do catálogo.')
+      toast.error('Erro ao carregar itens do catálogo')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    const timer = setTimeout(() => loadItems(search), 500)
-    return () => clearTimeout(timer)
+    const delay = setTimeout(() => {
+      loadItems(search)
+    }, 500)
+    return () => clearTimeout(delay)
   }, [search])
 
-  const handleUploadClick = (item: CatalogItem) => {
-    setSelectedItem(item)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-      fileInputRef.current.click()
-    }
-  }
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !selectedItem) return
-
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type)) {
-      toast.error('Formato de arquivo inválido. Use JPG, PNG ou WEBP.')
-      return
-    }
-
-    setUploadingId(selectedItem.id)
+  const handleFileUpload = async (id: number, file: File) => {
     try {
-      const safeReferencia = selectedItem.referencia.replace(/[^a-zA-Z0-9-]/g, '')
-      const url = await uploadCatalogImageExact(file, safeReferencia)
-      await updateCatalogImageUrl(selectedItem.id, `${url}?t=${Date.now()}`)
-      toast.success('Imagem enviada com sucesso!')
+      setUploadingId(id)
+      const item = items.find((i) => i.id === id)
+      const prefix = item?.referencia || `item_${id}`
+      const url = await uploadCatalogImage(file, prefix)
+      await updateCatalogImageUrl(id, url)
+      toast.success('Imagem atualizada com sucesso')
       loadItems(search)
     } catch (error) {
-      toast.error('Erro ao enviar imagem.')
-      console.error(error)
-    } finally {
-      setUploadingId(null)
-      setSelectedItem(null)
-    }
-  }
-
-  const handleRemoveImage = async (id: number) => {
-    setUploadingId(id)
-    try {
-      await updateCatalogImageUrl(id, null)
-      toast.success('Imagem removida com sucesso!')
-      loadItems(search)
-    } catch (error) {
-      toast.error('Erro ao remover imagem.')
+      toast.error('Erro ao fazer upload da imagem')
     } finally {
       setUploadingId(null)
     }
   }
 
-  const handleBatchUploadClick = () => {
-    if (batchFileInputRef.current) {
-      batchFileInputRef.current.value = ''
-      batchFileInputRef.current.click()
-    }
-  }
+  const handleMoveOrder = async (index: number, direction: 'up' | 'down') => {
+    const newItems = [...items]
+    const swapIndex = direction === 'up' ? index - 1 : index + 1
 
-  const handleBatchFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+    if (swapIndex < 0 || swapIndex >= newItems.length) return
 
-    setIsBatchUploading(true)
-    let successCount = 0
-    let errorCount = 0
+    const tempOrder = newItems[index].ordem
+    newItems[index].ordem = newItems[swapIndex].ordem
+    newItems[swapIndex].ordem = tempOrder
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
+    const tempItem = newItems[index]
+    newItems[index] = newItems[swapIndex]
+    newItems[swapIndex] = tempItem
 
-      if (!['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type)) {
-        errorCount++
-        continue
-      }
+    setItems(newItems)
 
-      const match = file.name.match(/^([A-Za-z0-9-]+)/)
-      if (!match) {
-        errorCount++
-        continue
-      }
-
-      const referencia = match[1]
-
-      try {
-        const url = await uploadCatalogImageExact(file, referencia)
-        await updateCatalogImageUrlByReferencia(referencia, `${url}?t=${Date.now()}`)
-        successCount++
-      } catch (error) {
-        console.error('Error uploading batch file', file.name, error)
-        errorCount++
-      }
-    }
-
-    setIsBatchUploading(false)
-    if (successCount > 0) {
-      toast.success(`Upload em lote concluído! ${successCount} imagens enviadas.`)
+    try {
+      await updateCatalogOrder([
+        { id: newItems[index].id, ordem: newItems[index].ordem },
+        { id: newItems[swapIndex].id, ordem: newItems[swapIndex].ordem },
+      ])
+    } catch (error) {
+      toast.error('Erro ao atualizar a ordem')
       loadItems(search)
     }
-    if (errorCount > 0) {
-      toast.error(`${errorCount} arquivo(s) falharam no upload. Verifique os formatos e nomes.`)
+  }
+
+  const handleSaveEdit = async () => {
+    setSavingEdit(true)
+    try {
+      if (isCreating) {
+        if (!formState.referencia || !formState.descricao) {
+          toast.error('Preencha os campos obrigatórios (Referência e Descrição)')
+          setSavingEdit(false)
+          return
+        }
+        await createCatalogItem({
+          referencia: formState.referencia,
+          descricao: formState.descricao,
+          desc_produto: formState.descricao,
+          cor: formState.cor,
+          ordem: items.length > 0 ? items[0].ordem - 1 : 0,
+        })
+        toast.success('Produto criado com sucesso!')
+      } else if (editingItem) {
+        await updateCatalogItemDetails(editingItem.id, {
+          cor: formState.cor,
+          referencia: formState.referencia,
+          descricao: formState.descricao,
+          desc_produto: formState.descricao,
+        })
+        toast.success('Produto atualizado com sucesso!')
+      }
+      setIsCreating(false)
+      setEditingItem(null)
+      loadItems(search)
+    } catch (error) {
+      toast.error('Erro ao salvar o produto')
+    } finally {
+      setSavingEdit(false)
     }
   }
 
-  const handleDragStart = (e: React.DragEvent, item: CatalogItem) => {
-    setDraggedItem(item)
-    e.dataTransfer.effectAllowed = 'move'
-    const dragGhost = e.currentTarget.cloneNode(true) as HTMLElement
-    dragGhost.style.opacity = '0.5'
-    document.body.appendChild(dragGhost)
-    e.dataTransfer.setDragImage(dragGhost, 20, 20)
-    setTimeout(() => document.body.removeChild(dragGhost), 0)
-  }
-
-  const handleDragOver = (e: React.DragEvent, targetItem: CatalogItem) => {
-    e.preventDefault()
-    if (!draggedItem || draggedItem.id === targetItem.id) return
-
-    setItems((prev) => {
-      const newItems = [...prev]
-      const draggedIndex = newItems.findIndex((i) => i.id === draggedItem.id)
-      const targetIndex = newItems.findIndex((i) => i.id === targetItem.id)
-
-      if (draggedIndex === -1 || targetIndex === -1) return prev
-
-      newItems.splice(draggedIndex, 1)
-      newItems.splice(targetIndex, 0, draggedItem)
-      return newItems
+  const openEdit = (item: CatalogItem) => {
+    setEditingItem(item)
+    setIsCreating(false)
+    setFormState({
+      referencia: item.referencia || '',
+      descricao: item.desc_produto || item.descricao || '',
+      cor: item.cor || '',
     })
   }
 
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault()
-    if (!draggedItem) return
-    setDraggedItem(null)
-
-    setSavingOrder(true)
-    try {
-      const orderPayload = items.map((it, idx) => ({ id: it.id, ordem: idx + 1 }))
-      await updateCatalogOrder(orderPayload)
-      toast.success('Ordem salva com sucesso!')
-    } catch (err) {
-      toast.error('Erro ao salvar a nova ordem.')
-    } finally {
-      setSavingOrder(false)
-    }
+  const openCreate = () => {
+    setEditingItem(null)
+    setIsCreating(true)
+    setFormState({ referencia: '', descricao: '', cor: '' })
   }
 
   return (
-    <div className="space-y-4 animate-fade-in pb-16">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-muted/20 p-4 rounded-lg border border-border/50">
-        <div className="relative w-full sm:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
+        <div className="relative flex-1 w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por referência ou descrição..."
             value={search}
@@ -206,142 +169,196 @@ export function AdminImages() {
             className="pl-9 bg-background"
           />
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Button
-            variant="default"
-            onClick={handleBatchUploadClick}
-            disabled={isBatchUploading || loading}
-            className="w-full sm:w-auto shrink-0"
-          >
-            {isBatchUploading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Files className="w-4 h-4 mr-2" />
-            )}
-            {isBatchUploading ? 'Enviando Lote...' : 'Upload em Lote'}
-          </Button>
-        </div>
+        <Button onClick={openCreate} className="shrink-0 w-full sm:w-auto">
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Produto
+        </Button>
       </div>
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        accept=".jpg,.jpeg,.png,.webp"
-      />
-      <input
-        type="file"
-        ref={batchFileInputRef}
-        onChange={handleBatchFileChange}
-        className="hidden"
-        multiple
-        accept=".jpg,.jpeg,.png,.webp"
-      />
-
-      <div className="bg-card border rounded-md p-4">
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="flex flex-col gap-2 p-4 border rounded-md">
-                <Skeleton className="h-32 w-full rounded-md" />
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-4 w-full" />
-              </div>
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <div className="text-center h-32 flex items-center justify-center text-muted-foreground">
-            Nenhum produto encontrado.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, item)}
-                onDragOver={(e) => handleDragOver(e, item)}
-                onDrop={handleDrop}
-                onDragEnd={() => setDraggedItem(null)}
-                className={cn(
-                  'relative group flex flex-col gap-3 p-4 border rounded-md bg-background shadow-sm hover:border-primary/50 transition-colors cursor-grab active:cursor-grabbing',
-                  draggedItem?.id === item.id ? 'opacity-50' : 'opacity-100',
+      {loading ? (
+        <div className="flex justify-center p-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-12 bg-muted/30 rounded-lg border border-dashed text-center space-y-2">
+          <p className="text-muted-foreground font-medium">Nenhum produto encontrado.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {items.map((item, index) => (
+            <Card
+              key={item.id}
+              className="overflow-hidden flex flex-col group border-orange-200/50 hover:border-orange-500/30 transition-all duration-300"
+            >
+              <div className="aspect-square bg-white relative">
+                {item.imagem_catalogo_url ? (
+                  <img
+                    src={item.imagem_catalogo_url}
+                    alt={item.descricao}
+                    className="w-full h-full object-contain mix-blend-multiply p-4"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-slate-400 bg-slate-50">
+                    <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
+                    <span className="text-sm font-medium uppercase tracking-wider opacity-60">
+                      Sem Imagem
+                    </span>
+                  </div>
                 )}
-              >
-                <div className="absolute top-2 left-2 p-1 bg-background/80 rounded cursor-grab opacity-0 group-hover:opacity-100 transition-opacity z-10 text-muted-foreground hover:text-foreground">
-                  <GripVertical className="w-5 h-5" />
-                </div>
 
-                <div className="aspect-square relative w-full rounded-md overflow-hidden bg-muted flex items-center justify-center border">
-                  {item.imagem_catalogo_url ? (
-                    <img
-                      src={item.imagem_catalogo_url}
-                      alt={item.referencia}
-                      className="object-cover w-full h-full pointer-events-none"
-                    />
-                  ) : (
-                    <ImageIcon className="w-10 h-10 text-muted-foreground/30 pointer-events-none" />
-                  )}
-                </div>
-
-                <div className="flex-1 flex flex-col">
-                  <h3 className="font-semibold text-sm truncate" title={item.referencia}>
-                    {item.referencia}
-                  </h3>
-                  <p
-                    className="text-xs text-muted-foreground line-clamp-2 mt-1 flex-1"
-                    title={item.desc_produto || item.descricao}
-                  >
-                    {item.desc_produto || item.descricao || '-'}
-                  </p>
-                </div>
-
-                <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 text-xs"
-                    onClick={() => handleUploadClick(item)}
-                    disabled={uploadingId === item.id}
-                  >
-                    {uploadingId === item.id ? (
-                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    ) : (
-                      <Upload className="w-4 h-4 mr-1" />
-                    )}
-                    Upload
-                  </Button>
-
-                  {item.imagem_catalogo_url && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => handleRemoveImage(item.id)}
-                      disabled={uploadingId === item.id}
-                      title="Remover Imagem"
-                    >
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Label htmlFor={`upload-${item.id}`} className="cursor-pointer">
+                    <div className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors shadow-sm">
                       {uploadingId === item.id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <Trash2 className="w-4 h-4" />
+                        <Upload className="w-4 h-4" />
                       )}
-                    </Button>
-                  )}
+                      <span className="font-medium">Alterar Imagem</span>
+                    </div>
+                  </Label>
+                  <Input
+                    id={`upload-${item.id}`}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleFileUpload(item.id, file)
+                    }}
+                  />
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {savingOrder && (
-        <div className="fixed bottom-4 right-4 bg-background border shadow-lg rounded-md px-4 py-2 flex items-center gap-2 z-50 animate-fade-in-up">
-          <Loader2 className="w-4 h-4 animate-spin text-primary" />
-          <span className="text-sm font-medium">Salvando nova ordem...</span>
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-lg line-clamp-1" title={item.referencia}>
+                  {item.referencia}
+                </CardTitle>
+                <div
+                  className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]"
+                  title={item.desc_produto || item.descricao}
+                >
+                  {item.desc_produto || item.descricao}
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0 flex-1 flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-auto">
+                  <Badge
+                    variant={item.cor ? 'default' : 'secondary'}
+                    className={item.cor ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                  >
+                    {item.cor ? `Cor: ${item.cor}` : 'Sem cor'}
+                  </Badge>
+                  <Badge variant="outline" className="text-muted-foreground">
+                    Ordem: {item.ordem}
+                  </Badge>
+                </div>
+              </CardContent>
+              <CardFooter className="p-4 pt-0 flex justify-between bg-slate-50/50 border-t items-center mt-auto h-14">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openEdit(item)}
+                  className="hover:text-orange-600 hover:bg-orange-100/50"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar
+                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 hover:border-orange-500 hover:text-orange-600"
+                    disabled={index === 0}
+                    onClick={() => handleMoveOrder(index, 'up')}
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 hover:border-orange-500 hover:text-orange-600"
+                    disabled={index === items.length - 1}
+                    onClick={() => handleMoveOrder(index, 'down')}
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       )}
+
+      <Dialog
+        open={isCreating || !!editingItem}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsCreating(false)
+            setEditingItem(null)
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isCreating ? 'Novo Produto' : 'Editar Produto'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="referencia">
+                Referência <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="referencia"
+                value={formState.referencia}
+                onChange={(e) => setFormState((prev) => ({ ...prev, referencia: e.target.value }))}
+                placeholder="Ex: IS-1234"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="descricao">
+                Descrição <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="descricao"
+                value={formState.descricao}
+                onChange={(e) => setFormState((prev) => ({ ...prev, descricao: e.target.value }))}
+                placeholder="Ex: LUMINÁRIA PENDENTE..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cor">Cor</Label>
+              <Input
+                id="cor"
+                value={formState.cor}
+                onChange={(e) => setFormState((prev) => ({ ...prev, cor: e.target.value }))}
+                placeholder="Ex: BRANCA, PRETA, DOURADA..."
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Opcional. Adicione a cor do produto para facilitar a organização.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreating(false)
+                setEditingItem(null)
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={savingEdit}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              {savingEdit ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

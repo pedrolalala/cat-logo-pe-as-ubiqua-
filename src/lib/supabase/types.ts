@@ -3222,6 +3222,7 @@ export type Database = {
           imagem_catalogo_url: string | null
           itens_vendidos: number | null
           nm_fornecedor: string | null
+          ordem: number | null
           referencia: string
           updated_at: string | null
           valor_revenda: number | null
@@ -3249,6 +3250,7 @@ export type Database = {
           imagem_catalogo_url?: string | null
           itens_vendidos?: number | null
           nm_fornecedor?: string | null
+          ordem?: number | null
           referencia: string
           updated_at?: string | null
           valor_revenda?: number | null
@@ -3276,6 +3278,7 @@ export type Database = {
           imagem_catalogo_url?: string | null
           itens_vendidos?: number | null
           nm_fornecedor?: string | null
+          ordem?: number | null
           referencia?: string
           updated_at?: string | null
           valor_revenda?: number | null
@@ -5277,6 +5280,10 @@ export type Database = {
       limpar_staging_processados: { Args: never; Returns: number }
       stats_datacenter: { Args: never; Returns: Json }
       unaccent: { Args: { '': string }; Returns: string }
+      update_revenda_ubiqua_ordem: {
+        Args: { payload: Json }
+        Returns: undefined
+      }
     }
     Enums: {
       conta_tipo: 'Corrente' | 'Poupança' | 'CDB' | 'Investimento' | 'Caixa'
@@ -6046,6 +6053,7 @@ export const Constants = {
 //   updated_at: timestamp with time zone (nullable, default: now())
 //   cor: text (nullable)
 //   empresa_id: uuid (nullable)
+//   ordem: integer (nullable, default: 0)
 // Table: separacao_itens
 //   id: uuid (not null, default: gen_random_uuid())
 //   separacao_id: uuid (not null)
@@ -8187,6 +8195,31 @@ export const Constants = {
 //     END IF;
 //
 //     RETURN NEW;
+//   END;
+//   $function$
+//
+// FUNCTION update_revenda_ubiqua_ordem(jsonb)
+//   CREATE OR REPLACE FUNCTION public.update_revenda_ubiqua_ordem(payload jsonb)
+//    RETURNS void
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     item jsonb;
+//     v_caller_role public.usuario_role;
+//   BEGIN
+//     SELECT role INTO v_caller_role FROM public.usuarios WHERE id = auth.uid();
+//
+//     IF v_caller_role NOT IN ('admin', 'gerente') THEN
+//       RAISE EXCEPTION 'Apenas administradores e gerentes podem reordenar o catálogo.';
+//     END IF;
+//
+//     FOR item IN SELECT * FROM jsonb_array_elements(payload)
+//     LOOP
+//       UPDATE public.revenda_ubiqua
+//       SET ordem = (item->>'ordem')::integer
+//       WHERE id = (item->>'id')::integer;
+//     END LOOP;
 //   END;
 //   $function$
 //
