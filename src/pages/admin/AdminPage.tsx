@@ -17,7 +17,8 @@ import { QuotesTable } from './QuotesTable'
 import { QuoteDetailsSheet } from './QuoteDetailsSheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AdminImages } from './AdminImages'
-import { Package, Receipt } from 'lucide-react'
+import { AdminCatalog } from './AdminCatalog'
+import { Package, Receipt, CopyPlus } from 'lucide-react'
 
 export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
@@ -99,14 +100,18 @@ export default function AdminPage() {
       </div>
 
       <Tabs defaultValue="quotes" className="w-full">
-        <TabsList className="grid w-full sm:w-[400px] grid-cols-2 mb-6">
+        <TabsList className="grid w-full sm:w-[600px] grid-cols-3 mb-6">
           <TabsTrigger value="quotes" className="flex items-center gap-2">
             <Receipt className="w-4 h-4" />
             Orçamentos
           </TabsTrigger>
           <TabsTrigger value="images" className="flex items-center gap-2">
             <Package className="w-4 h-4" />
-            Imagens (Catálogo)
+            Imagens
+          </TabsTrigger>
+          <TabsTrigger value="catalog" className="flex items-center gap-2">
+            <CopyPlus className="w-4 h-4" />
+            Agrupamento
           </TabsTrigger>
         </TabsList>
 
@@ -183,6 +188,10 @@ export default function AdminPage() {
 
         <TabsContent value="images">
           <AdminImages />
+        </TabsContent>
+
+        <TabsContent value="catalog">
+          <AdminCatalog />
         </TabsContent>
       </Tabs>
 

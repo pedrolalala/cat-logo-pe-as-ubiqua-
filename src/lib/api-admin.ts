@@ -95,6 +95,14 @@ export async function fetchCatalogItems(search: string = ''): Promise<CatalogIte
   return (data || []) as CatalogItem[]
 }
 
+export async function updateCatalogItemsGroup(itemIds: number[], newDescProduto: string) {
+  const { error } = await supabase
+    .from('revenda_ubiqua')
+    .update({ desc_produto: newDescProduto, updated_at: new Date().toISOString() })
+    .in('id', itemIds)
+  if (error) throw error
+}
+
 export async function updateCatalogOrder(items: { id: number; ordem: number }[]) {
   const { error } = await supabase.rpc('update_revenda_ubiqua_ordem', { payload: items })
   if (error) throw error

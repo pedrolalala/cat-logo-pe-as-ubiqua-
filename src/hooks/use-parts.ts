@@ -83,6 +83,17 @@ export function useParts() {
 
   useEffect(() => {
     load()
+
+    const channel = supabase
+      .channel('revenda_ubiqua_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'revenda_ubiqua' }, () => {
+        load()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [load])
 
   return { data, loading, error, refetch: load }

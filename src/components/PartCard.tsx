@@ -135,6 +135,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           <img
             src={mappedImageUrl}
             alt={lampName}
+            draggable={false}
             onError={() => setImageError(true)}
             loading="lazy"
             className="absolute inset-0 w-full h-full object-contain mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105 p-4"
