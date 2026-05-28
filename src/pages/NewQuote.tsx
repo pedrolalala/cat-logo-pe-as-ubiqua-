@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
-import { saveQuoteToSupabase, sendQuoteEmail, QuoteData, saveClienteInfo } from '@/lib/api'
+import { sendQuoteEmail, QuoteData } from '@/lib/api'
 import { toast } from 'sonner'
 import {
   Trash2,
@@ -92,6 +92,10 @@ export default function NewQuote() {
       toast.error('Formato de e-mail inválido.')
       return
     }
+    if (items.some((item) => item.quantity <= 0)) {
+      toast.error('A quantidade de todos os itens deve ser maior que zero.')
+      return
+    }
     executeSaveQuote()
   }
 
@@ -127,7 +131,19 @@ export default function NewQuote() {
       }
     } else {
       try {
-        const lead = await saveClienteInfo(clienteInfo)
+        const { data: lead, error: leadError } = await supabase
+          .from('informacoes_cliente_ubiqua')
+          .insert({
+            nome: clienteInfo.nome,
+            email: clienteInfo.email,
+            telefone: clienteInfo.telefone,
+            cpf_cnpj: clienteInfo.cpf_cnpj || null,
+            data_nascimento: clienteInfo.data_nascimento || null,
+          })
+          .select('id')
+          .single()
+
+        if (leadError) throw leadError
         leadId = lead.id
       } catch (err: any) {
         setSaveError(true)
@@ -142,32 +158,62 @@ export default function NewQuote() {
     try {
       if (!leadId) throw new Error('Falha ao identificar o cliente.')
 
-      const quoteData = {
-        items,
-        observacoes,
-        valor_total: totalGeral,
-        informacoes_cliente_id: leadId,
-      }
+      const { data: quote, error: quoteError } = await supabase
+        .from('orcamentos_revenda_ubiqua')
+        .insert({
+          cliente_id: leadId,
+          observacoes: observacoes,
+          valor_subtotal: totalGeral,
+          valor_total: totalGeral,
+          numero_orcamento: '',
+          status: 'rascunho',
+        })
+        .select('*')
+        .single()
 
-      const saved = await saveQuoteToSupabase(quoteData)
-      setSavedQuote(saved)
+      if (quoteError) throw quoteError
+
+      const itemsToInsert = items.map((item, idx) => ({
+        orcamento_id: quote.id,
+        produto_id: Number(item.id),
+        quantidade: item.quantity,
+        valor_unitario: item.valor_revenda,
+        desconto_item: 0,
+        ordem: idx,
+        referencia_snapshot: item.referencia,
+        descricao_snapshot: item.descricao,
+        marca_snapshot: item.desc_marca || null,
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('itens_orcamento_ubiqua')
+        .insert(itemsToInsert)
+
+      if (itemsError) throw itemsError
+
+      setSavedQuote(quote as QuoteData)
       clearCart()
       toast.success('Orçamento gerado com sucesso!')
     } catch (e: any) {
       console.error(e)
       setSaveError(true)
-      const msg =
+      let msg =
         e.message ||
         e.details ||
         e.hint ||
         'Erro ao processar o orçamento. Verifique os dados e tente novamente.'
-      if (msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('network')) {
-        setErrorMessage('Tempo de conexão esgotado. Verifique sua internet e tente novamente.')
-        toast.error('Tempo de conexão esgotado. Verifique sua internet e tente novamente.')
-      } else {
-        setErrorMessage(msg)
-        toast.error(`Falha na solicitação: ${msg}`)
+
+      if (msg.includes('foreign key constraint')) {
+        msg =
+          'Erro de referência de dados: O produto ou cliente selecionado não foi encontrado no sistema.'
+      } else if (msg.includes('violates not-null constraint')) {
+        msg = 'Dados incompletos: Todos os campos obrigatórios devem ser preenchidos.'
+      } else if (msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('network')) {
+        msg = 'Tempo de conexão esgotado. Verifique sua internet e tente novamente.'
       }
+
+      setErrorMessage(msg)
+      toast.error(`Falha na solicitação: ${msg}`)
     } finally {
       setIsSaving(false)
     }
@@ -465,7 +511,9 @@ export default function NewQuote() {
                         type="number"
                         min={1}
                         value={item.quantity}
-                        onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                        onChange={(e) =>
+                          updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))
+                        }
                         className="w-20 text-center h-9 font-medium"
                       />
                     </div>
