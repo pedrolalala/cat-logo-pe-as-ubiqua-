@@ -165,6 +165,30 @@ export async function updateCatalogImageUrl(id: number, url: string | null) {
   }
 }
 
+export async function deleteCatalogImage(id: number, imageUrl: string) {
+  try {
+    const bucketName = 'revenda-ubiqua-images'
+    const urlParts = imageUrl.split(`/${bucketName}/`)
+    if (urlParts.length > 1) {
+      const filePath = urlParts[1].split('?')[0]
+      await supabase.storage.from(bucketName).remove([filePath])
+    }
+
+    const { error } = await supabase
+      .from('revenda_ubiqua')
+      .update({
+        imagem_catalogo_url: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+
+    if (error) throw error
+  } catch (error) {
+    console.error('Error deleting image:', error)
+    throw error
+  }
+}
+
 export async function updateCatalogImageUrlByReferencia(referencia: string, url: string | null) {
   const { error } = await supabase
     .from('revenda_ubiqua')

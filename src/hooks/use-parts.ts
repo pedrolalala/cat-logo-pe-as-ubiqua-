@@ -68,7 +68,11 @@ export function useParts() {
       setLoading(true)
       setError(null)
 
-      const { data: items, error: fetchError } = await supabase.from('revenda_ubiqua').select('*')
+      const { data: items, error: fetchError } = await supabase
+        .from('revenda_ubiqua')
+        .select('*')
+        .order('ordem', { ascending: true, nullsFirst: false })
+        .order('id', { ascending: false })
 
       if (fetchError) throw fetchError
 

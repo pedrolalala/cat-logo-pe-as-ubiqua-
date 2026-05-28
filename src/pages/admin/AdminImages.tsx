@@ -13,11 +13,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { ImageOff, Upload, Save, Edit, RefreshCw, Search, AlertCircle } from 'lucide-react'
+import { ImageOff, Upload, Save, Edit, RefreshCw, Search, AlertCircle, Trash2 } from 'lucide-react'
 import {
   updateCatalogItemDetails,
   updateCatalogImageUrl,
   uploadCatalogImageExact,
+  deleteCatalogImage,
 } from '@/lib/api-admin'
 import { cn } from '@/lib/utils'
 
@@ -240,6 +241,24 @@ export function AdminImages() {
     }
   }
 
+  const handleDeleteImage = async () => {
+    if (!editingVariant?.imagem_catalogo_url) return
+    if (!confirm('Tem certeza que deseja excluir esta imagem? A ação não pode ser desfeita.'))
+      return
+
+    setIsSaving(true)
+    try {
+      await deleteCatalogImage(editingVariant.id, editingVariant.imagem_catalogo_url)
+      toast.success('Imagem removida com sucesso!')
+      setEditingVariant({ ...editingVariant, imagem_catalogo_url: null })
+      refetch()
+    } catch (error) {
+      toast.error('Erro ao remover imagem.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-muted/20 p-4 rounded-lg border border-border/50">
@@ -315,7 +334,7 @@ export function AdminImages() {
               <Label>Imagem do Catálogo</Label>
               <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                 {editingVariant?.imagem_catalogo_url ? (
-                  <div className="w-16 h-16 border rounded bg-white p-1">
+                  <div className="w-16 h-16 border rounded bg-white p-1 relative group">
                     <img
                       src={editingVariant.imagem_catalogo_url}
                       alt="Current"
@@ -327,15 +346,27 @@ export function AdminImages() {
                     <ImageOff className="w-6 h-6 text-muted-foreground opacity-50" />
                   </div>
                 )}
-                <div className="flex-1">
-                  <Button
-                    variant="secondary"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isSaving}
-                    className="w-full sm:w-auto"
-                  >
-                    <Upload className="w-4 h-4 mr-2" /> Alterar Imagem
-                  </Button>
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isSaving}
+                      className="w-full sm:w-auto"
+                    >
+                      <Upload className="w-4 h-4 mr-2" /> Alterar Imagem
+                    </Button>
+                    {editingVariant?.imagem_catalogo_url && (
+                      <Button
+                        variant="destructive"
+                        onClick={handleDeleteImage}
+                        disabled={isSaving}
+                        className="w-full sm:w-auto"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" /> Remover
+                      </Button>
+                    )}
+                  </div>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
