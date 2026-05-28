@@ -141,7 +141,7 @@ Deno.serve(async (req: Request) => {
 
     // Upload to Supabase Storage
     const numOrcto = budget.numero_orcamento || budget.id.split('-')[0]
-    const fileName = `quote_${numOrcto}_${Date.now()}.pdf`
+    const fileName = `pdfs/${numOrcto}.pdf`
     const { error: uploadError } = await supabase.storage
       .from('orcamentos')
       .upload(fileName, pdfBytes, {
