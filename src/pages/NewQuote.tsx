@@ -42,6 +42,7 @@ export default function NewQuote() {
   const { user, signUp } = useAuth()
   const [observacoes, setObservacoes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [savingStatus, setSavingStatus] = useState('')
   const [saveError, setSaveError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [savedQuote, setSavedQuote] = useState<QuoteData | null>(null)
@@ -101,6 +102,7 @@ export default function NewQuote() {
 
   const executeSaveQuote = async () => {
     setIsSaving(true)
+    setSavingStatus('Identificando cliente...')
     setSaveError(false)
 
     let leadId: string | undefined = undefined
@@ -158,6 +160,7 @@ export default function NewQuote() {
     try {
       if (!leadId) throw new Error('Falha ao identificar o cliente.')
 
+      setSavingStatus('Salvando orçamento...')
       const { data: quote, error: quoteError } = await supabase
         .from('orcamentos_revenda_ubiqua')
         .insert({
@@ -191,9 +194,20 @@ export default function NewQuote() {
 
       if (itemsError) throw itemsError
 
+      setSavingStatus('Processando e enviando PDF...')
+      const { error: fnError } = await supabase.functions.invoke('process-budget-pdf', {
+        body: { quote_id: quote.id },
+      })
+
+      if (fnError) {
+        console.error('Error generating PDF:', fnError)
+        toast.error('Orçamento salvo, mas houve uma falha ao gerar o PDF e enviar por email.')
+      } else {
+        toast.success('Orçamento gerado e PDF enviado com sucesso!')
+      }
+
       setSavedQuote(quote as QuoteData)
       clearCart()
-      toast.success('Orçamento gerado com sucesso!')
     } catch (e: any) {
       console.error(e)
       setSaveError(true)
@@ -216,6 +230,7 @@ export default function NewQuote() {
       toast.error(`Falha na solicitação: ${msg}`)
     } finally {
       setIsSaving(false)
+      setSavingStatus('')
     }
   }
 
@@ -668,7 +683,7 @@ export default function NewQuote() {
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Gerando...
+                    {savingStatus || 'Gerando...'}
                   </>
                 ) : (
                   'Gerar Orçamento'

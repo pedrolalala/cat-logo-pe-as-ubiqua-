@@ -107,7 +107,6 @@ export async function saveQuoteToSupabase(quoteData: any): Promise<QuoteData> {
       produto_id: item.id, // ID from revenda_ubiqua
       quantidade: item.quantity,
       valor_unitario: item.valor_revenda,
-      valor_total: item.valor_revenda * item.quantity,
       referencia_snapshot: item.referencia,
       descricao_snapshot: item.descricao,
       ordem: idx,
