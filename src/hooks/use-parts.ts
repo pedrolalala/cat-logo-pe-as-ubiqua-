@@ -20,26 +20,49 @@ export function useParts() {
       setLoading(true)
       setError(null)
 
-      const viewResult = await supabase.from('vw_catalogo_ubiqua').select('*')
+      const [viewResult, orderResult] = await Promise.all([
+        supabase.from('vw_catalogo_ubiqua').select('*'),
+        supabase.from('revenda_ubiqua').select('descricao, desc_produto, ordem'),
+      ])
 
       if (viewResult.error) throw viewResult.error
 
-      const groupsMap = new Map<string, GroupedPart>()
+      const orderMap = new Map<string, number>()
+      if (!orderResult.error && orderResult.data) {
+        orderResult.data.forEach((item) => {
+          const currentOrder = item.ordem || 0
+          const updateMap = (key: string) => {
+            const lower = key.toLowerCase()
+            const existing = orderMap.get(lower) ?? 999999
+            if (currentOrder < existing) {
+              orderMap.set(lower, currentOrder)
+            }
+          }
+          if (item.desc_produto) updateMap(item.desc_produto)
+          if (item.descricao) updateMap(item.descricao)
+        })
+      }
 
-      for (const row of viewResult.data || []) {
-        const nome = row.nome_exibicao || 'Sem nome'
-        groupsMap.set(nome, {
-          nomeExibicao: nome,
+      const mappedData: (GroupedPart & { ordem: number })[] = (viewResult.data || []).map((row) => {
+        const nomeExibicao = row.nome_exibicao || 'Sem nome'
+        const ordem = orderMap.get(nomeExibicao.toLowerCase()) ?? 999999
+
+        return {
+          nomeExibicao,
           totalAvailable: Number(row.estoque_total) || 0,
           coresDisponiveis: row.cores_disponiveis || [],
           imagemPrincipal: row.imagem_principal,
           valorRevenda: Number(row.valor_revenda) || 0,
           detalhesPorCor: (row.detalhes_por_cor as any[]) || [],
-        })
-      }
+          ordem,
+        }
+      })
 
       setData(
-        Array.from(groupsMap.values()).sort((a, b) => a.nomeExibicao.localeCompare(b.nomeExibicao)),
+        mappedData.sort((a, b) => {
+          if (a.ordem !== b.ordem) return a.ordem - b.ordem
+          return a.nomeExibicao.localeCompare(b.nomeExibicao)
+        }),
       )
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error occurred'))

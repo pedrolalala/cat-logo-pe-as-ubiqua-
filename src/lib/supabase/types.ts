@@ -572,6 +572,13 @@ export type Database = {
             referencedRelation: 'usuarios'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'custos_recorrentes_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
+          },
         ]
       }
       custos_recorrentes_lancamentos: {
@@ -795,6 +802,13 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'entregas_entregador_id_fkey'
+            columns: ['entregador_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
+          },
+          {
             foreignKeyName: 'entregas_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: false
@@ -812,6 +826,13 @@ export type Database = {
             foreignKeyName: 'entregas_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: false
+            referencedRelation: 'vw_projetos_dashboard'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'entregas_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
             referencedRelation: 'vw_projetos_pipeline'
             referencedColumns: ['id']
           },
@@ -820,6 +841,20 @@ export type Database = {
             columns: ['projeto_id']
             isOneToOne: false
             referencedRelation: 'vw_projetos_resumo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'entregas_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_empresa'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'entregas_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_responsavel'
             referencedColumns: ['id']
           },
           {
@@ -907,6 +942,13 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'estoque_itens_atualizado_por_fkey'
+            columns: ['atualizado_por']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
+          },
+          {
             foreignKeyName: 'estoque_itens_produto_id_fkey'
             columns: ['produto_id']
             isOneToOne: false
@@ -980,6 +1022,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'usuarios'
             referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'ferias_aprovado_por_fkey'
+            columns: ['aprovado_por']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
           },
           {
             foreignKeyName: 'ferias_funcionario_id_fkey'
@@ -1191,6 +1240,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'usuarios'
             referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'funcionarios_usuario_id_fkey'
+            columns: ['usuario_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
           },
         ]
       }
@@ -1633,6 +1689,13 @@ export type Database = {
             foreignKeyName: 'negociacoes_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: false
+            referencedRelation: 'vw_projetos_dashboard'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'negociacoes_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
             referencedRelation: 'vw_projetos_pipeline'
             referencedColumns: ['id']
           },
@@ -1641,6 +1704,20 @@ export type Database = {
             columns: ['projeto_id']
             isOneToOne: false
             referencedRelation: 'vw_projetos_resumo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'negociacoes_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_empresa'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'negociacoes_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_responsavel'
             referencedColumns: ['id']
           },
           {
@@ -2328,6 +2405,13 @@ export type Database = {
             foreignKeyName: 'projeto_itens_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: false
+            referencedRelation: 'vw_projetos_dashboard'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_itens_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
             referencedRelation: 'vw_projetos_pipeline'
             referencedColumns: ['id']
           },
@@ -2336,6 +2420,20 @@ export type Database = {
             columns: ['projeto_id']
             isOneToOne: false
             referencedRelation: 'vw_projetos_resumo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_itens_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_empresa'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_itens_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_responsavel'
             referencedColumns: ['id']
           },
           {
@@ -2444,6 +2542,13 @@ export type Database = {
             foreignKeyName: 'projeto_parcelas_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: false
+            referencedRelation: 'vw_projetos_dashboard'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_parcelas_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
             referencedRelation: 'vw_projetos_pipeline'
             referencedColumns: ['id']
           },
@@ -2452,6 +2557,20 @@ export type Database = {
             columns: ['projeto_id']
             isOneToOne: false
             referencedRelation: 'vw_projetos_resumo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_parcelas_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_empresa'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_parcelas_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_responsavel'
             referencedColumns: ['id']
           },
           {
@@ -2636,6 +2755,13 @@ export type Database = {
             foreignKeyName: 'projeto_produtos_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: false
+            referencedRelation: 'vw_projetos_dashboard'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_produtos_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
             referencedRelation: 'vw_projetos_pipeline'
             referencedColumns: ['id']
           },
@@ -2644,6 +2770,20 @@ export type Database = {
             columns: ['projeto_id']
             isOneToOne: false
             referencedRelation: 'vw_projetos_resumo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_produtos_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_empresa'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_produtos_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_responsavel'
             referencedColumns: ['id']
           },
           {
@@ -2728,6 +2868,13 @@ export type Database = {
             foreignKeyName: 'projeto_sinal_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: true
+            referencedRelation: 'vw_projetos_dashboard'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_sinal_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: true
             referencedRelation: 'vw_projetos_pipeline'
             referencedColumns: ['id']
           },
@@ -2736,6 +2883,20 @@ export type Database = {
             columns: ['projeto_id']
             isOneToOne: true
             referencedRelation: 'vw_projetos_resumo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_sinal_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: true
+            referencedRelation: 'vw_projetos_sem_empresa'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projeto_sinal_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: true
+            referencedRelation: 'vw_projetos_sem_responsavel'
             referencedColumns: ['id']
           },
           {
@@ -2788,6 +2949,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           data_entrada: string | null
+          empresa_id: string | null
           estado: string | null
           historico: Json
           id: string
@@ -2812,6 +2974,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           data_entrada?: string | null
+          empresa_id?: string | null
           estado?: string | null
           historico?: Json
           id?: string
@@ -2836,6 +2999,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           data_entrada?: string | null
+          empresa_id?: string | null
           estado?: string | null
           historico?: Json
           id?: string
@@ -2899,11 +3063,39 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'projetos_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
+          },
+          {
+            foreignKeyName: 'projetos_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'empresas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projetos_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['empresa_id']
+          },
+          {
             foreignKeyName: 'projetos_responsavel_id_fkey'
             columns: ['responsavel_id']
             isOneToOne: false
             referencedRelation: 'usuarios'
             referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projetos_responsavel_id_fkey'
+            columns: ['responsavel_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
           },
           {
             foreignKeyName: 'projetos_responsavel_obra_id_fkey'
@@ -3290,6 +3482,13 @@ export type Database = {
             foreignKeyName: 'separacoes_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: false
+            referencedRelation: 'vw_projetos_dashboard'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'separacoes_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
             referencedRelation: 'vw_projetos_pipeline'
             referencedColumns: ['id']
           },
@@ -3298,6 +3497,20 @@ export type Database = {
             columns: ['projeto_id']
             isOneToOne: false
             referencedRelation: 'vw_projetos_resumo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'separacoes_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_empresa'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'separacoes_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_responsavel'
             referencedColumns: ['id']
           },
           {
@@ -3327,6 +3540,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'usuarios'
             referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'separacoes_responsavel_id_fkey'
+            columns: ['responsavel_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
           },
         ]
       }
@@ -3831,6 +4051,13 @@ export type Database = {
             referencedRelation: 'usuarios'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'sync_history_executado_por_fkey'
+            columns: ['executado_por']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
+          },
         ]
       }
       transacoes: {
@@ -3957,6 +4184,13 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'transacoes_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
+          },
+          {
             foreignKeyName: 'transacoes_empresa_id_fkey'
             columns: ['empresa_id']
             isOneToOne: false
@@ -4030,6 +4264,13 @@ export type Database = {
             foreignKeyName: 'transacoes_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: false
+            referencedRelation: 'vw_projetos_dashboard'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transacoes_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
             referencedRelation: 'vw_projetos_pipeline'
             referencedColumns: ['id']
           },
@@ -4038,6 +4279,20 @@ export type Database = {
             columns: ['projeto_id']
             isOneToOne: false
             referencedRelation: 'vw_projetos_resumo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transacoes_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_empresa'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transacoes_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_responsavel'
             referencedColumns: ['id']
           },
           {
@@ -4182,6 +4437,13 @@ export type Database = {
             foreignKeyName: 'vendas_projeto_id_fkey'
             columns: ['projeto_id']
             isOneToOne: false
+            referencedRelation: 'vw_projetos_dashboard'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
             referencedRelation: 'vw_projetos_pipeline'
             referencedColumns: ['id']
           },
@@ -4190,6 +4452,20 @@ export type Database = {
             columns: ['projeto_id']
             isOneToOne: false
             referencedRelation: 'vw_projetos_resumo'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_empresa'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vendas_projeto_id_fkey'
+            columns: ['projeto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_sem_responsavel'
             referencedColumns: ['id']
           },
           {
@@ -4498,6 +4774,92 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_projetos_dashboard: {
+        Row: {
+          area_do_projeto: Json | null
+          arquiteto_id: string | null
+          arquiteto_nome: string | null
+          arquivado: boolean | null
+          cidade: string | null
+          cliente_id: string | null
+          cliente_nome: string | null
+          cliente_tipo: Database['public']['Enums']['contato_tipo'] | null
+          codigo: string | null
+          created_at: string | null
+          data_entrada: string | null
+          empresa_codigo: number | null
+          empresa_id: string | null
+          empresa_nome: string | null
+          estado: string | null
+          id: string | null
+          nivel_estrategico: Database['public']['Enums']['projeto_nivel'] | null
+          nome: string | null
+          responsavel_email: string | null
+          responsavel_id: string | null
+          responsavel_nome: string | null
+          status: Database['public']['Enums']['projeto_status'] | null
+          tipo_projeto: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'projetos_arquiteto_id_fkey'
+            columns: ['arquiteto_id']
+            isOneToOne: false
+            referencedRelation: 'contatos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projetos_arquiteto_id_fkey'
+            columns: ['arquiteto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['contato_id']
+          },
+          {
+            foreignKeyName: 'projetos_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'contatos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projetos_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['contato_id']
+          },
+          {
+            foreignKeyName: 'projetos_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'empresas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projetos_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['empresa_id']
+          },
+          {
+            foreignKeyName: 'projetos_responsavel_id_fkey'
+            columns: ['responsavel_id']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projetos_responsavel_id_fkey'
+            columns: ['responsavel_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
+          },
+        ]
+      }
       vw_projetos_pipeline: {
         Row: {
           client_id: string | null
@@ -4527,6 +4889,16 @@ export type Database = {
           },
         ]
       }
+      vw_projetos_por_responsavel: {
+        Row: {
+          projetos_arquivados: number | null
+          projetos_ativos: number | null
+          responsavel: string | null
+          total_projetos: number | null
+          usuario_id: string | null
+        }
+        Relationships: []
+      }
       vw_projetos_por_status: {
         Row: {
           status: Database['public']['Enums']['projeto_status'] | null
@@ -4545,6 +4917,105 @@ export type Database = {
           valor_pago: number | null
           valor_pendente: number | null
           valor_total_vendas: number | null
+        }
+        Relationships: []
+      }
+      vw_projetos_sem_empresa: {
+        Row: {
+          codigo: string | null
+          created_at: string | null
+          data_entrada: string | null
+          id: string | null
+          nome: string | null
+          responsavel_nome: string | null
+          status: Database['public']['Enums']['projeto_status'] | null
+        }
+        Insert: {
+          codigo?: string | null
+          created_at?: string | null
+          data_entrada?: string | null
+          id?: string | null
+          nome?: string | null
+          responsavel_nome?: string | null
+          status?: Database['public']['Enums']['projeto_status'] | null
+        }
+        Update: {
+          codigo?: string | null
+          created_at?: string | null
+          data_entrada?: string | null
+          id?: string | null
+          nome?: string | null
+          responsavel_nome?: string | null
+          status?: Database['public']['Enums']['projeto_status'] | null
+        }
+        Relationships: []
+      }
+      vw_projetos_sem_responsavel: {
+        Row: {
+          arquiteto_id: string | null
+          cliente_id: string | null
+          codigo: string | null
+          created_at: string | null
+          data_entrada: string | null
+          id: string | null
+          nome: string | null
+          status: Database['public']['Enums']['projeto_status'] | null
+        }
+        Insert: {
+          arquiteto_id?: string | null
+          cliente_id?: string | null
+          codigo?: string | null
+          created_at?: string | null
+          data_entrada?: string | null
+          id?: string | null
+          nome?: string | null
+          status?: Database['public']['Enums']['projeto_status'] | null
+        }
+        Update: {
+          arquiteto_id?: string | null
+          cliente_id?: string | null
+          codigo?: string | null
+          created_at?: string | null
+          data_entrada?: string | null
+          id?: string | null
+          nome?: string | null
+          status?: Database['public']['Enums']['projeto_status'] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'projetos_arquiteto_id_fkey'
+            columns: ['arquiteto_id']
+            isOneToOne: false
+            referencedRelation: 'contatos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projetos_arquiteto_id_fkey'
+            columns: ['arquiteto_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['contato_id']
+          },
+          {
+            foreignKeyName: 'projetos_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'contatos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'projetos_cliente_id_fkey'
+            columns: ['cliente_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['contato_id']
+          },
+        ]
+      }
+      vw_projetos_status_enum: {
+        Row: {
+          status: Database['public']['Enums']['projeto_status'] | null
+          total: number | null
         }
         Relationships: []
       }
@@ -4584,6 +5055,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'usuarios'
             referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'entregas_entregador_id_fkey'
+            columns: ['entregador_id']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
           },
         ]
       }
@@ -4652,6 +5130,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'usuarios'
             referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'transacoes_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'vw_projetos_por_responsavel'
+            referencedColumns: ['usuario_id']
           },
           {
             foreignKeyName: 'transacoes_negociacao_id_fkey'
@@ -4760,6 +5245,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           data_entrada: string | null
+          empresa_id: string | null
           estado: string | null
           historico: Json
           id: string
@@ -5512,6 +5998,7 @@ export const Constants = {
 //   area_do_projeto: jsonb (nullable)
 //   Nome Arquiteto: text (nullable)
 //   codigo_legado: integer (nullable)
+//   empresa_id: uuid (nullable)
 // Table: projetos_fechados
 //   id: uuid (not null, default: gen_random_uuid())
 //   cod: text (nullable)
@@ -5939,6 +6426,31 @@ export const Constants = {
 //   periodo_id: uuid (nullable)
 //   data_inicio: date (nullable)
 //   data_fim: date (nullable)
+// Table: vw_projetos_dashboard
+//   id: uuid (nullable)
+//   codigo: character varying (nullable)
+//   nome: text (nullable)
+//   status: projeto_status (nullable)
+//   nivel_estrategico: projeto_nivel (nullable)
+//   data_entrada: date (nullable)
+//   cidade: character varying (nullable)
+//   estado: character varying (nullable)
+//   arquivado: boolean (nullable)
+//   responsavel_id: uuid (nullable)
+//   responsavel_nome: text (nullable)
+//   responsavel_email: text (nullable)
+//   cliente_id: uuid (nullable)
+//   cliente_nome: text (nullable)
+//   cliente_tipo: contato_tipo (nullable)
+//   arquiteto_id: uuid (nullable)
+//   arquiteto_nome: text (nullable)
+//   empresa_id: uuid (nullable)
+//   empresa_nome: text (nullable)
+//   empresa_codigo: integer (nullable)
+//   area_do_projeto: jsonb (nullable)
+//   tipo_projeto: text (nullable)
+//   created_at: timestamp with time zone (nullable)
+//   updated_at: timestamp with time zone (nullable)
 // Table: vw_projetos_pipeline
 //   id: uuid (nullable)
 //   codigo: character varying (nullable)
@@ -5949,6 +6461,12 @@ export const Constants = {
 //   client_id: uuid (nullable)
 //   cliente_nome: text (nullable)
 //   valor_total: numeric (nullable)
+// Table: vw_projetos_por_responsavel
+//   usuario_id: uuid (nullable)
+//   responsavel: text (nullable)
+//   total_projetos: bigint (nullable)
+//   projetos_ativos: bigint (nullable)
+//   projetos_arquivados: bigint (nullable)
 // Table: vw_projetos_por_status
 //   status: projeto_status (nullable)
 //   total_projetos: bigint (nullable)
@@ -5962,6 +6480,26 @@ export const Constants = {
 //   valor_total_vendas: numeric (nullable)
 //   valor_pago: numeric (nullable)
 //   valor_pendente: numeric (nullable)
+// Table: vw_projetos_sem_empresa
+//   id: uuid (nullable)
+//   codigo: character varying (nullable)
+//   nome: text (nullable)
+//   status: projeto_status (nullable)
+//   responsavel_nome: text (nullable)
+//   data_entrada: date (nullable)
+//   created_at: timestamp with time zone (nullable)
+// Table: vw_projetos_sem_responsavel
+//   id: uuid (nullable)
+//   codigo: character varying (nullable)
+//   nome: text (nullable)
+//   status: projeto_status (nullable)
+//   data_entrada: date (nullable)
+//   created_at: timestamp with time zone (nullable)
+//   cliente_id: uuid (nullable)
+//   arquiteto_id: uuid (nullable)
+// Table: vw_projetos_status_enum
+//   status: projeto_status (nullable)
+//   total: bigint (nullable)
 // Table: vw_separacoes_agenda
 //   separacao_id: uuid (nullable)
 //   separacao_status: separacao_status (nullable)
@@ -6306,6 +6844,7 @@ export const Constants = {
 //   UNIQUE projetos_codigo_key: UNIQUE (codigo)
 //   UNIQUE projetos_codigo_legado_key: UNIQUE (codigo_legado)
 //   FOREIGN KEY projetos_created_by_fkey: FOREIGN KEY (created_by) REFERENCES usuarios(id) ON DELETE SET NULL
+//   FOREIGN KEY projetos_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE SET NULL
 //   PRIMARY KEY projetos_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY projetos_responsavel_id_fkey: FOREIGN KEY (responsavel_id) REFERENCES usuarios(id)
 //   FOREIGN KEY projetos_responsavel_obra_id_fkey: FOREIGN KEY (responsavel_obra_id) REFERENCES contatos(id) ON DELETE SET NULL
@@ -7905,6 +8444,8 @@ export const Constants = {
 //   CREATE INDEX idx_projetos_codigo_legado ON public.projetos USING btree (codigo_legado)
 //   CREATE INDEX idx_projetos_created_by ON public.projetos USING btree (created_by)
 //   CREATE INDEX idx_projetos_data_entrada ON public.projetos USING btree (data_entrada)
+//   CREATE INDEX idx_projetos_empresa ON public.projetos USING btree (empresa_id)
+//   CREATE INDEX idx_projetos_empresa_status ON public.projetos USING btree (empresa_id, status)
 //   CREATE INDEX idx_projetos_nivel ON public.projetos USING btree (nivel_estrategico)
 //   CREATE INDEX idx_projetos_nome ON public.projetos USING gin (to_tsvector('portuguese'::regconfig, nome))
 //   CREATE INDEX idx_projetos_resp_obra ON public.projetos USING btree (responsavel_obra_id)

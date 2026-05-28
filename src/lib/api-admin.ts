@@ -49,25 +49,33 @@ export interface CatalogItem {
   descricao: string
   desc_produto: string | null
   imagem_catalogo_url: string | null
+  ordem: number
 }
 
 export async function fetchCatalogItems(search: string = ''): Promise<CatalogItem[]> {
   let query = supabase
     .from('revenda_ubiqua')
-    .select('id, referencia, descricao, desc_produto, imagem_catalogo_url')
-    .limit(50)
+    .select('id, referencia, descricao, desc_produto, imagem_catalogo_url, ordem')
+    .limit(1000)
   if (search) {
     query = query.or(
       `referencia.ilike.%${search}%,descricao.ilike.%${search}%,desc_produto.ilike.%${search}%`,
     )
   }
-  const { data, error } = await query.order('id', { ascending: false })
+  const { data, error } = await query
+    .order('ordem', { ascending: true, nullsFirst: false })
+    .order('id', { ascending: false })
 
   if (error) {
     throw error
   }
 
   return (data || []) as CatalogItem[]
+}
+
+export async function updateCatalogOrder(items: { id: number; ordem: number }[]) {
+  const { error } = await supabase.rpc('update_revenda_ubiqua_ordem', { payload: items })
+  if (error) throw error
 }
 
 export async function uploadCatalogImage(file: File, filePrefix: string): Promise<string> {

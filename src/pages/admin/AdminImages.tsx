@@ -3,23 +3,25 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
-import { Search, Upload, Trash2, Image as ImageIcon, Loader2, Files } from 'lucide-react'
+import {
+  Search,
+  Upload,
+  Trash2,
+  Image as ImageIcon,
+  Loader2,
+  Files,
+  GripVertical,
+} from 'lucide-react'
 import {
   fetchCatalogItems,
   uploadCatalogImage,
   updateCatalogImageUrl,
   updateCatalogImageUrlByReferencia,
   uploadCatalogImageExact,
+  updateCatalogOrder,
   CatalogItem,
 } from '@/lib/api-admin'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 
 export function AdminImages() {
   const [items, setItems] = useState<CatalogItem[]>([])
@@ -30,6 +32,9 @@ export function AdminImages() {
   const batchFileInputRef = useRef<HTMLInputElement>(null)
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null)
   const [isBatchUploading, setIsBatchUploading] = useState(false)
+  const [savingOrder, setSavingOrder] = useState(false)
+
+  const [draggedItem, setDraggedItem] = useState<CatalogItem | null>(null)
 
   const loadItems = async (q: string = '') => {
     setLoading(true)
@@ -117,7 +122,6 @@ export function AdminImages() {
         continue
       }
 
-      // Expected pattern: [referencia]_catalogo.jpg or just starts with [referencia]
       const match = file.name.match(/^([A-Za-z0-9-]+)/)
       if (!match) {
         errorCount++
@@ -146,8 +150,52 @@ export function AdminImages() {
     }
   }
 
+  const handleDragStart = (e: React.DragEvent, item: CatalogItem) => {
+    setDraggedItem(item)
+    e.dataTransfer.effectAllowed = 'move'
+    const dragGhost = e.currentTarget.cloneNode(true) as HTMLElement
+    dragGhost.style.opacity = '0.5'
+    document.body.appendChild(dragGhost)
+    e.dataTransfer.setDragImage(dragGhost, 20, 20)
+    setTimeout(() => document.body.removeChild(dragGhost), 0)
+  }
+
+  const handleDragOver = (e: React.DragEvent, targetItem: CatalogItem) => {
+    e.preventDefault()
+    if (!draggedItem || draggedItem.id === targetItem.id) return
+
+    setItems((prev) => {
+      const newItems = [...prev]
+      const draggedIndex = newItems.findIndex((i) => i.id === draggedItem.id)
+      const targetIndex = newItems.findIndex((i) => i.id === targetItem.id)
+
+      if (draggedIndex === -1 || targetIndex === -1) return prev
+
+      newItems.splice(draggedIndex, 1)
+      newItems.splice(targetIndex, 0, draggedItem)
+      return newItems
+    })
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    if (!draggedItem) return
+    setDraggedItem(null)
+
+    setSavingOrder(true)
+    try {
+      const orderPayload = items.map((it, idx) => ({ id: it.id, ordem: idx + 1 }))
+      await updateCatalogOrder(orderPayload)
+      toast.success('Ordem salva com sucesso!')
+    } catch (err) {
+      toast.error('Erro ao salvar a nova ordem.')
+    } finally {
+      setSavingOrder(false)
+    }
+  }
+
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 animate-fade-in pb-16">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-muted/20 p-4 rounded-lg border border-border/50">
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -158,19 +206,21 @@ export function AdminImages() {
             className="pl-9 bg-background"
           />
         </div>
-        <Button
-          variant="default"
-          onClick={handleBatchUploadClick}
-          disabled={isBatchUploading || loading}
-          className="w-full sm:w-auto shrink-0"
-        >
-          {isBatchUploading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Files className="w-4 h-4 mr-2" />
-          )}
-          {isBatchUploading ? 'Enviando Lote...' : 'Upload em Lote'}
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="default"
+            onClick={handleBatchUploadClick}
+            disabled={isBatchUploading || loading}
+            className="w-full sm:w-auto shrink-0"
+          >
+            {isBatchUploading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Files className="w-4 h-4 mr-2" />
+            )}
+            {isBatchUploading ? 'Enviando Lote...' : 'Upload em Lote'}
+          </Button>
+        </div>
       </div>
 
       <input
@@ -189,104 +239,109 @@ export function AdminImages() {
         accept=".jpg,.jpeg,.png,.webp"
       />
 
-      <div className="border rounded-md bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Imagem</TableHead>
-              <TableHead>Referência</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              [...Array(5)].map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-12 w-12 rounded-md" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-48" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-8 w-20 ml-auto" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center h-32 text-muted-foreground">
-                  Nenhum produto encontrado.
-                </TableCell>
-              </TableRow>
-            ) : (
-              items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    {item.imagem_catalogo_url ? (
-                      <div className="relative w-12 h-12 rounded-md overflow-hidden border">
-                        <img
-                          src={item.imagem_catalogo_url}
-                          alt={item.referencia}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center border">
-                        <ImageIcon className="w-5 h-5 text-muted-foreground/50" />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{item.referencia}</TableCell>
-                  <TableCell
-                    className="max-w-[400px] truncate"
+      <div className="bg-card border rounded-md p-4">
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="flex flex-col gap-2 p-4 border rounded-md">
+                <Skeleton className="h-32 w-full rounded-md" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="text-center h-32 flex items-center justify-center text-muted-foreground">
+            Nenhum produto encontrado.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, item)}
+                onDragOver={(e) => handleDragOver(e, item)}
+                onDrop={handleDrop}
+                onDragEnd={() => setDraggedItem(null)}
+                className={cn(
+                  'relative group flex flex-col gap-3 p-4 border rounded-md bg-background shadow-sm hover:border-primary/50 transition-colors cursor-grab active:cursor-grabbing',
+                  draggedItem?.id === item.id ? 'opacity-50' : 'opacity-100',
+                )}
+              >
+                <div className="absolute top-2 left-2 p-1 bg-background/80 rounded cursor-grab opacity-0 group-hover:opacity-100 transition-opacity z-10 text-muted-foreground hover:text-foreground">
+                  <GripVertical className="w-5 h-5" />
+                </div>
+
+                <div className="aspect-square relative w-full rounded-md overflow-hidden bg-muted flex items-center justify-center border">
+                  {item.imagem_catalogo_url ? (
+                    <img
+                      src={item.imagem_catalogo_url}
+                      alt={item.referencia}
+                      className="object-cover w-full h-full pointer-events-none"
+                    />
+                  ) : (
+                    <ImageIcon className="w-10 h-10 text-muted-foreground/30 pointer-events-none" />
+                  )}
+                </div>
+
+                <div className="flex-1 flex flex-col">
+                  <h3 className="font-semibold text-sm truncate" title={item.referencia}>
+                    {item.referencia}
+                  </h3>
+                  <p
+                    className="text-xs text-muted-foreground line-clamp-2 mt-1 flex-1"
                     title={item.desc_produto || item.descricao}
                   >
                     {item.desc_produto || item.descricao || '-'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleUploadClick(item)}
-                        disabled={uploadingId === item.id}
-                      >
-                        {uploadingId === item.id ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Upload className="w-4 h-4 mr-2" />
-                        )}
-                        Upload
-                      </Button>
-                      {item.imagem_catalogo_url && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleRemoveImage(item.id)}
-                          disabled={uploadingId === item.id}
-                          title="Remover Imagem"
-                        >
-                          {uploadingId === item.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </Button>
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-xs"
+                    onClick={() => handleUploadClick(item)}
+                    disabled={uploadingId === item.id}
+                  >
+                    {uploadingId === item.id ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-1" />
+                    )}
+                    Upload
+                  </Button>
+
+                  {item.imagem_catalogo_url && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleRemoveImage(item.id)}
+                      disabled={uploadingId === item.id}
+                      title="Remover Imagem"
+                    >
+                      {uploadingId === item.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
                       )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {savingOrder && (
+        <div className="fixed bottom-4 right-4 bg-background border shadow-lg rounded-md px-4 py-2 flex items-center gap-2 z-50 animate-fade-in-up">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <span className="text-sm font-medium">Salvando nova ordem...</span>
+        </div>
+      )}
     </div>
   )
 }
