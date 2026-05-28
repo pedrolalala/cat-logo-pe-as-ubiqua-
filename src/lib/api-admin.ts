@@ -122,7 +122,13 @@ export async function uploadCatalogImage(file: File, filePrefix: string): Promis
 
 export async function updateCatalogItemDetails(
   id: number,
-  updates: { cor?: string | null; referencia?: string; descricao?: string; desc_produto?: string },
+  updates: {
+    cor?: string | null
+    referencia?: string
+    descricao?: string
+    desc_produto?: string
+    valor_revenda?: number
+  },
 ) {
   const { error } = await supabase
     .from('revenda_ubiqua')

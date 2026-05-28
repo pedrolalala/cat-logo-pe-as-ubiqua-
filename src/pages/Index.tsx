@@ -82,7 +82,7 @@ export default function Index() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredData.map((group, i) => (
           <div
-            key={group.nomeExibicao + i}
+            key={group.id}
             className="animate-fade-in-up"
             style={{ animationDelay: `${i * 50}ms` }}
           >

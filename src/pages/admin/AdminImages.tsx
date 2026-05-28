@@ -1,27 +1,10 @@
-import { useEffect, useState } from 'react'
-import {
-  fetchCatalogItems,
-  updateCatalogOrder,
-  updateCatalogImageUrl,
-  uploadCatalogImage,
-  updateCatalogItemDetails,
-  createCatalogItem,
-  CatalogItem,
-} from '@/lib/api-admin'
-import { Input } from '@/components/ui/input'
+import { useState, useMemo, useRef } from 'react'
+import { useParts, GroupedPart } from '@/hooks/use-parts'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { toast } from 'sonner'
-import {
-  Loader2,
-  Search,
-  Upload,
-  Image as ImageIcon,
-  ArrowUp,
-  ArrowDown,
-  Edit,
-  Plus,
-} from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -29,332 +12,356 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { toast } from 'sonner'
+import { ImageOff, Upload, Save, Edit, RefreshCw, Search, AlertCircle } from 'lucide-react'
+import {
+  updateCatalogItemDetails,
+  updateCatalogImageUrl,
+  uploadCatalogImageExact,
+} from '@/lib/api-admin'
+import { cn } from '@/lib/utils'
+
+const colorMap: Record<string, string> = {
+  BRANCA: '#FFFFFF',
+  PRETA: '#000000',
+  AREIA: '#D2B48C',
+  'VERDE SÁLVIA': '#77815C',
+  'VERDE SALVIA': '#77815C',
+  'OURO VELHO': '#CFB53B',
+  PRATA: '#C0C0C0',
+  COBRE: '#B87333',
+  DOURADA: '#D4AF37',
+  DOURADO: '#D4AF37',
+  CORTEN: '#B87333',
+  NÍQUEL: '#727472',
+  NIQUEL: '#727472',
+  AMARELA: '#FFFF00',
+  AMARELO: '#FFFF00',
+  AZUL: '#0000FF',
+  VERMELHA: '#FF0000',
+  VERMELHO: '#FF0000',
+  VERDE: '#008000',
+  ROSA: '#FFC0CB',
+  LILAS: '#C8A2C8',
+  MARROM: '#964B00',
+  LARANJA: '#FFA500',
+  GRAFITE: '#383428',
+  CHUMBO: '#5A5A5A',
+}
+
+function AdminPartCard({
+  group,
+  onEdit,
+}: {
+  group: GroupedPart
+  onEdit: (g: GroupedPart, v: any) => void
+}) {
+  const {
+    coresDisponiveis,
+    imagemPrincipal,
+    totalAvailable,
+    nomeExibicao,
+    valorRevenda,
+    detalhesPorCor,
+  } = group
+
+  const uniqueColors = useMemo(() => {
+    if (coresDisponiveis && coresDisponiveis.length > 0) return coresDisponiveis
+    return ['PADRÃO']
+  }, [coresDisponiveis])
+
+  const [selectedColor, setSelectedColor] = useState<string | null>(() =>
+    uniqueColors.length === 1 ? uniqueColors[0] : null,
+  )
+  const [imageError, setImageError] = useState(false)
+
+  const selectedVariant = useMemo(() => {
+    if (!selectedColor) return detalhesPorCor[0] || null
+    const colorVariants = detalhesPorCor.filter((v) => {
+      const c = v.cor?.toUpperCase().trim() || 'PADRÃO'
+      return c === selectedColor.toUpperCase().trim()
+    })
+    if (colorVariants.length === 0) return detalhesPorCor[0] || null
+    return colorVariants.reduce((prev, curr) =>
+      (curr.disponivel || 0) > (prev.disponivel || 0) ? curr : prev,
+    )
+  }, [selectedColor, detalhesPorCor])
+
+  const displayPrice = selectedVariant?.valor_revenda ?? valorRevenda ?? 0
+  const formattedPrice = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(displayPrice)
+
+  const mappedImageUrl = selectedVariant?.imagem_catalogo_url || imagemPrincipal
+
+  return (
+    <Card className="flex flex-col h-full bg-card overflow-hidden border-border/50 hover:border-primary/30 transition-all">
+      <div className="relative w-full pt-[80%] bg-white overflow-hidden flex items-center justify-center">
+        {!imageError && mappedImageUrl ? (
+          <img
+            src={mappedImageUrl}
+            alt={nomeExibicao}
+            onError={() => setImageError(true)}
+            className="absolute inset-0 w-full h-full object-contain p-4 mix-blend-multiply"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 text-slate-400">
+            <ImageOff className="w-10 h-10 mb-2 opacity-50" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">Sem Imagem</span>
+          </div>
+        )}
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
+          <Badge
+            variant="secondary"
+            className="font-mono font-bold text-xs bg-background/90 backdrop-blur-sm text-foreground"
+          >
+            {selectedVariant?.referencia || 'N/A'}
+          </Badge>
+          <Badge className="text-[10px] bg-primary/10 text-primary hover:bg-primary/20 border-none">
+            {detalhesPorCor.length} Variante{detalhesPorCor.length !== 1 ? 's' : ''}
+          </Badge>
+        </div>
+      </div>
+      <CardHeader className="pb-2 pt-4">
+        <h3
+          className="font-extrabold text-foreground text-sm line-clamp-2 uppercase"
+          title={nomeExibicao}
+        >
+          {nomeExibicao}
+        </h3>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col gap-3 pb-4">
+        {uniqueColors.length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            {uniqueColors.map((colorName) => {
+              const hex = colorMap[colorName.toUpperCase()] || '#CCCCCC'
+              const isWhite = hex === '#FFFFFF'
+              return (
+                <button
+                  key={colorName}
+                  className={cn(
+                    'w-6 h-6 rounded-full transition-all shadow-sm ring-offset-background',
+                    isWhite ? 'border border-slate-300' : 'border border-transparent',
+                    selectedColor === colorName
+                      ? 'ring-2 ring-primary ring-offset-2 scale-110'
+                      : 'opacity-80 hover:opacity-100',
+                  )}
+                  style={{ backgroundColor: hex }}
+                  title={colorName}
+                  onClick={() => {
+                    setSelectedColor(colorName)
+                    setImageError(false)
+                  }}
+                />
+              )
+            })}
+          </div>
+        )}
+        <p className="text-xl font-bold text-primary mt-auto">{formattedPrice}</p>
+      </CardContent>
+      <CardFooter className="pt-0">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => selectedVariant && onEdit(group, selectedVariant)}
+        >
+          <Edit className="w-4 h-4 mr-2" />
+          Editar Variante
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
 
 export function AdminImages() {
-  const [items, setItems] = useState<CatalogItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, loading, refetch } = useParts()
   const [search, setSearch] = useState('')
-  const [uploadingId, setUploadingId] = useState<number | null>(null)
+  const [editingVariant, setEditingVariant] = useState<any>(null)
+  const [editingGroup, setEditingGroup] = useState<GroupedPart | null>(null)
 
-  const [editingItem, setEditingItem] = useState<CatalogItem | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const [formState, setFormState] = useState({ referencia: '', descricao: '', cor: '' })
-  const [savingEdit, setSavingEdit] = useState(false)
+  const [descProduto, setDescProduto] = useState('')
+  const [valorRevenda, setValorRevenda] = useState<number>(0)
+  const [cor, setCor] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const loadItems = async (q: string = '') => {
-    setLoading(true)
+  const filteredData = useMemo(() => {
+    if (!search.trim()) return data
+    const lowerSearch = search.toLowerCase()
+    return data.filter(
+      (g) =>
+        g.nomeExibicao.toLowerCase().includes(lowerSearch) ||
+        g.detalhesPorCor.some((v) => v.referencia?.toLowerCase().includes(lowerSearch)),
+    )
+  }, [data, search])
+
+  const handleEdit = (group: GroupedPart, variant: any) => {
+    setEditingGroup(group)
+    setEditingVariant(variant)
+    setDescProduto(variant.desc_produto || variant.descricao || '')
+    setValorRevenda(Number(variant.valor_revenda) || 0)
+    setCor(variant.cor || '')
+  }
+
+  const handleSave = async () => {
+    if (!editingVariant) return
+    setIsSaving(true)
     try {
-      const data = await fetchCatalogItems(q)
-      setItems(data)
+      await updateCatalogItemDetails(editingVariant.id, {
+        desc_produto: descProduto,
+        valor_revenda: valorRevenda,
+        cor: cor,
+      })
+      toast.success('Variante atualizada com sucesso.')
+      setEditingVariant(null)
+      refetch()
     } catch (error) {
-      toast.error('Erro ao carregar itens do catálogo')
+      toast.error('Erro ao atualizar variante.')
     } finally {
-      setLoading(false)
+      setIsSaving(false)
     }
   }
 
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      loadItems(search)
-    }, 500)
-    return () => clearTimeout(delay)
-  }, [search])
-
-  const handleFileUpload = async (id: number, file: File) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !editingVariant) return
+    setIsSaving(true)
     try {
-      setUploadingId(id)
-      const item = items.find((i) => i.id === id)
-      const prefix = item?.referencia || `item_${id}`
-      const url = await uploadCatalogImage(file, prefix)
-      await updateCatalogImageUrl(id, url)
-      toast.success('Imagem atualizada com sucesso')
-      loadItems(search)
+      const url = await uploadCatalogImageExact(file, editingVariant.referencia)
+      await updateCatalogImageUrl(editingVariant.id, url)
+      toast.success('Imagem enviada com sucesso!')
+      setEditingVariant(null)
+      refetch()
     } catch (error) {
-      toast.error('Erro ao fazer upload da imagem')
+      toast.error('Erro ao enviar imagem.')
     } finally {
-      setUploadingId(null)
+      setIsSaving(false)
     }
-  }
-
-  const handleMoveOrder = async (index: number, direction: 'up' | 'down') => {
-    const newItems = [...items]
-    const swapIndex = direction === 'up' ? index - 1 : index + 1
-
-    if (swapIndex < 0 || swapIndex >= newItems.length) return
-
-    const tempOrder = newItems[index].ordem
-    newItems[index].ordem = newItems[swapIndex].ordem
-    newItems[swapIndex].ordem = tempOrder
-
-    const tempItem = newItems[index]
-    newItems[index] = newItems[swapIndex]
-    newItems[swapIndex] = tempItem
-
-    setItems(newItems)
-
-    try {
-      await updateCatalogOrder([
-        { id: newItems[index].id, ordem: newItems[index].ordem },
-        { id: newItems[swapIndex].id, ordem: newItems[swapIndex].ordem },
-      ])
-    } catch (error) {
-      toast.error('Erro ao atualizar a ordem')
-      loadItems(search)
-    }
-  }
-
-  const handleSaveEdit = async () => {
-    setSavingEdit(true)
-    try {
-      if (isCreating) {
-        if (!formState.referencia || !formState.descricao) {
-          toast.error('Preencha os campos obrigatórios (Referência e Descrição)')
-          setSavingEdit(false)
-          return
-        }
-        await createCatalogItem({
-          referencia: formState.referencia,
-          descricao: formState.descricao,
-          desc_produto: formState.descricao,
-          cor: formState.cor,
-          ordem: items.length > 0 ? items[0].ordem - 1 : 0,
-        })
-        toast.success('Produto criado com sucesso!')
-      } else if (editingItem) {
-        await updateCatalogItemDetails(editingItem.id, {
-          cor: formState.cor,
-          referencia: formState.referencia,
-          descricao: formState.descricao,
-          desc_produto: formState.descricao,
-        })
-        toast.success('Produto atualizado com sucesso!')
-      }
-      setIsCreating(false)
-      setEditingItem(null)
-      loadItems(search)
-    } catch (error) {
-      toast.error('Erro ao salvar o produto')
-    } finally {
-      setSavingEdit(false)
-    }
-  }
-
-  const openEdit = (item: CatalogItem) => {
-    setEditingItem(item)
-    setIsCreating(false)
-    setFormState({
-      referencia: item.referencia || '',
-      descricao: item.desc_produto || item.descricao || '',
-      cor: item.cor || '',
-    })
-  }
-
-  const openCreate = () => {
-    setEditingItem(null)
-    setIsCreating(true)
-    setFormState({ referencia: '', descricao: '', cor: '' })
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
-        <div className="relative flex-1 w-full max-w-md">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-muted/20 p-4 rounded-lg border border-border/50">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por referência ou descrição..."
+            placeholder="Buscar por descrição ou referência..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 bg-background"
           />
         </div>
-        <Button onClick={openCreate} className="shrink-0 w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Produto
+        <Button variant="outline" onClick={refetch} disabled={loading}>
+          <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
+          Atualizar
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="h-80 rounded-xl animate-pulse bg-muted" />
+          ))}
         </div>
-      ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-muted/30 rounded-lg border border-dashed text-center space-y-2">
+      ) : filteredData.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-12 text-center border rounded-lg bg-muted/10">
+          <ImageOff className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
           <p className="text-muted-foreground font-medium">Nenhum produto encontrado.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {items.map((item, index) => (
-            <Card
-              key={item.id}
-              className="overflow-hidden flex flex-col group border-orange-200/50 hover:border-orange-500/30 transition-all duration-300"
-            >
-              <div className="aspect-square bg-white relative">
-                {item.imagem_catalogo_url ? (
-                  <img
-                    src={item.imagem_catalogo_url}
-                    alt={item.descricao}
-                    className="w-full h-full object-contain mix-blend-multiply p-4"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-slate-400 bg-slate-50">
-                    <ImageIcon className="w-12 h-12 mb-2 opacity-50" />
-                    <span className="text-sm font-medium uppercase tracking-wider opacity-60">
-                      Sem Imagem
-                    </span>
-                  </div>
-                )}
-
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Label htmlFor={`upload-${item.id}`} className="cursor-pointer">
-                    <div className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors shadow-sm">
-                      {uploadingId === item.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Upload className="w-4 h-4" />
-                      )}
-                      <span className="font-medium">Alterar Imagem</span>
-                    </div>
-                  </Label>
-                  <Input
-                    id={`upload-${item.id}`}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) handleFileUpload(item.id, file)
-                    }}
-                  />
-                </div>
-              </div>
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-lg line-clamp-1" title={item.referencia}>
-                  {item.referencia}
-                </CardTitle>
-                <div
-                  className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]"
-                  title={item.desc_produto || item.descricao}
-                >
-                  {item.desc_produto || item.descricao}
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-0 flex-1 flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-2 mt-auto">
-                  <Badge
-                    variant={item.cor ? 'default' : 'secondary'}
-                    className={item.cor ? 'bg-orange-500 hover:bg-orange-600' : ''}
-                  >
-                    {item.cor ? `Cor: ${item.cor}` : 'Sem cor'}
-                  </Badge>
-                  <Badge variant="outline" className="text-muted-foreground">
-                    Ordem: {item.ordem}
-                  </Badge>
-                </div>
-              </CardContent>
-              <CardFooter className="p-4 pt-0 flex justify-between bg-slate-50/50 border-t items-center mt-auto h-14">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => openEdit(item)}
-                  className="hover:text-orange-600 hover:bg-orange-100/50"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Editar
-                </Button>
-                <div className="flex gap-1">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 hover:border-orange-500 hover:text-orange-600"
-                    disabled={index === 0}
-                    onClick={() => handleMoveOrder(index, 'up')}
-                  >
-                    <ArrowUp className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 hover:border-orange-500 hover:text-orange-600"
-                    disabled={index === items.length - 1}
-                    onClick={() => handleMoveOrder(index, 'down')}
-                  >
-                    <ArrowDown className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {filteredData.map((group) => (
+            <AdminPartCard key={group.id} group={group} onEdit={handleEdit} />
           ))}
         </div>
       )}
 
-      <Dialog
-        open={isCreating || !!editingItem}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsCreating(false)
-            setEditingItem(null)
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={!!editingVariant} onOpenChange={(o) => !o && setEditingVariant(null)}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{isCreating ? 'Novo Produto' : 'Editar Produto'}</DialogTitle>
+            <DialogTitle>Editar Variante: {editingVariant?.referencia}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="referencia">
-                Referência <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="referencia"
-                value={formState.referencia}
-                onChange={(e) => setFormState((prev) => ({ ...prev, referencia: e.target.value }))}
-                placeholder="Ex: IS-1234"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="descricao">
-                Descrição <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="descricao"
-                value={formState.descricao}
-                onChange={(e) => setFormState((prev) => ({ ...prev, descricao: e.target.value }))}
-                placeholder="Ex: LUMINÁRIA PENDENTE..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cor">Cor</Label>
-              <Input
-                id="cor"
-                value={formState.cor}
-                onChange={(e) => setFormState((prev) => ({ ...prev, cor: e.target.value }))}
-                placeholder="Ex: BRANCA, PRETA, DOURADA..."
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Opcional. Adicione a cor do produto para facilitar a organização.
+              <Label>Descrição do Produto (Agrupamento)</Label>
+              <Input value={descProduto} onChange={(e) => setDescProduto(e.target.value)} />
+              <p className="text-[11px] text-muted-foreground">
+                Itens com a mesma descrição e preço são agrupados.
               </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Valor Revenda (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={valorRevenda}
+                onChange={(e) => setValorRevenda(parseFloat(e.target.value))}
+              />
+              <p className="text-[11px] font-medium text-orange-600 flex items-center gap-1 mt-1">
+                <AlertCircle className="w-3 h-3" />
+                Alterar o valor separará esta variante em um novo card.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Cor</Label>
+              <Input
+                value={cor}
+                onChange={(e) => setCor(e.target.value)}
+                placeholder="Ex: BRANCA, PRETA..."
+              />
+            </div>
+            <div className="space-y-2 pt-2 border-t mt-4">
+              <Label>Imagem do Catálogo</Label>
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                {editingVariant?.imagem_catalogo_url ? (
+                  <div className="w-16 h-16 border rounded bg-white p-1">
+                    <img
+                      src={editingVariant.imagem_catalogo_url}
+                      alt="Current"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 border rounded bg-muted flex items-center justify-center">
+                    <ImageOff className="w-6 h-6 text-muted-foreground opacity-50" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Button
+                    variant="secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isSaving}
+                    className="w-full sm:w-auto"
+                  >
+                    <Upload className="w-4 h-4 mr-2" /> Alterar Imagem
+                  </Button>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    A imagem enviada será usada para esta variante e servirá de base (fallback) para
+                    outras variantes do mesmo grupo que não possuam imagem.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsCreating(false)
-                setEditingItem(null)
-              }}
-            >
+            <Button variant="outline" onClick={() => setEditingVariant(null)} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button
-              onClick={handleSaveEdit}
-              disabled={savingEdit}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              {savingEdit ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Salvar
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Salvar Alterações
             </Button>
           </DialogFooter>
         </DialogContent>

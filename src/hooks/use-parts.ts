@@ -2,12 +2,60 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 
 export type GroupedPart = {
+  id: string
   nomeExibicao: string
   totalAvailable: number
   coresDisponiveis: string[]
   imagemPrincipal: string | null
   valorRevenda: number
   detalhesPorCor: any[]
+  ordem: number
+}
+
+export function groupCatalogItems(items: any[]): GroupedPart[] {
+  const groups = new Map<string, GroupedPart>()
+
+  items.forEach((item) => {
+    const desc = (item.desc_produto || item.descricao || 'Sem nome').trim()
+    const price = Number(item.valor_revenda) || 0
+    const key = `${desc.toLowerCase()}_${price.toFixed(2)}`
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        id: key,
+        nomeExibicao: desc,
+        totalAvailable: 0,
+        coresDisponiveis: [],
+        imagemPrincipal: null,
+        valorRevenda: price,
+        detalhesPorCor: [],
+        ordem: item.ordem ?? 999999,
+      })
+    }
+
+    const group = groups.get(key)!
+    group.totalAvailable += Number(item.disponivel) || 0
+
+    const cor = (item.cor || 'PADRÃO').trim()
+    if (!group.coresDisponiveis.includes(cor)) {
+      group.coresDisponiveis.push(cor)
+    }
+
+    if (item.imagem_catalogo_url && !group.imagemPrincipal) {
+      group.imagemPrincipal = item.imagem_catalogo_url
+    }
+
+    if (item.ordem !== null && item.ordem < group.ordem) {
+      group.ordem = item.ordem
+    }
+
+    group.detalhesPorCor.push(item)
+  })
+
+  return Array.from(groups.values()).sort((a, b) => {
+    if (a.ordem !== b.ordem) return a.ordem - b.ordem
+    return a.nomeExibicao.localeCompare(b.nomeExibicao)
+  })
 }
 
 export function useParts() {
@@ -20,50 +68,12 @@ export function useParts() {
       setLoading(true)
       setError(null)
 
-      const [viewResult, orderResult] = await Promise.all([
-        supabase.from('vw_catalogo_ubiqua').select('*'),
-        supabase.from('revenda_ubiqua').select('descricao, desc_produto, ordem'),
-      ])
+      const { data: items, error: fetchError } = await supabase.from('revenda_ubiqua').select('*')
 
-      if (viewResult.error) throw viewResult.error
+      if (fetchError) throw fetchError
 
-      const orderMap = new Map<string, number>()
-      if (!orderResult.error && orderResult.data) {
-        orderResult.data.forEach((item) => {
-          const currentOrder = item.ordem || 0
-          const updateMap = (key: string) => {
-            const lower = key.toLowerCase()
-            const existing = orderMap.get(lower) ?? 999999
-            if (currentOrder < existing) {
-              orderMap.set(lower, currentOrder)
-            }
-          }
-          if (item.desc_produto) updateMap(item.desc_produto)
-          if (item.descricao) updateMap(item.descricao)
-        })
-      }
-
-      const mappedData: (GroupedPart & { ordem: number })[] = (viewResult.data || []).map((row) => {
-        const nomeExibicao = row.nome_exibicao || 'Sem nome'
-        const ordem = orderMap.get(nomeExibicao.toLowerCase()) ?? 999999
-
-        return {
-          nomeExibicao,
-          totalAvailable: Number(row.estoque_total) || 0,
-          coresDisponiveis: row.cores_disponiveis || [],
-          imagemPrincipal: row.imagem_principal,
-          valorRevenda: Number(row.valor_revenda) || 0,
-          detalhesPorCor: (row.detalhes_por_cor as any[]) || [],
-          ordem,
-        }
-      })
-
-      setData(
-        mappedData.sort((a, b) => {
-          if (a.ordem !== b.ordem) return a.ordem - b.ordem
-          return a.nomeExibicao.localeCompare(b.nomeExibicao)
-        }),
-      )
+      const grouped = groupCatalogItems(items || [])
+      setData(grouped)
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error occurred'))
     } finally {

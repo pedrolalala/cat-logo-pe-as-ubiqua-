@@ -36,13 +36,13 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
   }, [selectedColor])
 
   const selectedVariant = useMemo(() => {
-    if (!selectedColor) return null
+    if (!selectedColor) return detalhesPorCor[0] || null
     const colorVariants = detalhesPorCor.filter((v) => {
       const c = v.cor?.toUpperCase().trim() || 'PADRÃO'
       return c === selectedColor.toUpperCase().trim()
     })
 
-    if (colorVariants.length === 0) return null
+    if (colorVariants.length === 0) return detalhesPorCor[0] || null
 
     return colorVariants.reduce((prev, curr) =>
       (curr.disponivel || 0) > (prev.disponivel || 0) ? curr : prev,
@@ -76,8 +76,8 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
   const mappedImageUrl =
     selectedVariant?.imagem_catalogo_url ||
     selectedVariant?.imagem_url ||
-    (sixDigits ? `${storageBaseUrl}${sixDigits}_catalogo.jpg` : null) ||
-    imagemPrincipal
+    imagemPrincipal ||
+    (sixDigits ? `${storageBaseUrl}${sixDigits}_catalogo.jpg` : null)
 
   const colorMap: Record<string, string> = {
     BRANCA: '#FFFFFF',
