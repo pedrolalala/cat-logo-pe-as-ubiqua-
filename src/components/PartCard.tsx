@@ -9,9 +9,10 @@ import { cn } from '@/lib/utils'
 interface PartCardProps {
   group: GroupedPart
   onAddBudget: (variant: any) => void
+  onViewDetails: (variant: any) => void
 }
 
-export function PartCard({ group, onAddBudget }: PartCardProps) {
+export function PartCard({ group, onAddBudget, onViewDetails }: PartCardProps) {
   const {
     coresDisponiveis,
     imagemPrincipal,
@@ -128,9 +129,17 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     ? getVariantStockForColor(selectedColor) <= 0
     : totalAvailable <= 0
 
+  const handleViewDetails = () => {
+    const variantToView = selectedVariant || detalhesPorCor[0]
+    if (variantToView) onViewDetails(variantToView)
+  }
+
   return (
     <Card className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-card overflow-hidden border-orange-200/50 hover:border-orange-500/30">
-      <div className="relative w-full pt-[80%] bg-white overflow-hidden flex items-center justify-center">
+      <div
+        className="relative w-full pt-[80%] bg-white overflow-hidden flex items-center justify-center cursor-pointer"
+        onClick={handleViewDetails}
+      >
         {!imageError && mappedImageUrl ? (
           <img
             src={mappedImageUrl}
@@ -167,16 +176,20 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           </Badge>
         </div>
       </div>
-      <CardHeader className="pb-2 pt-4">
+      <CardHeader className="pb-2 pt-4 cursor-pointer" onClick={handleViewDetails}>
         <h3
-          className="font-extrabold text-foreground text-xl leading-tight line-clamp-1 uppercase tracking-tight"
+          className="font-extrabold text-foreground text-xl leading-tight line-clamp-1 uppercase tracking-tight group-hover:text-orange-600 transition-colors"
           title={lampName}
         >
           {lampName}
         </h3>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3 pb-4">
-        <p className="text-sm text-muted-foreground line-clamp-2" title={cleanDescription}>
+        <p
+          className="text-sm text-muted-foreground line-clamp-2 cursor-pointer"
+          title={cleanDescription}
+          onClick={handleViewDetails}
+        >
           {cleanDescription}
         </p>
 
