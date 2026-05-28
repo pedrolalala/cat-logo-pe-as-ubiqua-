@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, ShoppingCart, ImageOff, Tag, Layers, AlertCircle, Check } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { cn, getFinishColorHex } from '@/lib/utils'
 import { QuantityModal } from '@/components/QuantityModal'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -207,18 +207,7 @@ export default function ProductDetail() {
               {uniqueColors.length > 0 ? (
                 <div className="flex flex-wrap gap-3">
                   {uniqueColors.map((colorName) => {
-                    const LOCAL_COLOR_MAP: Record<string, string> = {
-                      'UV BRONZE': '#A87932',
-                      'UV CHROME': '#D1D1D1',
-                      'UV DOURADA': '#D4AF37',
-                      'MÁRMORE VERDE': '#2E473B',
-                      'MÁRMORE PRETO': '#1A1A1A',
-                      'MÁRMORE BRANCO': '#F2F2F2',
-                      CIMENTO: '#8E9089',
-                      'VERMELHO CHAMA': '#CF352E',
-                    }
-                    const hex =
-                      LOCAL_COLOR_MAP[colorName] || colorMap[colorName.toUpperCase()] || '#CCCCCC'
+                    const hex = getFinishColorHex(colorName, colorMap)
                     const isLightColor = hex === '#FFFFFF' || hex === '#F2F2F2'
                     const qty = getVariantStockForColor(colorName)
                     const isSelected = selectedColor === colorName
@@ -241,7 +230,7 @@ export default function ProductDetail() {
                         <div
                           className={cn(
                             'w-5 h-5 rounded-full flex items-center justify-center shadow-sm',
-                            isLightColor && 'border border-slate-300',
+                            isLightColor && 'border border-gray-200',
                           )}
                           style={{ backgroundColor: hex }}
                         >

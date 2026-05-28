@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ShoppingCart, ImageOff } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getFinishColorHex } from '@/lib/utils'
 
 interface PartCardProps {
   group: GroupedPart
@@ -157,18 +157,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
         {uniqueColors.length > 1 && (
           <div className="flex flex-wrap gap-2 mt-auto">
             {uniqueColors.map((colorName) => {
-              const LOCAL_COLOR_MAP: Record<string, string> = {
-                'UV BRONZE': '#A87932',
-                'UV CHROME': '#D1D1D1',
-                'UV DOURADA': '#D4AF37',
-                'MÁRMORE VERDE': '#2E473B',
-                'MÁRMORE PRETO': '#1A1A1A',
-                'MÁRMORE BRANCO': '#F2F2F2',
-                CIMENTO: '#8E9089',
-                'VERMELHO CHAMA': '#CF352E',
-              }
-              const hex =
-                LOCAL_COLOR_MAP[colorName] || colorMap[colorName.toUpperCase()] || '#CCCCCC'
+              const hex = getFinishColorHex(colorName, colorMap)
               const isLightColor = hex === '#FFFFFF' || hex === '#F2F2F2'
               const qty = getVariantStockForColor(colorName)
               return (
@@ -176,7 +165,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
                   key={colorName}
                   className={cn(
                     'w-6 h-6 rounded-full transition-all shadow-sm ring-offset-background',
-                    isLightColor ? 'border border-slate-300' : 'border border-transparent',
+                    isLightColor ? 'border border-gray-200' : 'border border-transparent',
                     selectedColor === colorName
                       ? 'ring-2 ring-orange-500 ring-offset-2 scale-110 shadow-md'
                       : 'opacity-80 hover:opacity-100 hover:scale-105',
