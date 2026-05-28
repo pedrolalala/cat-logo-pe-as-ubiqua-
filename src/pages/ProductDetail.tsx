@@ -1,4 +1,4 @@
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { useParts, getVariantImage, colorMap } from '@/hooks/use-parts'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ShoppingCart, ImageOff, Tag, Layers, AlertCircle, Check } from 'lucide-react'
@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function ProductDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const urlColor = searchParams.get('cor')
 
@@ -131,7 +132,13 @@ export default function ProductDetail() {
       <Button
         variant="ghost"
         className="mb-6 -ml-4 text-muted-foreground hover:text-foreground"
-        onClick={() => navigate(-1)}
+        onClick={() => {
+          if (location.key !== 'default') {
+            navigate(-1)
+          } else {
+            navigate('/')
+          }
+        }}
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Voltar ao Catálogo
