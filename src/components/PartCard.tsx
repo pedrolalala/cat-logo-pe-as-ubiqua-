@@ -157,15 +157,26 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
         {uniqueColors.length > 1 && (
           <div className="flex flex-wrap gap-2 mt-auto">
             {uniqueColors.map((colorName) => {
-              const hex = colorMap[colorName.toUpperCase()] || '#CCCCCC'
-              const isWhite = hex === '#FFFFFF'
+              const LOCAL_COLOR_MAP: Record<string, string> = {
+                'UV BRONZE': '#A87932',
+                'UV CHROME': '#D1D1D1',
+                'UV DOURADA': '#D4AF37',
+                'MÁRMORE VERDE': '#2E473B',
+                'MÁRMORE PRETO': '#1A1A1A',
+                'MÁRMORE BRANCO': '#F2F2F2',
+                CIMENTO: '#8E9089',
+                'VERMELHO CHAMA': '#CF352E',
+              }
+              const hex =
+                LOCAL_COLOR_MAP[colorName] || colorMap[colorName.toUpperCase()] || '#CCCCCC'
+              const isLightColor = hex === '#FFFFFF' || hex === '#F2F2F2'
               const qty = getVariantStockForColor(colorName)
               return (
                 <button
                   key={colorName}
                   className={cn(
                     'w-6 h-6 rounded-full transition-all shadow-sm ring-offset-background',
-                    isWhite ? 'border border-slate-300' : 'border border-transparent',
+                    isLightColor ? 'border border-slate-300' : 'border border-transparent',
                     selectedColor === colorName
                       ? 'ring-2 ring-orange-500 ring-offset-2 scale-110 shadow-md'
                       : 'opacity-80 hover:opacity-100 hover:scale-105',

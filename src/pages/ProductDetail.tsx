@@ -1,4 +1,4 @@
-import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useParts, getVariantImage, colorMap } from '@/hooks/use-parts'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ShoppingCart, ImageOff, Tag, Layers, AlertCircle, Check } from 'lucide-react'
@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function ProductDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const urlColor = searchParams.get('cor')
 
@@ -132,13 +131,7 @@ export default function ProductDetail() {
       <Button
         variant="ghost"
         className="mb-6 -ml-4 text-muted-foreground hover:text-foreground"
-        onClick={() => {
-          if (location.state?.fromCatalog) {
-            navigate(-1)
-          } else {
-            navigate('/')
-          }
-        }}
+        onClick={() => navigate('/')}
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Voltar ao Catálogo
@@ -214,8 +207,19 @@ export default function ProductDetail() {
               {uniqueColors.length > 0 ? (
                 <div className="flex flex-wrap gap-3">
                   {uniqueColors.map((colorName) => {
-                    const hex = colorMap[colorName.toUpperCase()] || '#CCCCCC'
-                    const isWhite = hex === '#FFFFFF'
+                    const LOCAL_COLOR_MAP: Record<string, string> = {
+                      'UV BRONZE': '#A87932',
+                      'UV CHROME': '#D1D1D1',
+                      'UV DOURADA': '#D4AF37',
+                      'MÁRMORE VERDE': '#2E473B',
+                      'MÁRMORE PRETO': '#1A1A1A',
+                      'MÁRMORE BRANCO': '#F2F2F2',
+                      CIMENTO: '#8E9089',
+                      'VERMELHO CHAMA': '#CF352E',
+                    }
+                    const hex =
+                      LOCAL_COLOR_MAP[colorName] || colorMap[colorName.toUpperCase()] || '#CCCCCC'
+                    const isLightColor = hex === '#FFFFFF' || hex === '#F2F2F2'
                     const qty = getVariantStockForColor(colorName)
                     const isSelected = selectedColor === colorName
 
@@ -237,13 +241,16 @@ export default function ProductDetail() {
                         <div
                           className={cn(
                             'w-5 h-5 rounded-full flex items-center justify-center shadow-sm',
-                            isWhite && 'border border-slate-300',
+                            isLightColor && 'border border-slate-300',
                           )}
                           style={{ backgroundColor: hex }}
                         >
                           {isSelected && (
                             <Check
-                              className={cn('w-3.5 h-3.5', isWhite ? 'text-black' : 'text-white')}
+                              className={cn(
+                                'w-3.5 h-3.5',
+                                isLightColor ? 'text-black' : 'text-white',
+                              )}
                               strokeWidth={3}
                             />
                           )}
