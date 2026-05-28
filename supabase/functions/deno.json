@@ -10,6 +10,7 @@
     "sync-sharepoint": 2,
     "sync-teams": 2,
     "enviar-confirmacao-email": 2,
-    "parse-budget-pdf": 5
+    "parse-budget-pdf": 5,
+    "process-budget-pdf": 1
   }
 }
