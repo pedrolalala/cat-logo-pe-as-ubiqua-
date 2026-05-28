@@ -3,7 +3,7 @@ import { useParts } from '@/hooks/use-parts'
 import { PartCard } from '@/components/PartCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, PackageSearch } from 'lucide-react'
+import { AlertCircle, PackageSearch, CheckCircle2 } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { QuantityModal } from '@/components/QuantityModal'
 
@@ -12,6 +12,7 @@ export default function Index() {
   const query = searchParams.get('q')?.toLowerCase() || ''
   const { data, loading, error, refetch } = useParts()
   const [selectedVariant, setSelectedVariant] = useState<any | null>(null)
+  const isSuccess = searchParams.get('success') === 'true'
 
   const filteredData = useMemo(() => {
     if (!query) return data
@@ -19,6 +20,24 @@ export default function Index() {
       return group.nomeExibicao.toLowerCase().includes(query)
     })
   }, [data, query])
+
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
+        <div className="h-24 w-24 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle2 className="w-12 h-12 text-primary" />
+        </div>
+        <h2 className="text-3xl font-semibold mb-3">Orçamento enviado com sucesso!</h2>
+        <p className="text-muted-foreground mb-8 max-w-md text-lg">
+          Sua solicitação do orçamento Ubiqua foi processada. Em breve nossa equipe retornará com a
+          proposta formal.
+        </p>
+        <Button onClick={() => (window.location.href = '/')} size="lg">
+          Novo Orçamento
+        </Button>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

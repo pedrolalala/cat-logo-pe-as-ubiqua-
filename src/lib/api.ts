@@ -90,7 +90,6 @@ export async function saveQuoteToSupabase(quoteData: any): Promise<QuoteData> {
       cliente_id: cliente_id,
       numero_orcamento: '', // Trigger fn_auto_numero_orcamento will generate this
       valor_subtotal: quoteData.valor_total,
-      valor_total: quoteData.valor_total,
       status: 'rascunho',
       observacoes: quoteData.observacoes,
     })
