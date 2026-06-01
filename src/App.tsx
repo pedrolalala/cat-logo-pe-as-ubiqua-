@@ -11,6 +11,8 @@ import ProductDetail from './pages/ProductDetail'
 import { CartProvider } from './hooks/use-cart'
 import { AuthProvider } from './hooks/use-auth'
 import { AuthWrapper } from './components/AuthWrapper'
+import { OnboardingGuard } from './components/OnboardingGuard'
+import OnboardingPage from './pages/Onboarding'
 
 const App = () => (
   <AuthProvider>
@@ -20,28 +22,32 @@ const App = () => (
           <Toaster />
           <Sonner position="bottom-right" richColors />
           <Routes>
-            <Route element={<Layout />}>
+            <Route
+              path="/onboarding"
+              element={
+                <AuthWrapper>
+                  <OnboardingGuard>
+                    <OnboardingPage />
+                  </OnboardingGuard>
+                </AuthWrapper>
+              }
+            />
+            <Route
+              element={
+                <AuthWrapper>
+                  <OnboardingGuard>
+                    <Layout />
+                  </OnboardingGuard>
+                </AuthWrapper>
+              }
+            >
               <Route path="/" element={<Index />} />
               <Route path="/produtos" element={<Index />} />
               <Route path="/produto/:slug" element={<ProductDetail />} />
               <Route path="/novo-orcamento" element={<NewQuote />} />
               <Route path="/carrinho" element={<NewQuote />} />
-              <Route
-                path="/admin/*"
-                element={
-                  <AuthWrapper>
-                    <AdminPage />
-                  </AuthWrapper>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <AuthWrapper>
-                    <AdminPage />
-                  </AuthWrapper>
-                }
-              />
+              <Route path="/admin/*" element={<AdminPage />} />
+              <Route path="/dashboard" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
