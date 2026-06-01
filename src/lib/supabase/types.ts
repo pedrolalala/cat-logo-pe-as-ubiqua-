@@ -675,6 +675,36 @@ export type Database = {
         }
         Relationships: []
       }
+      empresa_ubiqua: {
+        Row: {
+          cidade: string
+          cnpj: string | null
+          created_at: string
+          estado: string
+          id: string
+          nome_fantasia: string
+          razao_social: string | null
+        }
+        Insert: {
+          cidade: string
+          cnpj?: string | null
+          created_at?: string
+          estado: string
+          id?: string
+          nome_fantasia: string
+          razao_social?: string | null
+        }
+        Update: {
+          cidade?: string
+          cnpj?: string | null
+          created_at?: string
+          estado?: string
+          id?: string
+          nome_fantasia?: string
+          razao_social?: string | null
+        }
+        Relationships: []
+      }
       empresas: {
         Row: {
           ativo: boolean
@@ -4378,6 +4408,44 @@ export type Database = {
           },
         ]
       }
+      usuarios_ubiqua: {
+        Row: {
+          created_at: string
+          email: string
+          empresa_id: string | null
+          id: string
+          nome: string
+          onboarding_completado: boolean
+          telefone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          empresa_id?: string | null
+          id: string
+          nome: string
+          onboarding_completado?: boolean
+          telefone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          empresa_id?: string | null
+          id?: string
+          nome?: string
+          onboarding_completado?: boolean
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'usuarios_ubiqua_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'empresa_ubiqua'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       vendas: {
         Row: {
           cod_cliente: number | null
@@ -5654,6 +5722,14 @@ export const Constants = {
 //   descricao: text (nullable)
 //   ativo: boolean (not null, default: true)
 //   created_at: timestamp with time zone (not null, default: now())
+// Table: empresa_ubiqua
+//   id: uuid (not null, default: gen_random_uuid())
+//   nome_fantasia: text (not null)
+//   razao_social: text (nullable)
+//   cnpj: text (nullable)
+//   cidade: text (not null)
+//   estado: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: empresas
 //   id: uuid (not null, default: gen_random_uuid())
 //   codigo: integer (not null)
@@ -6300,6 +6376,14 @@ export const Constants = {
 //   onboarding_completado: boolean (not null, default: false)
 //   empresa_id: uuid (nullable)
 //   telefone: text (nullable)
+// Table: usuarios_ubiqua
+//   id: uuid (not null)
+//   empresa_id: uuid (nullable)
+//   nome: text (not null)
+//   email: text (not null)
+//   telefone: text (nullable)
+//   onboarding_completado: boolean (not null, default: false)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: v_cash_flow_lucenera
 //   dt_pagamento: date (nullable)
 //   dt_vencimento: date (nullable)
@@ -6727,6 +6811,9 @@ export const Constants = {
 // Table: departamentos
 //   UNIQUE departamentos_nome_key: UNIQUE (nome)
 //   PRIMARY KEY departamentos_pkey: PRIMARY KEY (id)
+// Table: empresa_ubiqua
+//   UNIQUE empresa_ubiqua_cnpj_key: UNIQUE (cnpj)
+//   PRIMARY KEY empresa_ubiqua_pkey: PRIMARY KEY (id)
 // Table: empresas
 //   UNIQUE empresas_cnpj_key: UNIQUE (cnpj)
 //   UNIQUE empresas_codigo_key: UNIQUE (codigo)
@@ -6923,6 +7010,11 @@ export const Constants = {
 //   FOREIGN KEY usuarios_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id)
 //   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
+// Table: usuarios_ubiqua
+//   UNIQUE usuarios_ubiqua_email_key: UNIQUE (email)
+//   FOREIGN KEY usuarios_ubiqua_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresa_ubiqua(id) ON DELETE CASCADE
+//   FOREIGN KEY usuarios_ubiqua_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY usuarios_ubiqua_pkey: PRIMARY KEY (id)
 // Table: vendas
 //   UNIQUE vendas_cod_venda_key: UNIQUE (cod_venda)
 //   PRIMARY KEY vendas_pkey: PRIMARY KEY (id)
@@ -7027,6 +7119,14 @@ export const Constants = {
 //     USING: true
 //   Policy "dept_update_admin" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
+// Table: empresa_ubiqua
+//   Policy "empresa_ubiqua_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "empresa_ubiqua_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (id IN ( SELECT usuarios_ubiqua.empresa_id    FROM usuarios_ubiqua   WHERE (usuarios_ubiqua.id = auth.uid())))
+//   Policy "empresa_ubiqua_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (id IN ( SELECT usuarios_ubiqua.empresa_id    FROM usuarios_ubiqua   WHERE (usuarios_ubiqua.id = auth.uid())))
+//     WITH CHECK: (id IN ( SELECT usuarios_ubiqua.empresa_id    FROM usuarios_ubiqua   WHERE (usuarios_ubiqua.id = auth.uid())))
 // Table: empresas
 //   Policy "anon_select_empresas" (SELECT, PERMISSIVE) roles={anon,authenticated}
 //     USING: true
@@ -7327,6 +7427,14 @@ export const Constants = {
 //     USING: true
 //   Policy "usuarios_update_own" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((id = auth.uid()) OR (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = 'admin'::usuario_role)))))
+// Table: usuarios_ubiqua
+//   Policy "usuarios_ubiqua_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: (id = auth.uid())
+//   Policy "usuarios_ubiqua_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: (id = auth.uid())
+//   Policy "usuarios_ubiqua_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: (id = auth.uid())
+//     WITH CHECK: (id = auth.uid())
 // Table: vendas
 //   Policy "Permitir leitura para autenticados" (SELECT, PERMISSIVE) roles={public}
 //     USING: (auth.role() = 'authenticated'::text)
@@ -8381,6 +8489,8 @@ export const Constants = {
 //   CREATE INDEX idx_lanc_vencimento ON public.custos_recorrentes_lancamentos USING btree (data_vencimento)
 // Table: departamentos
 //   CREATE UNIQUE INDEX departamentos_nome_key ON public.departamentos USING btree (nome)
+// Table: empresa_ubiqua
+//   CREATE UNIQUE INDEX empresa_ubiqua_cnpj_key ON public.empresa_ubiqua USING btree (cnpj)
 // Table: empresas
 //   CREATE UNIQUE INDEX empresas_cnpj_key ON public.empresas USING btree (cnpj)
 //   CREATE UNIQUE INDEX empresas_codigo_key ON public.empresas USING btree (codigo)
@@ -8566,6 +8676,8 @@ export const Constants = {
 //   CREATE INDEX idx_usuarios_email ON public.usuarios USING btree (email)
 //   CREATE INDEX idx_usuarios_role ON public.usuarios USING btree (role)
 //   CREATE UNIQUE INDEX usuarios_email_key ON public.usuarios USING btree (email)
+// Table: usuarios_ubiqua
+//   CREATE UNIQUE INDEX usuarios_ubiqua_email_key ON public.usuarios_ubiqua USING btree (email)
 // Table: vendas
 //   CREATE INDEX idx_vendas_cod_venda ON public.vendas USING btree (cod_venda)
 //   CREATE INDEX idx_vendas_data_emissao ON public.vendas USING btree (data_emissao)

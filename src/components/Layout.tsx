@@ -54,24 +54,43 @@ export default function Layout() {
               Ubìqua
             </span>
           </Link>
-          <div className="flex-1 max-w-md relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input
-              value={localQuery}
-              onChange={(e) => setLocalQuery(e.target.value)}
-              placeholder="Buscar por referência ou descrição..."
-              className="pl-9 w-full bg-background/50 border-muted focus-visible:ring-primary shadow-sm"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              to="/admin"
-              className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
-              title="Painel Administrativo"
-            >
-              <LayoutDashboard className="w-5 h-5" />
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium ml-4">
+            <Link to="/" className="hover:text-primary transition-colors text-muted-foreground">
+              Catálogo
             </Link>
-            <CartButton />
+            <Link
+              to="/clientes"
+              className="hover:text-primary transition-colors text-muted-foreground"
+            >
+              Clientes
+            </Link>
+            <Link
+              to="/perfil"
+              className="hover:text-primary transition-colors text-muted-foreground"
+            >
+              Meu Perfil
+            </Link>
+          </div>
+          <div className="flex-1 flex justify-end items-center gap-4">
+            <div className="w-full max-w-sm relative group hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Input
+                value={localQuery}
+                onChange={(e) => setLocalQuery(e.target.value)}
+                placeholder="Buscar peças..."
+                className="pl-9 w-full bg-background/50 border-muted focus-visible:ring-primary shadow-sm"
+              />
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                to="/admin"
+                className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
+                title="Painel Administrativo"
+              >
+                <LayoutDashboard className="w-5 h-5" />
+              </Link>
+              <CartButton />
+            </div>
           </div>
         </div>
       </header>

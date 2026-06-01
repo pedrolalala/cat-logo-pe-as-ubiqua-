@@ -1,6 +1,6 @@
 import { useCart } from '@/hooks/use-cart'
 import { useAuth } from '@/hooks/use-auth'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import {
   Table,
@@ -36,16 +36,26 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function NewQuote() {
   const { items, clearCart, removeFromCart, updateQuantity } = useCart()
-  const { user, signUp } = useAuth()
+  const { user } = useAuth()
   const [observacoes, setObservacoes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [savingStatus, setSavingStatus] = useState('')
   const [saveError, setSaveError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [savedQuote, setSavedQuote] = useState<QuoteData | null>(null)
+
+  const [customers, setCustomers] = useState<any[]>([])
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
 
   const colorMap: Record<string, string> = {
     'UV BRONZE': '#A87932',
@@ -63,21 +73,15 @@ export default function NewQuote() {
   const [emailRecipient, setEmailRecipient] = useState('')
   const [isSendingEmail, setIsSendingEmail] = useState(false)
 
-  const [clienteInfo, setClienteInfo] = useState({
-    nome: '',
-    email: '',
-    telefone: '',
-    cpf_cnpj: '',
-    data_nascimento: '',
-  })
-  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
-  const [signupPassword, setSignupPassword] = useState('')
-  const [isSigningUp, setIsSigningUp] = useState(false)
-
-  const isIdentValid =
-    clienteInfo.nome.trim() !== '' &&
-    clienteInfo.email.trim() !== '' &&
-    clienteInfo.telefone.trim() !== ''
+  useEffect(() => {
+    supabase
+      .from('informacoes_cliente_ubiqua')
+      .select('*')
+      .order('nome')
+      .then(({ data }) => {
+        if (data) setCustomers(data)
+      })
+  }, [])
 
   const totalGeral = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
 
@@ -85,12 +89,8 @@ export default function NewQuote() {
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
   const handleInitiateSave = () => {
-    if (!user && !isIdentValid) {
-      toast.error('Por favor, preencha Nome, E-mail e Telefone para continuar.')
-      return
-    }
-    if (!user && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clienteInfo.email)) {
-      toast.error('Formato de e-mail inválido.')
+    if (!selectedCustomerId) {
+      toast.error('Por favor, selecione um cliente para continuar.')
       return
     }
     if (items.some((item) => item.quantity <= 0)) {
@@ -102,65 +102,14 @@ export default function NewQuote() {
 
   const executeSaveQuote = async () => {
     setIsSaving(true)
-    setSavingStatus('Identificando cliente...')
+    setSavingStatus('Salvando orçamento...')
     setSaveError(false)
 
-    let leadId: string | undefined = undefined
-
-    if (user) {
-      try {
-        const { data: existing } = await supabase
-          .from('informacoes_cliente_ubiqua')
-          .select('id')
-          .eq('email', user.email)
-          .maybeSingle()
-
-        if (existing) {
-          leadId = existing.id
-        } else {
-          const { data: inserted } = await supabase
-            .from('informacoes_cliente_ubiqua')
-            .insert({
-              nome: user.user_metadata?.nome || user.email?.split('@')[0] || 'Usuário',
-              email: user.email,
-            })
-            .select('id')
-            .single()
-          if (inserted) leadId = inserted.id
-        }
-      } catch (e) {
-        console.error('Failed to resolve user client info', e)
-      }
-    } else {
-      try {
-        const { data: lead, error: leadError } = await supabase
-          .from('informacoes_cliente_ubiqua')
-          .insert({
-            nome: clienteInfo.nome,
-            email: clienteInfo.email,
-            telefone: clienteInfo.telefone,
-            cpf_cnpj: clienteInfo.cpf_cnpj || null,
-            data_nascimento: clienteInfo.data_nascimento || null,
-          })
-          .select('id')
-          .single()
-
-        if (leadError) throw leadError
-        leadId = lead.id
-      } catch (err: any) {
-        setSaveError(true)
-        const msg = err.message || err.details || 'Não foi possível salvar seus dados de contato.'
-        setErrorMessage(msg)
-        toast.error(`Erro ao salvar dados de contato: ${msg}`)
-        setIsSaving(false)
-        return
-      }
-    }
+    const leadId = selectedCustomerId
 
     try {
       if (!leadId) throw new Error('Falha ao identificar o cliente.')
 
-      setSavingStatus('Salvando orçamento...')
       const { data: quote, error: quoteError } = await supabase
         .from('orcamentos_revenda_ubiqua')
         .insert({
@@ -231,21 +180,6 @@ export default function NewQuote() {
     } finally {
       setIsSaving(false)
       setSavingStatus('')
-    }
-  }
-
-  const handleSignup = async () => {
-    if (!signupPassword) return
-    setIsSigningUp(true)
-    try {
-      const { error } = await signUp(clienteInfo.email, signupPassword)
-      if (error) throw error
-      toast.success('Conta criada com sucesso!')
-      setIsSignupModalOpen(false)
-    } catch (e) {
-      toast.error('Erro ao criar conta. Verifique suas informações e tente novamente.')
-    } finally {
-      setIsSigningUp(false)
     }
   }
 
@@ -320,18 +254,6 @@ export default function NewQuote() {
           </Button>
         </div>
 
-        {!user && (
-          <div className="mb-10 p-6 bg-muted/50 rounded-xl border max-w-md w-full animate-fade-in">
-            <h3 className="font-semibold text-lg mb-2">Acompanhe seus pedidos</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Deseja criar uma senha para acompanhar seus pedidos?
-            </p>
-            <Button variant="outline" className="w-full" onClick={() => setIsSignupModalOpen(true)}>
-              Criar uma conta
-            </Button>
-          </div>
-        )}
-
         <Button variant="ghost" asChild size="lg" className="hover:text-orange-600">
           <Link to="/">Voltar ao Catálogo</Link>
         </Button>
@@ -380,54 +302,6 @@ export default function NewQuote() {
                 ) : (
                   'Enviar E-mail'
                 )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isSignupModalOpen} onOpenChange={setIsSignupModalOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Criar Conta</DialogTitle>
-              <DialogDescription>
-                Use seu e-mail para criar uma conta e acompanhar seus pedidos.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label>E-mail</Label>
-                <Input
-                  type="email"
-                  value={clienteInfo.email}
-                  disabled
-                  className="bg-muted text-muted-foreground"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Senha</Label>
-                <Input
-                  type="password"
-                  value={signupPassword}
-                  onChange={(e) => setSignupPassword(e.target.value)}
-                  placeholder="Crie uma senha segura"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsSignupModalOpen(false)}
-                disabled={isSigningUp}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleSignup}
-                disabled={!signupPassword || isSigningUp}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                {isSigningUp ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Criar Conta
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -575,79 +449,38 @@ export default function NewQuote() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold border-b pb-4">Resumo do Orçamento</h3>
 
-            {!user && (
-              <div className="bg-card border rounded-lg p-4 mb-4 shadow-sm">
-                <h4 className="font-medium text-sm mb-3">Seus Dados</h4>
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">
-                      Nome Completo <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      value={clienteInfo.nome}
-                      onChange={(e) =>
-                        setClienteInfo((prev) => ({ ...prev, nome: e.target.value }))
-                      }
-                      placeholder="Ex: João da Silva"
-                      required
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">CPF / CNPJ</Label>
-                    <Input
-                      value={clienteInfo.cpf_cnpj}
-                      onChange={(e) =>
-                        setClienteInfo((prev) => ({ ...prev, cpf_cnpj: e.target.value }))
-                      }
-                      placeholder="Ex: 000.000.000-00 (Opcional)"
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">
-                      E-mail <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      type="email"
-                      value={clienteInfo.email}
-                      onChange={(e) =>
-                        setClienteInfo((prev) => ({ ...prev, email: e.target.value }))
-                      }
-                      placeholder="Ex: joao@email.com"
-                      required
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">
-                      Telefone <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      type="tel"
-                      value={clienteInfo.telefone}
-                      onChange={(e) =>
-                        setClienteInfo((prev) => ({ ...prev, telefone: e.target.value }))
-                      }
-                      placeholder="Ex: (11) 99999-9999"
-                      required
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Data de Nascimento</Label>
-                    <Input
-                      type="date"
-                      value={clienteInfo.data_nascimento}
-                      onChange={(e) =>
-                        setClienteInfo((prev) => ({ ...prev, data_nascimento: e.target.value }))
-                      }
-                      className="h-8 text-sm text-muted-foreground"
-                    />
+            <div className="bg-card border rounded-lg p-4 mb-4 shadow-sm">
+              <h4 className="font-medium text-sm mb-3">Cliente</h4>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">
+                    Selecione o Cliente <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                    <SelectTrigger className="w-full bg-background">
+                      <SelectValue placeholder="Selecione um cliente..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nome} {c.cpf_cnpj ? `(${c.cpf_cnpj})` : ''}
+                        </SelectItem>
+                      ))}
+                      {customers.length === 0 && (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          Nenhum cliente cadastrado
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <div className="text-xs text-muted-foreground mt-1 text-right">
+                    <Link to="/clientes" className="text-primary hover:underline">
+                      Gerenciar clientes
+                    </Link>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
 
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">
@@ -678,7 +511,7 @@ export default function NewQuote() {
               <Button
                 className="w-full sm:w-2/3 shadow-sm bg-orange-500 hover:bg-orange-600 text-white"
                 onClick={handleInitiateSave}
-                disabled={isSaving || (!user && !isIdentValid)}
+                disabled={isSaving || !selectedCustomerId}
               >
                 {isSaving ? (
                   <>

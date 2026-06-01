@@ -13,6 +13,8 @@ import { AuthProvider } from './hooks/use-auth'
 import { AuthWrapper } from './components/AuthWrapper'
 import { OnboardingGuard } from './components/OnboardingGuard'
 import OnboardingPage from './pages/Onboarding'
+import CustomersPage from './pages/CustomersPage'
+import ProfilePage from './pages/ProfilePage'
 
 const App = () => (
   <AuthProvider>
@@ -46,6 +48,8 @@ const App = () => (
               <Route path="/produto/:slug" element={<ProductDetail />} />
               <Route path="/novo-orcamento" element={<NewQuote />} />
               <Route path="/carrinho" element={<NewQuote />} />
+              <Route path="/clientes" element={<CustomersPage />} />
+              <Route path="/perfil" element={<ProfilePage />} />
               <Route path="/admin/*" element={<AdminPage />} />
               <Route path="/dashboard" element={<AdminPage />} />
             </Route>
