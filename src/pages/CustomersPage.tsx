@@ -19,7 +19,19 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { Loader2, Plus, Edit2, Trash2, Search, ArrowLeft } from 'lucide-react'
+import {
+  Loader2,
+  Plus,
+  Edit2,
+  Trash2,
+  Search,
+  ArrowLeft,
+  MoreVertical,
+  Phone,
+  Mail,
+  Building2,
+} from 'lucide-react'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
 
 export default function CustomersPage() {
@@ -185,69 +197,118 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Telefone</TableHead>
-              <TableHead>CNPJ</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
-                </TableCell>
-              </TableRow>
-            ) : filteredCustomers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                  Nenhum cliente encontrado.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredCustomers.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.nome}</TableCell>
-                  <TableCell>{c.email}</TableCell>
-                  <TableCell>{c.telefone}</TableCell>
-                  <TableCell>{c.cpf_cnpj || '-'}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEdit(c)}
-                        title="Editar"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDelete(c.id)}
-                        disabled={deletingId === c.id}
-                        title="Excluir"
-                      >
-                        {deletingId === c.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                      </Button>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : filteredCustomers.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground bg-card rounded-xl border border-dashed">
+          Nenhum cliente encontrado.
+        </div>
+      ) : (
+        <>
+          {/* Mobile View */}
+          <div className="md:hidden space-y-4">
+            {filteredCustomers.map((c) => (
+              <Card key={c.id} className="overflow-hidden">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-lg leading-tight">{c.nome}</h3>
+                  </div>
+                  <div className="space-y-1.5 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{c.email}</span>
                     </div>
-                  </TableCell>
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 shrink-0" />
+                      <span>{c.telefone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 shrink-0" />
+                      <span>{c.cpf_cnpj || 'Não informado'}</span>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-muted/30 p-2 flex justify-end gap-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11"
+                    onClick={() => openEdit(c)}
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => handleDelete(c.id)}
+                    disabled={deletingId === c.id}
+                  >
+                    {deletingId === c.id ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-5 h-5" />
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block bg-card rounded-xl border shadow-sm overflow-hidden">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>CNPJ</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {filteredCustomers.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.nome}</TableCell>
+                    <TableCell>{c.email}</TableCell>
+                    <TableCell>{c.telefone}</TableCell>
+                    <TableCell>{c.cpf_cnpj || '-'}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEdit(c)}
+                          title="Editar"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDelete(c.id)}
+                          disabled={deletingId === c.id}
+                          title="Excluir"
+                        >
+                          {deletingId === c.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -285,6 +346,9 @@ export default function CustomersPage() {
                 </Label>
                 <Input
                   id="telefone"
+                  type="tel"
+                  inputMode="numeric"
+                  className="h-12"
                   required
                   value={formData.telefone}
                   onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
@@ -296,6 +360,9 @@ export default function CustomersPage() {
                 </Label>
                 <Input
                   id="cpf_cnpj"
+                  type="tel"
+                  inputMode="numeric"
+                  className="h-12"
                   required
                   maxLength={18}
                   placeholder="00.000.000/0000-00"

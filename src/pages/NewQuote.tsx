@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -26,6 +27,7 @@ import {
   CheckCircle,
   Search,
   Plus,
+  Minus,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { generateQuotePDFBase64, downloadMockPDF } from '@/lib/pdf'
@@ -417,8 +419,9 @@ export default function NewQuote() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="w-[var(--radix-popover-trigger-width)] p-0"
-                  align="start"
+                  className="w-[calc(100vw-2rem)] sm:w-[var(--radix-popover-trigger-width)] p-0"
+                  align="center"
+                  sideOffset={8}
                 >
                   <Command>
                     <CommandInput placeholder="Buscar por nome ou CNPJ..." />
@@ -521,8 +524,9 @@ export default function NewQuote() {
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-[var(--radix-popover-trigger-width)] sm:w-[600px] p-0"
-              align="start"
+              className="w-[calc(100vw-2rem)] sm:w-[600px] p-0"
+              align="center"
+              sideOffset={8}
             >
               <Command>
                 <CommandInput
@@ -569,85 +573,196 @@ export default function NewQuote() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table className="min-w-[750px]">
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead className="w-[120px]">Referência</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead className="w-[110px] text-center">Quantidade</TableHead>
-                <TableHead className="text-right w-[140px]">Preço Unit.</TableHead>
-                <TableHead className="text-right w-[140px]">Subtotal</TableHead>
-                <TableHead className="w-[60px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
-                    Nenhum produto adicionado. Use a busca acima para incluir itens.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                items.map((item) => (
-                  <TableRow key={item.id} className="group">
-                    <TableCell className="font-mono font-medium text-xs">
-                      {item.referencia}
-                    </TableCell>
-                    <TableCell className="font-medium text-sm">
-                      {item.descricao}
+      {items.length === 0 ? (
+        <div className="bg-card rounded-xl border border-dashed shadow-sm p-10 text-center text-muted-foreground">
+          Nenhum produto adicionado. Use a busca acima para incluir itens.
+        </div>
+      ) : (
+        <>
+          {/* Mobile Cart Items (Cards) */}
+          <div className="md:hidden space-y-4">
+            {items.map((item) => (
+              <Card key={item.id} className="overflow-hidden">
+                <CardContent className="p-4 space-y-4">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="space-y-1">
+                      <div className="font-mono font-bold text-sm text-primary">
+                        {item.referencia}
+                      </div>
+                      <div className="font-medium text-sm leading-tight">{item.descricao}</div>
                       {item.cor && (
-                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                           <span
-                            className="w-3 h-3 rounded-full inline-block border border-black/10"
+                            className="w-3 h-3 rounded-full inline-block border border-black/10 shadow-sm"
                             style={{ backgroundColor: colorMap[item.cor.toUpperCase()] || '#ccc' }}
                           />
                           {item.cor}
-                        </span>
+                        </div>
                       )}
-                    </TableCell>
-                    <TableCell>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:bg-destructive/10 h-10 w-10 shrink-0"
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Preço Unit.</Label>
                       <Input
                         type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.01"
+                        value={item.valor_revenda}
+                        onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
+                        className="h-11 font-medium"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Subtotal</Label>
+                      <div className="flex items-center h-11 font-bold text-orange-600">
+                        {formatCurrency(item.valor_revenda * item.quantity)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-muted/30 p-2 rounded-lg border">
+                    <span className="text-sm font-semibold pl-2">Quantidade</span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0"
+                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        disabled={item.quantity <= 1}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
                         min={1}
                         value={item.quantity}
                         onChange={(e) =>
                           updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))
                         }
-                        className="w-full text-center h-8 font-medium"
+                        className="w-16 text-center h-10 font-bold"
                       />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Input
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        value={item.valor_revenda}
-                        onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
-                        className="w-full text-right h-8 font-medium"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right font-semibold text-orange-600">
-                      {formatCurrency(item.valor_revenda * item.quantity)}
-                    </TableCell>
-                    <TableCell className="text-center">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
-                        className="text-muted-foreground hover:text-destructive h-8 w-8"
-                        onClick={() => removeFromCart(item.id)}
+                        className="h-10 w-10 shrink-0"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Plus className="w-4 h-4" />
                       </Button>
-                    </TableCell>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Cart Items (Table) */}
+          <div className="hidden md:block bg-card rounded-xl border shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table className="min-w-[750px]">
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead className="w-[120px]">Referência</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead className="w-[140px] text-center">Quantidade</TableHead>
+                    <TableHead className="text-right w-[140px]">Preço Unit.</TableHead>
+                    <TableHead className="text-right w-[140px]">Subtotal</TableHead>
+                    <TableHead className="w-[60px]"></TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+                </TableHeader>
+                <TableBody>
+                  {items.map((item) => (
+                    <TableRow key={item.id} className="group">
+                      <TableCell className="font-mono font-medium text-xs">
+                        {item.referencia}
+                      </TableCell>
+                      <TableCell className="font-medium text-sm">
+                        {item.descricao}
+                        {item.cor && (
+                          <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                            <span
+                              className="w-3 h-3 rounded-full inline-block border border-black/10"
+                              style={{
+                                backgroundColor: colorMap[item.cor.toUpperCase()] || '#ccc',
+                              }}
+                            />
+                            {item.cor}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                            disabled={item.quantity <= 1}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(e) =>
+                              updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))
+                            }
+                            className="w-14 text-center h-8 font-medium px-1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={item.valor_revenda}
+                          onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
+                          className="w-full text-right h-8 font-medium"
+                        />
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-orange-600">
+                        {formatCurrency(item.valor_revenda * item.quantity)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive h-8 w-8"
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-3 flex flex-col h-full">

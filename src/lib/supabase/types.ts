@@ -678,7 +678,7 @@ export type Database = {
       empresa_ubiqua: {
         Row: {
           cidade: string
-          cnpj: string | null
+          cnpj: string
           created_at: string
           estado: string
           id: string
@@ -687,7 +687,7 @@ export type Database = {
         }
         Insert: {
           cidade: string
-          cnpj?: string | null
+          cnpj: string
           created_at?: string
           estado: string
           id?: string
@@ -696,7 +696,7 @@ export type Database = {
         }
         Update: {
           cidade?: string
-          cnpj?: string | null
+          cnpj?: string
           created_at?: string
           estado?: string
           id?: string
@@ -1473,27 +1473,24 @@ export type Database = {
       }
       informacoes_cliente_ubiqua: {
         Row: {
-          cpf_cnpj: string | null
+          cpf_cnpj: string
           created_at: string | null
-          data_nascimento: string | null
           email: string | null
           id: string
           nome: string
           telefone: string | null
         }
         Insert: {
-          cpf_cnpj?: string | null
+          cpf_cnpj: string
           created_at?: string | null
-          data_nascimento?: string | null
           email?: string | null
           id?: string
           nome: string
           telefone?: string | null
         }
         Update: {
-          cpf_cnpj?: string | null
+          cpf_cnpj?: string
           created_at?: string | null
-          data_nascimento?: string | null
           email?: string | null
           id?: string
           nome?: string
@@ -5726,7 +5723,7 @@ export const Constants = {
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome_fantasia: text (not null)
 //   razao_social: text (nullable)
-//   cnpj: text (nullable)
+//   cnpj: text (not null)
 //   cidade: text (not null)
 //   estado: text (not null)
 //   created_at: timestamp with time zone (not null, default: now())
@@ -5859,8 +5856,7 @@ export const Constants = {
 //   email: text (nullable)
 //   telefone: text (nullable)
 //   created_at: timestamp with time zone (nullable, default: now())
-//   data_nascimento: date (nullable)
-//   cpf_cnpj: text (nullable)
+//   cpf_cnpj: text (not null)
 // Table: itens_orcamento_ubiqua
 //   id: uuid (not null, default: gen_random_uuid())
 //   orcamento_id: uuid (not null)

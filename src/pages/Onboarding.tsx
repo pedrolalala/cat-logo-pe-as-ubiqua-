@@ -130,6 +130,8 @@ export default function OnboardingPage() {
                   <Label htmlFor="telefone">Telefone / WhatsApp</Label>
                   <Input
                     id="telefone"
+                    type="tel"
+                    inputMode="numeric"
                     value={telefone}
                     onChange={(e) => setTelefone(e.target.value)}
                     placeholder="(00) 00000-0000"
@@ -176,6 +178,8 @@ export default function OnboardingPage() {
                   </Label>
                   <Input
                     id="cnpj"
+                    type="tel"
+                    inputMode="numeric"
                     value={cnpj}
                     onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
                     placeholder="00.000.000/0000-00"

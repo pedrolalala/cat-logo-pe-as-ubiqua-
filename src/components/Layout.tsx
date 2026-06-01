@@ -1,8 +1,9 @@
-import { Outlet, useSearchParams, Link } from 'react-router-dom'
-import { Search, Wrench, ShoppingCart, LayoutDashboard } from 'lucide-react'
+import { Outlet, useSearchParams, Link, useLocation } from 'react-router-dom'
+import { Search, ShoppingCart, LayoutDashboard, Home, Users, User } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
 import { useCart } from '@/hooks/use-cart'
+import { cn } from '@/lib/utils'
 
 function CartButton() {
   const { items } = useCart()
@@ -27,6 +28,7 @@ export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
   const [localQuery, setLocalQuery] = useState(query)
+  const location = useLocation()
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -95,11 +97,68 @@ export default function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8 sm:py-10">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8 sm:py-10 pb-24 md:pb-10">
+        <div className="block sm:hidden w-full max-w-sm relative group mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+          <Input
+            value={localQuery}
+            onChange={(e) => setLocalQuery(e.target.value)}
+            placeholder="Buscar peças..."
+            className="pl-9 w-full bg-background/50 border-muted focus-visible:ring-primary shadow-sm h-12"
+          />
+        </div>
         <Outlet />
       </main>
 
-      <footer className="py-6 mt-auto border-t bg-muted/20">
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-t pb-safe">
+        <div className="flex items-center justify-around h-16 px-2">
+          <Link
+            to="/"
+            className={cn(
+              'flex flex-col items-center justify-center w-full h-full space-y-1 text-muted-foreground hover:text-primary transition-colors',
+              location.pathname === '/' && 'text-primary',
+            )}
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Início</span>
+          </Link>
+          <Link
+            to="/clientes"
+            className={cn(
+              'flex flex-col items-center justify-center w-full h-full space-y-1 text-muted-foreground hover:text-primary transition-colors',
+              location.pathname.startsWith('/clientes') && 'text-primary',
+            )}
+          >
+            <Users className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Clientes</span>
+          </Link>
+          <Link
+            to="/novo-orcamento"
+            className={cn(
+              'flex flex-col items-center justify-center w-full h-full space-y-1 text-muted-foreground hover:text-primary transition-colors',
+              location.pathname.startsWith('/novo-orcamento') && 'text-primary',
+            )}
+          >
+            <div className="relative">
+              <ShoppingCart className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-medium">Carrinho</span>
+          </Link>
+          <Link
+            to="/perfil"
+            className={cn(
+              'flex flex-col items-center justify-center w-full h-full space-y-1 text-muted-foreground hover:text-primary transition-colors',
+              location.pathname.startsWith('/perfil') && 'text-primary',
+            )}
+          >
+            <User className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Perfil</span>
+          </Link>
+        </div>
+      </nav>
+
+      <footer className="hidden md:block py-6 mt-auto border-t bg-muted/20">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Ubiqua Peças. Todos os direitos reservados.</p>
           <div className="flex items-center gap-4">

@@ -73,19 +73,31 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
                 Quantidade
               </label>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={decrement} disabled={quantity <= 1}>
-                  <Minus className="h-4 w-4" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 shrink-0"
+                  onClick={decrement}
+                  disabled={quantity <= 1}
+                >
+                  <Minus className="h-5 w-5" />
                 </Button>
                 <Input
                   id="quantity"
                   type="number"
+                  inputMode="numeric"
                   min={1}
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-20 text-center text-lg font-semibold"
+                  className="w-20 text-center text-lg font-semibold h-12"
                 />
-                <Button variant="outline" size="icon" onClick={increment}>
-                  <Plus className="h-4 w-4" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12 shrink-0"
+                  onClick={increment}
+                >
+                  <Plus className="h-5 w-5" />
                 </Button>
               </div>
             </div>
@@ -93,10 +105,10 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
         )}
 
         <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto h-12">
             Cancelar
           </Button>
-          <Button onClick={handleConfirm} className="w-full sm:w-auto">
+          <Button onClick={handleConfirm} className="w-full sm:w-auto h-12">
             Confirmar
           </Button>
         </DialogFooter>
