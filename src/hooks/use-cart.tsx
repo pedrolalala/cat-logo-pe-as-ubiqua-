@@ -7,10 +7,15 @@ export interface CartItem extends PartVariant {
 
 interface CartContextType {
   items: CartItem[]
+  activeQuoteId: string | null
+  selectedCustomerId: string | null
+  setActiveQuoteId: (id: string | null) => void
+  setSelectedCustomerId: (id: string | null) => void
   addToCart: (part: PartVariant, quantity: number) => void
   removeFromCart: (partId: string | number) => void
   clearCart: () => void
   updateQuantity: (partId: string | number, quantity: number) => void
+  updatePrice: (partId: string | number, price: number) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -25,9 +30,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   })
 
+  const [activeQuoteId, setActiveQuoteId] = useState<string | null>(() => {
+    return localStorage.getItem('ubiqua_quote_id')
+  })
+
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(() => {
+    return localStorage.getItem('ubiqua_client_id')
+  })
+
   useEffect(() => {
     localStorage.setItem('ubiqua_cart', JSON.stringify(items))
   }, [items])
+
+  useEffect(() => {
+    if (activeQuoteId) localStorage.setItem('ubiqua_quote_id', activeQuoteId)
+    else localStorage.removeItem('ubiqua_quote_id')
+  }, [activeQuoteId])
+
+  useEffect(() => {
+    if (selectedCustomerId) localStorage.setItem('ubiqua_client_id', selectedCustomerId)
+    else localStorage.removeItem('ubiqua_client_id')
+  }, [selectedCustomerId])
 
   const addToCart = (part: PartVariant, quantity: number) => {
     setItems((current) => {
@@ -47,6 +70,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setItems([])
+    setActiveQuoteId(null)
+    setSelectedCustomerId(null)
   }
 
   const updateQuantity = (partId: string | number, quantity: number) => {
@@ -55,8 +80,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
     )
   }
 
+  const updatePrice = (partId: string | number, price: number) => {
+    setItems((current) =>
+      current.map((item) => (item.id === partId ? { ...item, valor_revenda: price } : item)),
+    )
+  }
+
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, updateQuantity }}>
+    <CartContext.Provider
+      value={{
+        items,
+        activeQuoteId,
+        selectedCustomerId,
+        setActiveQuoteId,
+        setSelectedCustomerId,
+        addToCart,
+        removeFromCart,
+        clearCart,
+        updateQuantity,
+        updatePrice,
+      }}
+    >
       {children}
     </CartContext.Provider>
   )

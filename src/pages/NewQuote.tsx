@@ -24,6 +24,8 @@ import {
   Download,
   Mail,
   CheckCircle,
+  Search,
+  Plus,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { generateQuotePDFBase64, downloadMockPDF } from '@/lib/pdf'
@@ -36,18 +38,34 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 
 export default function NewQuote() {
-  const { items, clearCart, removeFromCart, updateQuantity } = useCart()
+  const {
+    items,
+    clearCart,
+    removeFromCart,
+    updateQuantity,
+    updatePrice,
+    activeQuoteId,
+    setActiveQuoteId,
+    selectedCustomerId,
+    setSelectedCustomerId,
+    addToCart,
+  } = useCart()
+
   const { user } = useAuth()
   const [observacoes, setObservacoes] = useState('')
+  const [descontoGlobal, setDescontoGlobal] = useState<number>(0)
+
   const [isSaving, setIsSaving] = useState(false)
   const [savingStatus, setSavingStatus] = useState('')
   const [saveError, setSaveError] = useState(false)
@@ -55,7 +73,17 @@ export default function NewQuote() {
   const [savedQuote, setSavedQuote] = useState<QuoteData | null>(null)
 
   const [customers, setCustomers] = useState<any[]>([])
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
+  const [openClientPopover, setOpenClientPopover] = useState(false)
+
+  const [openProductPopover, setOpenProductPopover] = useState(false)
+  const [productSearch, setProductSearch] = useState('')
+  const [productResults, setProductResults] = useState<any[]>([])
+  const [isSearchingProducts, setIsSearchingProducts] = useState(false)
+
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [emailRecipient, setEmailRecipient] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
 
   const colorMap: Record<string, string> = {
     'UV BRONZE': '#A87932',
@@ -68,11 +96,6 @@ export default function NewQuote() {
     'VERMELHO CHAMA': '#CF352E',
   }
 
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
-  const [emailRecipient, setEmailRecipient] = useState('')
-  const [isSendingEmail, setIsSendingEmail] = useState(false)
-
   useEffect(() => {
     supabase
       .from('informacoes_cliente_ubiqua')
@@ -83,14 +106,69 @@ export default function NewQuote() {
       })
   }, [])
 
-  const totalGeral = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
+  useEffect(() => {
+    const searchProducts = async () => {
+      if (productSearch.length < 3) {
+        setProductResults([])
+        return
+      }
+      setIsSearchingProducts(true)
+      const { data } = await supabase
+        .from('revenda_ubiqua')
+        .select('*')
+        .or(`descricao.ilike.%${productSearch}%,referencia.ilike.%${productSearch}%`)
+        .limit(20)
+      setProductResults(data || [])
+      setIsSearchingProducts(false)
+    }
+    const delayDebounceFn = setTimeout(() => {
+      searchProducts()
+    }, 500)
+    return () => clearTimeout(delayDebounceFn)
+  }, [productSearch])
+
+  const subtotalItems = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
+  const totalGeral = Math.max(0, subtotalItems - descontoGlobal)
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
-  const handleInitiateSave = () => {
+  const selectedClient = customers.find((c) => c.id === selectedCustomerId)
+
+  const handleStartQuote = async () => {
     if (!selectedCustomerId) {
-      toast.error('Por favor, selecione um cliente para continuar.')
+      toast.error('Selecione um cliente para iniciar o orçamento.')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const { data: quote, error } = await supabase
+        .from('orcamentos_revenda_ubiqua')
+        .insert({
+          cliente_id: selectedCustomerId,
+          status: 'rascunho',
+          numero_orcamento: '',
+          valor_subtotal: 0,
+          valor_total: 0,
+          valor_desconto: 0,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      setActiveQuoteId(quote.id)
+      toast.success('Sessão de orçamento iniciada.')
+    } catch (error: any) {
+      toast.error('Erro ao iniciar orçamento: ' + error.message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleInitiateSave = () => {
+    if (!selectedCustomerId || !activeQuoteId) {
+      toast.error('O orçamento precisa de um cliente vinculado.')
       return
     }
     if (items.some((item) => item.quantity <= 0)) {
@@ -105,28 +183,26 @@ export default function NewQuote() {
     setSavingStatus('Salvando orçamento...')
     setSaveError(false)
 
-    const leadId = selectedCustomerId
-
     try {
-      if (!leadId) throw new Error('Falha ao identificar o cliente.')
+      if (!selectedCustomerId || !activeQuoteId) throw new Error('Dados do orçamento ausentes.')
 
-      const { data: quote, error: quoteError } = await supabase
+      const { error: quoteError } = await supabase
         .from('orcamentos_revenda_ubiqua')
-        .insert({
-          cliente_id: leadId,
+        .update({
           observacoes: observacoes,
-          valor_subtotal: totalGeral,
+          valor_subtotal: subtotalItems,
+          valor_desconto: descontoGlobal,
           valor_total: totalGeral,
-          numero_orcamento: '',
           status: 'rascunho',
         })
-        .select('*')
-        .single()
+        .eq('id', activeQuoteId)
 
       if (quoteError) throw quoteError
 
+      await supabase.from('itens_orcamento_ubiqua').delete().eq('orcamento_id', activeQuoteId)
+
       const itemsToInsert = items.map((item, idx) => ({
-        orcamento_id: quote.id,
+        orcamento_id: activeQuoteId,
         produto_id: Number(item.id),
         quantidade: item.quantity,
         valor_unitario: item.valor_revenda,
@@ -135,46 +211,41 @@ export default function NewQuote() {
         referencia_snapshot: item.referencia,
         descricao_snapshot: item.descricao,
         marca_snapshot: item.desc_marca || null,
+        valor_total: item.valor_revenda * item.quantity,
       }))
 
-      const { error: itemsError } = await supabase
-        .from('itens_orcamento_ubiqua')
-        .insert(itemsToInsert)
+      if (itemsToInsert.length > 0) {
+        const { error: itemsError } = await supabase
+          .from('itens_orcamento_ubiqua')
+          .insert(itemsToInsert)
 
-      if (itemsError) throw itemsError
+        if (itemsError) throw itemsError
+      }
 
       setSavingStatus('Processando e enviando PDF...')
       const { error: fnError } = await supabase.functions.invoke('process-budget-pdf', {
-        body: { quote_id: quote.id },
+        body: { quote_id: activeQuoteId },
       })
 
       if (fnError) {
         console.error('Error generating PDF:', fnError)
-        toast.error('Orçamento salvo, mas houve uma falha ao gerar o PDF e enviar por email.')
+        toast.error('Orçamento salvo, mas houve uma falha ao gerar o PDF.')
       } else {
         toast.success('Orçamento gerado e PDF enviado com sucesso!')
       }
 
-      setSavedQuote(quote as QuoteData)
+      const { data: savedData } = await supabase
+        .from('orcamentos_revenda_ubiqua')
+        .select('*')
+        .eq('id', activeQuoteId)
+        .single()
+
+      setSavedQuote(savedData as QuoteData)
       clearCart()
     } catch (e: any) {
       console.error(e)
       setSaveError(true)
-      let msg =
-        e.message ||
-        e.details ||
-        e.hint ||
-        'Erro ao processar o orçamento. Verifique os dados e tente novamente.'
-
-      if (msg.includes('foreign key constraint')) {
-        msg =
-          'Erro de referência de dados: O produto ou cliente selecionado não foi encontrado no sistema.'
-      } else if (msg.includes('violates not-null constraint')) {
-        msg = 'Dados incompletos: Todos os campos obrigatórios devem ser preenchidos.'
-      } else if (msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('network')) {
-        msg = 'Tempo de conexão esgotado. Verifique sua internet e tente novamente.'
-      }
-
+      let msg = e.message || 'Erro ao processar o orçamento. Verifique os dados e tente novamente.'
       setErrorMessage(msg)
       toast.error(`Falha na solicitação: ${msg}`)
     } finally {
@@ -254,8 +325,13 @@ export default function NewQuote() {
           </Button>
         </div>
 
-        <Button variant="ghost" asChild size="lg" className="hover:text-orange-600">
-          <Link to="/">Voltar ao Catálogo</Link>
+        <Button
+          variant="ghost"
+          onClick={() => setSavedQuote(null)}
+          size="lg"
+          className="hover:text-orange-600"
+        >
+          Novo Orçamento
         </Button>
 
         <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
@@ -277,7 +353,6 @@ export default function NewQuote() {
                   value={emailRecipient}
                   onChange={(e) => setEmailRecipient(e.target.value)}
                   disabled={isSendingEmail}
-                  className="w-full"
                 />
               </div>
             </div>
@@ -296,8 +371,7 @@ export default function NewQuote() {
               >
                 {isSendingEmail ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Enviando...
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...
                   </>
                 ) : (
                   'Enviar E-mail'
@@ -310,92 +384,230 @@ export default function NewQuote() {
     )
   }
 
-  if (items.length === 0) {
+  if (!activeQuoteId) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
-        <div className="h-24 w-24 bg-muted rounded-full flex items-center justify-center mb-6">
-          <ShoppingCart className="w-12 h-12 text-muted-foreground" />
+      <div className="max-w-2xl mx-auto py-10 px-4">
+        <div className="bg-card rounded-xl border shadow-sm p-8 text-center animate-fade-in-up">
+          <div className="h-20 w-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ShoppingCart className="w-10 h-10 text-orange-600" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Novo Orçamento</h2>
+          <p className="text-muted-foreground mb-8 text-sm sm:text-base">
+            O fluxo de vendas requer a seleção de um cliente válido para acessar o catálogo de
+            produtos e criar cotações.
+          </p>
+
+          <div className="text-left space-y-5 max-w-md mx-auto bg-muted/30 p-6 rounded-lg border">
+            <div className="space-y-2">
+              <Label className="font-semibold">
+                Cliente <span className="text-destructive">*</span>
+              </Label>
+              <Popover open={openClientPopover} onOpenChange={setOpenClientPopover}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openClientPopover}
+                    className="w-full justify-between font-normal bg-background"
+                  >
+                    {selectedClient
+                      ? `${selectedClient.nome} ${selectedClient.cpf_cnpj ? `(${selectedClient.cpf_cnpj})` : ''}`
+                      : 'Selecione um cliente...'}
+                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[var(--radix-popover-trigger-width)] p-0"
+                  align="start"
+                >
+                  <Command>
+                    <CommandInput placeholder="Buscar por nome ou CPF/CNPJ..." />
+                    <CommandList>
+                      <CommandEmpty>
+                        Nenhum cliente encontrado.
+                        <div className="mt-4 pb-2 px-2">
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-orange-600 border-orange-200"
+                          >
+                            <Link to="/clientes">Cadastrar Novo Cliente</Link>
+                          </Button>
+                        </div>
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {customers.map((c) => (
+                          <CommandItem
+                            key={c.id}
+                            value={`${c.nome} ${c.cpf_cnpj || ''}`}
+                            onSelect={() => {
+                              setSelectedCustomerId(c.id)
+                              setOpenClientPopover(false)
+                            }}
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-medium">{c.nome}</span>
+                              {c.cpf_cnpj && (
+                                <span className="text-xs text-muted-foreground">{c.cpf_cnpj}</span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <Button
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+              size="lg"
+              disabled={!selectedCustomerId || isSaving}
+              onClick={handleStartQuote}
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Iniciar Orçamento
+            </Button>
+          </div>
         </div>
-        <h2 className="text-2xl font-semibold text-foreground mb-3">Carrinho vazio</h2>
-        <p className="text-muted-foreground max-w-md text-lg mb-8">
-          Você ainda não adicionou nenhuma peça ao seu orçamento.
-        </p>
-        <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white">
-          <Link to="/">Explorar Catálogo</Link>
-        </Button>
       </div>
     )
   }
 
   return (
-    <div className="animate-fade-in space-y-8 pb-10">
+    <div className="animate-fade-in space-y-6 pb-10 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Novo Orçamento</h1>
-          <p className="text-muted-foreground">
-            Revise os itens e adicione observações ao orçamento.
+          <h1 className="text-3xl font-bold tracking-tight mb-1">Orçamento em Andamento</h1>
+          <p className="text-muted-foreground text-sm">
+            Adicione produtos do catálogo e ajuste os valores.
           </p>
         </div>
-        <Button variant="ghost" asChild className="self-start sm:self-auto">
-          <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Continuar Comprando
-          </Link>
+        <Button
+          variant="ghost"
+          onClick={clearCart}
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive self-start sm:self-auto"
+        >
+          Cancelar Orçamento
         </Button>
       </div>
 
-      {saveError && (
-        <div className="bg-destructive/15 text-destructive p-4 rounded-lg flex items-start gap-3 animate-fade-in">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <h3 className="font-semibold">Erro ao salvar o orçamento</h3>
-            <p className="text-sm mt-1 mb-3">
-              {errorMessage ||
-                'Não foi possível conectar ao servidor para salvar o seu orçamento. Verifique sua conexão e tente novamente.'}
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleInitiateSave}
-              className="bg-background hover:bg-background/90 text-destructive border-destructive/20"
-            >
-              Tentar novamente
-            </Button>
+      <div className="bg-card rounded-xl border shadow-sm p-4 sm:p-6 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5 pb-5 border-b">
+          <div>
+            <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">
+              Cliente Vinculado
+            </h3>
+            <p className="font-medium text-lg">{selectedClient?.nome}</p>
+            {selectedClient?.cpf_cnpj && (
+              <p className="text-sm text-muted-foreground">{selectedClient.cpf_cnpj}</p>
+            )}
           </div>
         </div>
-      )}
+
+        <div className="space-y-3">
+          <Label className="text-sm font-semibold">Catálogo: Adicionar Produtos</Label>
+          <Popover open={openProductPopover} onOpenChange={setOpenProductPopover}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                className="w-full sm:w-[400px] justify-between font-normal text-muted-foreground bg-muted/30"
+              >
+                Buscar por Referência ou Descrição...
+                <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-[var(--radix-popover-trigger-width)] sm:w-[600px] p-0"
+              align="start"
+            >
+              <Command>
+                <CommandInput
+                  placeholder="Digite pelo menos 3 caracteres..."
+                  value={productSearch}
+                  onValueChange={setProductSearch}
+                />
+                <CommandList>
+                  <CommandEmpty>
+                    {isSearchingProducts
+                      ? 'Buscando...'
+                      : 'Nenhum produto encontrado. Refine a busca.'}
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {productResults.map((p) => (
+                      <CommandItem
+                        key={p.id}
+                        value={`${p.referencia} ${p.descricao}`}
+                        onSelect={() => {
+                          addToCart(p, 1)
+                          setOpenProductPopover(false)
+                          setProductSearch('')
+                          setProductResults([])
+                          toast.success('Produto adicionado ao orçamento!')
+                        }}
+                        className="flex items-center justify-between cursor-pointer py-2"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-bold text-sm">{p.referencia}</span>
+                          <span className="text-xs text-muted-foreground truncate max-w-[280px] sm:max-w-[400px]">
+                            {p.descricao}
+                          </span>
+                        </div>
+                        <span className="font-semibold text-orange-600">
+                          {formatCurrency(p.valor_revenda || 0)}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
 
       <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <Table className="min-w-[700px]">
+          <Table className="min-w-[750px]">
             <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead className="w-[120px]">Referência</TableHead>
                 <TableHead>Descrição</TableHead>
-                <TableHead className="w-[120px] text-center">Quantidade</TableHead>
-                <TableHead className="text-right w-[150px]">Preço Unitário</TableHead>
-                <TableHead className="text-right w-[150px]">Subtotal</TableHead>
-                <TableHead className="w-[70px]"></TableHead>
+                <TableHead className="w-[110px] text-center">Quantidade</TableHead>
+                <TableHead className="text-right w-[140px]">Preço Unit.</TableHead>
+                <TableHead className="text-right w-[140px]">Subtotal</TableHead>
+                <TableHead className="w-[60px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
-                <TableRow key={item.id} className="group">
-                  <TableCell className="font-mono font-medium">{item.referencia}</TableCell>
-                  <TableCell className="font-medium">
-                    {item.descricao}
-                    {item.cor && (
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                        <span
-                          className="w-3 h-3 rounded-full inline-block border border-black/10"
-                          style={{ backgroundColor: colorMap[item.cor.toUpperCase()] || '#ccc' }}
-                        />
-                        Cor: {item.cor}
-                      </span>
-                    )}
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                    Nenhum produto adicionado. Use a busca acima para incluir itens.
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-center">
+                </TableRow>
+              ) : (
+                items.map((item) => (
+                  <TableRow key={item.id} className="group">
+                    <TableCell className="font-mono font-medium text-xs">
+                      {item.referencia}
+                    </TableCell>
+                    <TableCell className="font-medium text-sm">
+                      {item.descricao}
+                      {item.cor && (
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                          <span
+                            className="w-3 h-3 rounded-full inline-block border border-black/10"
+                            style={{ backgroundColor: colorMap[item.cor.toUpperCase()] || '#ccc' }}
+                          />
+                          {item.cor}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Input
                         type="number"
                         min={1}
@@ -403,126 +615,96 @@ export default function NewQuote() {
                         onChange={(e) =>
                           updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))
                         }
-                        className="w-20 text-center h-9 font-medium"
+                        className="w-full text-center h-8 font-medium"
                       />
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
-                    {formatCurrency(item.valor_revenda)}
-                  </TableCell>
-                  <TableCell className="text-right font-medium whitespace-nowrap text-orange-600">
-                    {formatCurrency(item.valor_revenda * item.quantity)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
-                      onClick={() => removeFromCart(item.id)}
-                      title="Remover item"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={item.valor_revenda}
+                        onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
+                        className="w-full text-right h-8 font-medium"
+                      />
+                    </TableCell>
+                    <TableCell className="text-right font-semibold text-orange-600">
+                      {formatCurrency(item.valor_revenda * item.quantity)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-destructive h-8 w-8"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="space-y-4 flex flex-col h-full">
-          <label htmlFor="observacoes" className="block text-sm font-medium">
-            Observações
-          </label>
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-3 flex flex-col h-full">
+          <Label htmlFor="observacoes" className="text-sm font-semibold">
+            Observações Comerciais
+          </Label>
           <Textarea
             id="observacoes"
-            placeholder="Adicione observações ou instruções específicas para este orçamento..."
+            placeholder="Instruções específicas para o documento..."
             value={observacoes}
             onChange={(e) => setObservacoes(e.target.value)}
-            className="flex-1 min-h-[150px] resize-none focus-visible:ring-orange-500 shadow-sm"
+            className="flex-1 min-h-[150px] resize-none focus-visible:ring-orange-500 shadow-sm bg-card"
           />
         </div>
 
-        <div className="bg-muted/30 rounded-xl p-6 flex flex-col justify-between border shadow-sm h-full">
+        <div className="bg-card rounded-xl p-5 border shadow-sm flex flex-col justify-between">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-4">Resumo do Orçamento</h3>
+            <h3 className="text-lg font-semibold border-b pb-3 mb-2">Resumo Financeiro</h3>
 
-            <div className="bg-card border rounded-lg p-4 mb-4 shadow-sm">
-              <h4 className="font-medium text-sm mb-3">Cliente</h4>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">
-                    Selecione o Cliente <span className="text-destructive">*</span>
-                  </Label>
-                  <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
-                    <SelectTrigger className="w-full bg-background">
-                      <SelectValue placeholder="Selecione um cliente..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.nome} {c.cpf_cnpj ? `(${c.cpf_cnpj})` : ''}
-                        </SelectItem>
-                      ))}
-                      {customers.length === 0 && (
-                        <div className="p-2 text-sm text-muted-foreground text-center">
-                          Nenhum cliente cadastrado
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <div className="text-xs text-muted-foreground mt-1 text-right">
-                    <Link to="/clientes" className="text-primary hover:underline">
-                      Gerenciar clientes
-                    </Link>
-                  </div>
-                </div>
-              </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Subtotal ({items.length} itens)</span>
+              <span className="font-medium">{formatCurrency(subtotalItems)}</span>
             </div>
 
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">
-                Subtotal dos itens ({items.length} {items.length === 1 ? 'item' : 'itens'})
-              </span>
-              <span className="font-medium">{formatCurrency(totalGeral)}</span>
+              <span className="text-muted-foreground">Desconto Global (R$)</span>
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                value={descontoGlobal || ''}
+                onChange={(e) => setDescontoGlobal(parseFloat(e.target.value) || 0)}
+                className="w-28 text-right h-8"
+              />
             </div>
-            <div className="flex justify-between items-center font-bold text-xl pt-4 border-t">
-              <span>Valor Total Geral</span>
+
+            <div className="flex justify-between items-center font-bold text-xl pt-4 border-t mt-4">
+              <span>Valor Total</span>
               <span className="text-orange-600">{formatCurrency(totalGeral)}</span>
             </div>
           </div>
 
-          <div className="mt-8 space-y-5">
-            <div className="bg-amber-500/10 text-amber-600 dark:text-amber-500 p-3.5 rounded-lg text-sm text-center font-medium border border-amber-500/20 shadow-sm">
-              Atenção: Valores de ST (Substituição Tributária) a confirmar no faturamento
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                className="w-full sm:w-1/3 shadow-sm hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30 transition-colors"
-                onClick={clearCart}
-                disabled={isSaving}
-              >
-                Limpar Carrinho
-              </Button>
-              <Button
-                className="w-full sm:w-2/3 shadow-sm bg-orange-500 hover:bg-orange-600 text-white"
-                onClick={handleInitiateSave}
-                disabled={isSaving || !selectedCustomerId}
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {savingStatus || 'Gerando...'}
-                  </>
-                ) : (
-                  'Gerar Orçamento'
-                )}
-              </Button>
-            </div>
+          <div className="mt-8">
+            <Button
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+              size="lg"
+              onClick={handleInitiateSave}
+              disabled={isSaving || items.length === 0}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> {savingStatus}
+                </>
+              ) : (
+                'Finalizar e Gerar PDF'
+              )}
+            </Button>
           </div>
         </div>
       </div>
