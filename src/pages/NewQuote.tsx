@@ -421,7 +421,7 @@ export default function NewQuote() {
                   align="start"
                 >
                   <Command>
-                    <CommandInput placeholder="Buscar por nome ou CPF/CNPJ..." />
+                    <CommandInput placeholder="Buscar por nome ou CNPJ..." />
                     <CommandList>
                       <CommandEmpty>
                         Nenhum cliente encontrado.

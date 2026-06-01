@@ -27,7 +27,7 @@ Deno.serve(async (req: Request) => {
       .from('orcamentos_revenda_ubiqua')
       .select(`
         *,
-        cliente:informacoes_cliente_ubiqua!orcamentos_revenda_ubiqua_cliente_id_fkey(nome, email, telefone, cpf_cnpj, data_nascimento),
+        cliente:informacoes_cliente_ubiqua!orcamentos_revenda_ubiqua_cliente_id_fkey(nome, email, telefone, cpf_cnpj),
         itens:itens_orcamento_ubiqua(
           id, produto_id, quantidade, valor_unitario, valor_total, desconto_item, referencia_snapshot, descricao_snapshot, observacao_item, ordem
         )

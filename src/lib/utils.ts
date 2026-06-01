@@ -11,6 +11,52 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function isValidCNPJ(cnpj: string): boolean {
+  const c = cnpj.replace(/[^\d]+/g, '')
+  if (c === '' || c.length !== 14) return false
+
+  if (/^(\d)\1+$/.test(c)) return false
+
+  let tamanho = c.length - 2
+  let numeros = c.substring(0, tamanho)
+  const digitos = c.substring(tamanho)
+  let soma = 0
+  let pos = tamanho - 7
+
+  for (let i = tamanho; i >= 1; i--) {
+    soma += parseInt(numeros.charAt(tamanho - i)) * pos--
+    if (pos < 2) pos = 9
+  }
+
+  let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
+  if (resultado !== parseInt(digitos.charAt(0))) return false
+
+  tamanho = tamanho + 1
+  numeros = c.substring(0, tamanho)
+  soma = 0
+  pos = tamanho - 7
+
+  for (let i = tamanho; i >= 1; i--) {
+    soma += parseInt(numeros.charAt(tamanho - i)) * pos--
+    if (pos < 2) pos = 9
+  }
+
+  resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
+  if (resultado !== parseInt(digitos.charAt(1))) return false
+
+  return true
+}
+
+export function formatCNPJ(value: string): string {
+  let v = value.replace(/\D/g, '')
+  if (v.length > 14) v = v.slice(0, 14)
+  v = v.replace(/^(\d{2})(\d)/, '$1.$2')
+  v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+  v = v.replace(/\.(\d{3})(\d)/, '.$1/$2')
+  v = v.replace(/(\d{4})(\d)/, '$1-$2')
+  return v
+}
+
 /**
  * Maps a finish color name to its corresponding HEX code.
  * Normalizes strings to handle accents and casing.

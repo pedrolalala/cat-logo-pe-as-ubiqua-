@@ -7211,6 +7211,9 @@ export const Constants = {
 //     WITH CHECK: true
 //   Policy "auth_insert_itens_orcamento_ubiqua" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
+//   Policy "authenticated_all_itens_orcamento_ubiqua" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
 // Table: marcas
 //   Policy "marcas_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
@@ -7271,6 +7274,9 @@ export const Constants = {
 //   Policy "anon_insert_orcamentos_revenda_ubiqua" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
 //   Policy "auth_insert_orcamentos_revenda_ubiqua" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: true
+//   Policy "authenticated_all_orcamentos_revenda_ubiqua" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
 //     WITH CHECK: true
 //   Policy "update_orcamentos_revenda_ubiqua" (UPDATE, PERMISSIVE) roles={anon,authenticated}
 //     USING: true

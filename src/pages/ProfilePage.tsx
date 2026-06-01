@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Separator } from '@/components/ui/separator'
+import { formatCNPJ, isValidCNPJ } from '@/lib/utils'
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -79,8 +80,13 @@ export default function ProfilePage() {
       toast.error('O nome do representante é obrigatório.')
       return
     }
-    if (!company.nome_fantasia || !company.cidade || !company.estado) {
-      toast.error('Nome Fantasia, Cidade e Estado da empresa são obrigatórios.')
+    if (!company.nome_fantasia || !company.cidade || !company.estado || !company.cnpj) {
+      toast.error('Nome Fantasia, CNPJ, Cidade e Estado da empresa são obrigatórios.')
+      return
+    }
+
+    if (!isValidCNPJ(company.cnpj)) {
+      toast.error('CNPJ inválido. Verifique o formato.')
       return
     }
 
@@ -226,11 +232,15 @@ export default function ProfilePage() {
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="cnpj">CNPJ</Label>
+              <Label htmlFor="cnpj">
+                CNPJ <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="cnpj"
+                required
+                maxLength={18}
                 value={company.cnpj}
-                onChange={(e) => setCompany({ ...company, cnpj: e.target.value })}
+                onChange={(e) => setCompany({ ...company, cnpj: formatCNPJ(e.target.value) })}
                 placeholder="00.000.000/0000-00"
               />
             </div>

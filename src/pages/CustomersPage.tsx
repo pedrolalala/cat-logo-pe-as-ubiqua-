@@ -38,7 +38,6 @@ export default function CustomersPage() {
     email: '',
     telefone: '',
     cpf_cnpj: '',
-    data_nascimento: '',
   })
 
   useEffect(() => {
@@ -78,7 +77,7 @@ export default function CustomersPage() {
   }
 
   function openNew() {
-    setFormData({ nome: '', email: '', telefone: '', cpf_cnpj: '', data_nascimento: '' })
+    setFormData({ nome: '', email: '', telefone: '', cpf_cnpj: '' })
     setEditingId(null)
     setIsModalOpen(true)
   }
@@ -89,7 +88,6 @@ export default function CustomersPage() {
       email: customer.email || '',
       telefone: customer.telefone || '',
       cpf_cnpj: customer.cpf_cnpj || '',
-      data_nascimento: customer.data_nascimento || '',
     })
     setEditingId(customer.id)
     setIsModalOpen(true)
@@ -97,8 +95,13 @@ export default function CustomersPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!formData.nome || !formData.email || !formData.telefone) {
-      toast.error('Nome, Email e Telefone são obrigatórios.')
+    if (!formData.nome || !formData.email || !formData.telefone || !formData.cpf_cnpj) {
+      toast.error('Nome, Email, Telefone e CNPJ são obrigatórios.')
+      return
+    }
+
+    if (!isValidCNPJ(formData.cpf_cnpj)) {
+      toast.error('CNPJ inválido. Verifique o formato.')
       return
     }
 
@@ -108,8 +111,7 @@ export default function CustomersPage() {
         nome: formData.nome,
         email: formData.email,
         telefone: formData.telefone,
-        cpf_cnpj: formData.cpf_cnpj || null,
-        data_nascimento: formData.data_nascimento || null,
+        cpf_cnpj: formData.cpf_cnpj,
       }
 
       if (editingId) {
@@ -190,7 +192,7 @@ export default function CustomersPage() {
               <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Telefone</TableHead>
-              <TableHead>CPF/CNPJ</TableHead>
+              <TableHead>CNPJ</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -289,20 +291,18 @@ export default function CustomersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cpf_cnpj">CPF/CNPJ</Label>
+                <Label htmlFor="cpf_cnpj">
+                  CNPJ <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="cpf_cnpj"
+                  required
+                  maxLength={18}
+                  placeholder="00.000.000/0000-00"
                   value={formData.cpf_cnpj}
-                  onChange={(e) => setFormData({ ...formData, cpf_cnpj: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="nascimento">Data de Nascimento</Label>
-                <Input
-                  id="nascimento"
-                  type="date"
-                  value={formData.data_nascimento}
-                  onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cpf_cnpj: formatCNPJ(e.target.value) })
+                  }
                 />
               </div>
             </div>

@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner'
 import { Loader2, ArrowRight, Building2, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
+import { formatCNPJ, isValidCNPJ } from '@/lib/utils'
 
 export default function OnboardingPage() {
   const { user, profile, refreshProfile } = useAuth()
@@ -45,6 +46,11 @@ export default function OnboardingPage() {
     e.preventDefault()
     if (!nomeEmpresa || !cnpj || !cidade || !estado) {
       toast.error('Preencha todos os dados da representação')
+      return
+    }
+
+    if (!isValidCNPJ(cnpj)) {
+      toast.error('CNPJ inválido. Verifique o formato.')
       return
     }
 
@@ -165,14 +171,17 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ</Label>
+                  <Label htmlFor="cnpj">
+                    CNPJ <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="cnpj"
                     value={cnpj}
-                    onChange={(e) => setCnpj(e.target.value)}
+                    onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
                     placeholder="00.000.000/0000-00"
                     required
                     className="h-12"
+                    maxLength={18}
                   />
                 </div>
 

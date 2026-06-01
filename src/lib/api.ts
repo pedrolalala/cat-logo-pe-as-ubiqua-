@@ -35,14 +35,12 @@ export async function saveClienteInfo(data: {
   email: string
   telefone: string
   cpf_cnpj: string
-  data_nascimento?: string
 }): Promise<{ id: string }> {
   const payload = {
     nome: data.nome,
     email: data.email,
     telefone: data.telefone,
     ...(data.cpf_cnpj ? { cpf_cnpj: data.cpf_cnpj } : {}),
-    ...(data.data_nascimento ? { data_nascimento: data.data_nascimento } : {}),
   }
 
   const { data: existing } = await supabase
