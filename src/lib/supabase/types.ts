@@ -4327,9 +4327,12 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           email: string
+          empresa_id: string | null
           id: string
           nome: string
+          onboarding_completado: boolean
           role: Database['public']['Enums']['usuario_role'] | null
+          telefone: string | null
           updated_at: string | null
         }
         Insert: {
@@ -4337,9 +4340,12 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           email: string
+          empresa_id?: string | null
           id: string
           nome: string
+          onboarding_completado?: boolean
           role?: Database['public']['Enums']['usuario_role'] | null
+          telefone?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -4347,12 +4353,30 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           email?: string
+          empresa_id?: string | null
           id?: string
           nome?: string
+          onboarding_completado?: boolean
           role?: Database['public']['Enums']['usuario_role'] | null
+          telefone?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'usuarios_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'empresas'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'usuarios_empresa_id_fkey'
+            columns: ['empresa_id']
+            isOneToOne: false
+            referencedRelation: 'vw_transacoes_completas'
+            referencedColumns: ['empresa_id']
+          },
+        ]
       }
       vendas: {
         Row: {
@@ -6273,6 +6297,9 @@ export const Constants = {
 //   created_at: timestamp with time zone (nullable, default: now())
 //   avatar_url: text (nullable)
 //   updated_at: timestamp with time zone (nullable)
+//   onboarding_completado: boolean (not null, default: false)
+//   empresa_id: uuid (nullable)
+//   telefone: text (nullable)
 // Table: v_cash_flow_lucenera
 //   dt_pagamento: date (nullable)
 //   dt_vencimento: date (nullable)
@@ -6893,6 +6920,7 @@ export const Constants = {
 //   UNIQUE uq_transacoes_connect: UNIQUE (negociacao_id, cod_itens_duplicata)
 // Table: usuarios
 //   UNIQUE usuarios_email_key: UNIQUE (email)
+//   FOREIGN KEY usuarios_empresa_id_fkey: FOREIGN KEY (empresa_id) REFERENCES empresas(id)
 //   FOREIGN KEY usuarios_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY usuarios_pkey: PRIMARY KEY (id)
 // Table: vendas
@@ -7298,7 +7326,7 @@ export const Constants = {
 //   Policy "usuarios_select_own" (SELECT, PERMISSIVE) roles={authenticated}
 //     USING: true
 //   Policy "usuarios_update_own" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: ((id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = ( SELECT auth.uid() AS uid)) AND (u.role = 'admin'::usuario_role)))))
+//     USING: ((id = auth.uid()) OR (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = 'admin'::usuario_role)))))
 // Table: vendas
 //   Policy "Permitir leitura para autenticados" (SELECT, PERMISSIVE) roles={public}
 //     USING: (auth.role() = 'authenticated'::text)

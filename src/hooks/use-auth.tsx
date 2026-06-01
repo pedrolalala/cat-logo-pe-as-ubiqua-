@@ -28,7 +28,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase.from('usuarios').select('*').eq('id', userId).single()
+    const { data } = await supabase
+      .from('usuarios_ubiqua' as any)
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle()
     setProfile(data)
   }, [])
 
@@ -46,10 +50,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null)
       if (session?.user) {
         supabase
-          .from('usuarios')
+          .from('usuarios_ubiqua' as any)
           .select('*')
           .eq('id', session.user.id)
-          .single()
+          .maybeSingle()
           .then(({ data }) => {
             setProfile(data)
             setLoading(false)
@@ -64,10 +68,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null)
       if (session?.user) {
         supabase
-          .from('usuarios')
+          .from('usuarios_ubiqua' as any)
           .select('*')
           .eq('id', session.user.id)
-          .single()
+          .maybeSingle()
           .then(({ data }) => {
             setProfile(data)
             setLoading(false)

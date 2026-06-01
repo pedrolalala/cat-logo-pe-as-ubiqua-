@@ -50,20 +50,10 @@ export default function OnboardingPage() {
 
     setIsSubmitting(true)
     try {
-      const { data: maxEmpresa } = await supabase
-        .from('empresas')
-        .select('codigo')
-        .order('codigo', { ascending: false })
-        .limit(1)
-        .single()
-
-      const nextCodigo = (maxEmpresa?.codigo || 0) + 1
-
       const { data: empresa, error: empError } = await supabase
-        .from('empresas')
+        .from('empresa_ubiqua' as any)
         .insert({
-          codigo: nextCodigo,
-          nome: nomeEmpresa,
+          nome_fantasia: nomeEmpresa,
           razao_social: razaoSocial || nomeEmpresa,
           cnpj,
           cidade,
@@ -74,15 +64,14 @@ export default function OnboardingPage() {
 
       if (empError) throw empError
 
-      const { error: userError } = await supabase
-        .from('usuarios')
-        .update({
-          nome,
-          telefone,
-          empresa_id: empresa.id,
-          onboarding_completado: true,
-        })
-        .eq('id', user!.id)
+      const { error: userError } = await supabase.from('usuarios_ubiqua' as any).upsert({
+        id: user!.id,
+        nome,
+        email: user!.email || '',
+        telefone,
+        empresa_id: empresa.id,
+        onboarding_completado: true,
+      })
 
       if (userError) throw userError
 

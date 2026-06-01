@@ -18,14 +18,6 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
 
-  if (user && !profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
   const isOnboardingCompleted = profile?.onboarding_completado === true
 
   if (!isOnboardingCompleted && location.pathname !== '/onboarding') {
