@@ -28,12 +28,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from('usuarios_ubiqua' as any)
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle()
-    setProfile(data)
+    const [ubiquaRes, usuariosRes] = await Promise.all([
+      supabase
+        .from('usuarios_ubiqua' as any)
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle(),
+      supabase.from('usuarios').select('*').eq('id', userId).maybeSingle(),
+    ])
+    setProfile({
+      ...ubiquaRes.data,
+      ...usuariosRes.data,
+      role: usuariosRes.data?.role || ubiquaRes.data?.nivel_acesso,
+      onboarding_completado:
+        usuariosRes.data?.onboarding_completado || ubiquaRes.data?.onboarding_completado,
+    })
   }, [])
 
   const refreshProfile = useCallback(async () => {
@@ -49,15 +58,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        supabase
-          .from('usuarios_ubiqua' as any)
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle()
-          .then(({ data }) => {
-            setProfile(data)
-            setLoading(false)
+        Promise.all([
+          supabase
+            .from('usuarios_ubiqua' as any)
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle(),
+          supabase.from('usuarios').select('*').eq('id', session.user.id).maybeSingle(),
+        ]).then(([ubiquaRes, usuariosRes]) => {
+          setProfile({
+            ...ubiquaRes.data,
+            ...usuariosRes.data,
+            role: usuariosRes.data?.role || ubiquaRes.data?.nivel_acesso,
+            onboarding_completado:
+              usuariosRes.data?.onboarding_completado || ubiquaRes.data?.onboarding_completado,
           })
+          setLoading(false)
+        })
       } else {
         setProfile(null)
         setLoading(false)
@@ -67,15 +84,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        supabase
-          .from('usuarios_ubiqua' as any)
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle()
-          .then(({ data }) => {
-            setProfile(data)
-            setLoading(false)
+        Promise.all([
+          supabase
+            .from('usuarios_ubiqua' as any)
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle(),
+          supabase.from('usuarios').select('*').eq('id', session.user.id).maybeSingle(),
+        ]).then(([ubiquaRes, usuariosRes]) => {
+          setProfile({
+            ...ubiquaRes.data,
+            ...usuariosRes.data,
+            role: usuariosRes.data?.role || ubiquaRes.data?.nivel_acesso,
+            onboarding_completado:
+              usuariosRes.data?.onboarding_completado || ubiquaRes.data?.onboarding_completado,
           })
+          setLoading(false)
+        })
       } else {
         setProfile(null)
         setLoading(false)

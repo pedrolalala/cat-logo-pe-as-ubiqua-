@@ -4411,6 +4411,7 @@ export type Database = {
           email: string
           empresa_id: string | null
           id: string
+          nivel_acesso: Database['public']['Enums']['nivel_acesso_tipo']
           nome: string
           onboarding_completado: boolean
           telefone: string | null
@@ -4420,6 +4421,7 @@ export type Database = {
           email: string
           empresa_id?: string | null
           id: string
+          nivel_acesso?: Database['public']['Enums']['nivel_acesso_tipo']
           nome: string
           onboarding_completado?: boolean
           telefone?: string | null
@@ -4429,6 +4431,7 @@ export type Database = {
           email?: string
           empresa_id?: string | null
           id?: string
+          nivel_acesso?: Database['public']['Enums']['nivel_acesso_tipo']
           nome?: string
           onboarding_completado?: boolean
           telefone?: string | null
@@ -5381,6 +5384,7 @@ export type Database = {
       estoque_local: 'Estoque' | 'Showroom' | 'Em trânsito' | 'Reservado'
       frequencia_tipo: 'mensal' | 'trimestral' | 'semestral' | 'anual'
       lancamento_status: 'pendente' | 'pago' | 'cancelado'
+      nivel_acesso_tipo: 'revendedor' | 'interno' | 'admin'
       pagamento_forma: 'pix' | 'cartao' | 'boleto' | 'transferencia' | 'cheque' | 'dinheiro'
       parcela_status: 'pendente' | 'paga' | 'atrasada' | 'cancelada'
       projeto_nivel: '1' | '2' | '3' | '4'
@@ -5545,6 +5549,7 @@ export const Constants = {
       estoque_local: ['Estoque', 'Showroom', 'Em trânsito', 'Reservado'],
       frequencia_tipo: ['mensal', 'trimestral', 'semestral', 'anual'],
       lancamento_status: ['pendente', 'pago', 'cancelado'],
+      nivel_acesso_tipo: ['revendedor', 'interno', 'admin'],
       pagamento_forma: ['pix', 'cartao', 'boleto', 'transferencia', 'cheque', 'dinheiro'],
       parcela_status: ['pendente', 'paga', 'atrasada', 'cancelada'],
       projeto_nivel: ['1', '2', '3', '4'],
@@ -6380,6 +6385,7 @@ export const Constants = {
 //   telefone: text (nullable)
 //   onboarding_completado: boolean (not null, default: false)
 //   created_at: timestamp with time zone (not null, default: now())
+//   nivel_acesso: nivel_acesso_tipo (not null, default: 'revendedor'::nivel_acesso_tipo)
 // Table: v_cash_flow_lucenera
 //   dt_pagamento: date (nullable)
 //   dt_vencimento: date (nullable)
@@ -7119,7 +7125,7 @@ export const Constants = {
 //   Policy "empresa_ubiqua_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: true
 //   Policy "empresa_ubiqua_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (id IN ( SELECT usuarios_ubiqua.empresa_id    FROM usuarios_ubiqua   WHERE (usuarios_ubiqua.id = auth.uid())))
+//     USING: true
 //   Policy "empresa_ubiqua_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: (id IN ( SELECT usuarios_ubiqua.empresa_id    FROM usuarios_ubiqua   WHERE (usuarios_ubiqua.id = auth.uid())))
 //     WITH CHECK: (id IN ( SELECT usuarios_ubiqua.empresa_id    FROM usuarios_ubiqua   WHERE (usuarios_ubiqua.id = auth.uid())))
