@@ -48,12 +48,7 @@ export default function ProductDetail() {
     )
   }, [group, selectedColor])
 
-  const [imageError, setImageError] = useState(false)
   const [modalVariant, setModalVariant] = useState<any | null>(null)
-
-  useEffect(() => {
-    setImageError(false)
-  }, [selectedColor])
 
   if (loading) {
     return (
@@ -94,6 +89,15 @@ export default function ProductDetail() {
   }
 
   const mappedImageUrl = getVariantImage(selectedVariant, group.imagemPrincipal)
+
+  const [imageError, setImageError] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true)
+
+  useEffect(() => {
+    setImageError(false)
+    setImageLoading(true)
+  }, [mappedImageUrl])
+
   const displayPrice = selectedVariant?.valor_revenda ?? group.valorRevenda ?? 0
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -141,22 +145,41 @@ export default function ProductDetail() {
         {/* Image Gallery Column */}
         <div className="flex flex-col gap-4">
           <div className="relative w-full aspect-square bg-white rounded-2xl border overflow-hidden flex items-center justify-center shadow-sm">
-            {!imageError && mappedImageUrl ? (
-              <img
-                src={mappedImageUrl}
-                alt={lampName}
-                onError={() => setImageError(true)}
-                className="absolute inset-0 w-full h-full object-contain mix-blend-multiply p-8 transition-transform duration-500 hover:scale-105"
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center text-slate-400">
-                <ImageOff className="w-16 h-16 mb-4 opacity-50" />
-                <span className="text-sm font-semibold uppercase tracking-wider opacity-60">
-                  Sem Imagem
-                </span>
+            {imageLoading && <Skeleton className="absolute inset-0 w-full h-full z-10" />}
+
+            <img
+              src={
+                !imageError && mappedImageUrl
+                  ? mappedImageUrl
+                  : 'https://img.usecurling.com/p/800/800?q=light%20fixture&color=gray'
+              }
+              alt={lampName}
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageError(true)
+                setImageLoading(false)
+              }}
+              className={cn(
+                'absolute inset-0 w-full h-full object-contain p-8 transition-all duration-500',
+                imageLoading ? 'opacity-0' : 'opacity-100 hover:scale-105',
+                !mappedImageUrl || imageError
+                  ? 'opacity-30 grayscale mix-blend-multiply'
+                  : 'mix-blend-multiply',
+              )}
+            />
+
+            {(!mappedImageUrl || imageError) && !imageLoading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-10 pointer-events-none">
+                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl flex flex-col items-center shadow-sm border border-slate-200">
+                  <ImageOff className="w-10 h-10 mb-2 opacity-60 text-slate-400" />
+                  <span className="text-sm font-bold uppercase tracking-widest opacity-80 text-slate-600">
+                    Imagem Indisponível
+                  </span>
+                </div>
               </div>
             )}
-            <div className="absolute top-4 left-4 flex flex-col gap-2">
+
+            <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
               <Badge
                 variant="secondary"
                 className="font-mono font-bold bg-background/90 backdrop-blur-sm shadow-sm text-sm border-none"
