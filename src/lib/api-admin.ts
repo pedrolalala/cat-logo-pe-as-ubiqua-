@@ -103,6 +103,17 @@ export async function updateCatalogItemsGroup(itemIds: number[], newDescProduto:
   if (error) throw error
 }
 
+export async function deleteCatalogItemGroup(itemIds: number[]) {
+  const { error } = await supabase.from('revenda_ubiqua').delete().in('id', itemIds)
+
+  if (error) {
+    if (error.code === '23503') {
+      throw new Error('fk_violation')
+    }
+    throw error
+  }
+}
+
 export async function updateCatalogOrder(items: { id: number; ordem: number }[]) {
   const { error } = await supabase.rpc('update_revenda_ubiqua_ordem', { payload: items })
   if (error) throw error

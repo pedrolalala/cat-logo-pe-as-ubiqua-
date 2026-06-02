@@ -1,13 +1,31 @@
 import { useState, useEffect } from 'react'
 import { useParts, GroupedPart } from '@/hooks/use-parts'
 import { PartCard } from '@/components/PartCard'
-import { updateCatalogItemsGroup, updateCatalogOrder } from '@/lib/api-admin'
+import {
+  updateCatalogItemsGroup,
+  updateCatalogOrder,
+  deleteCatalogItemGroup,
+} from '@/lib/api-admin'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Trash2 } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
 
 export function AdminCatalog() {
   const { data, loading, refetch } = useParts()
@@ -16,6 +34,36 @@ export function AdminCatalog() {
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [mode, setMode] = useState<'group' | 'reorder'>('group')
   const [orderedData, setOrderedData] = useState<GroupedPart[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const checkRole = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: ubData } = await supabase
+        .from('usuarios_ubiqua')
+        .select('nivel_acesso')
+        .eq('id', user.id)
+        .single()
+      if (ubData?.nivel_acesso === 'admin') {
+        setIsAdmin(true)
+        return
+      }
+
+      const { data: uData } = await supabase
+        .from('usuarios')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      if (uData?.role === 'admin' || uData?.role === 'gerente') {
+        setIsAdmin(true)
+      }
+    }
+    checkRole()
+  }, [])
 
   useEffect(() => {
     if (!search) {
@@ -106,6 +154,23 @@ export function AdminCatalog() {
     setDraggedGroup(null)
   }
 
+  const handleDeleteGroup = async (group: GroupedPart) => {
+    try {
+      const itemIds = group.detalhesPorCor.map((i) => i.id)
+      await deleteCatalogItemGroup(itemIds)
+      toast.success('Peça apagada com sucesso!')
+      refetch()
+    } catch (error: any) {
+      if (error.message === 'fk_violation') {
+        toast.error(
+          'Não é possível apagar esta peça pois ela está vinculada a orçamentos existentes.',
+        )
+      } else {
+        toast.error('Erro ao apagar peça.')
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in">
@@ -185,8 +250,47 @@ export function AdminCatalog() {
               draggedGroup?.id === group.id && 'opacity-40 grayscale scale-95',
             )}
           >
-            <div className="h-full pointer-events-auto">
+            <div className="h-full pointer-events-auto relative group/card">
               <PartCard group={group} onAddBudget={() => {}} />
+              {isAdmin && mode === 'group' && (
+                <div className="absolute top-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity z-20">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="h-8 w-8 rounded-full shadow-md"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir peça?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja apagar esta peça? Esta ação não pode ser desfeita e
+                          removerá o item permanentemente do catálogo.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                          Cancelar
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteGroup(group)
+                          }}
+                        >
+                          Confirmar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </div>
             {dragOverId === group.id && mode === 'group' && (
               <div className="absolute inset-0 bg-orange-500/10 rounded-xl pointer-events-none flex items-center justify-center backdrop-blur-[1px]">

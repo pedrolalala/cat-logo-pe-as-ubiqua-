@@ -5369,6 +5369,7 @@ export type Database = {
       get_latest_transaction_id: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      is_ubiqua_admin: { Args: never; Returns: boolean }
       limpar_staging_processados: { Args: never; Returns: number }
       stats_datacenter: { Args: never; Returns: Json }
       unaccent: { Args: { '': string }; Returns: string }
@@ -7436,13 +7437,15 @@ export const Constants = {
 //   Policy "usuarios_update_own" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((id = auth.uid()) OR (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = 'admin'::usuario_role)))))
 // Table: usuarios_ubiqua
+//   Policy "usuarios_ubiqua_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((id = auth.uid()) OR is_ubiqua_admin())
 //   Policy "usuarios_ubiqua_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: (id = auth.uid())
+//     WITH CHECK: ((id = auth.uid()) OR is_ubiqua_admin())
 //   Policy "usuarios_ubiqua_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: (id = auth.uid())
+//     USING: ((id = auth.uid()) OR is_ubiqua_admin())
 //   Policy "usuarios_ubiqua_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: (id = auth.uid())
-//     WITH CHECK: (id = auth.uid())
+//     USING: ((id = auth.uid()) OR is_ubiqua_admin())
+//     WITH CHECK: ((id = auth.uid()) OR is_ubiqua_admin())
 // Table: vendas
 //   Policy "Permitir leitura para autenticados" (SELECT, PERMISSIVE) roles={public}
 //     USING: (auth.role() = 'authenticated'::text)
@@ -7853,6 +7856,20 @@ export const Constants = {
 //     RETURN EXISTS (
 //       SELECT 1 FROM public.profiles
 //       WHERE id = auth.uid() AND role = 'admin'
+//     );
+//   END;
+//   $function$
+//
+// FUNCTION is_ubiqua_admin()
+//   CREATE OR REPLACE FUNCTION public.is_ubiqua_admin()
+//    RETURNS boolean
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     RETURN EXISTS (
+//       SELECT 1 FROM public.usuarios_ubiqua
+//       WHERE id = auth.uid() AND nivel_acesso = 'admin'
 //     );
 //   END;
 //   $function$
