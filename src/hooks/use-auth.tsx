@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ...ubiquaRes.data,
       ...usuariosRes.data,
       role: usuariosRes.data?.role || ubiquaRes.data?.nivel_acesso,
+      nivel_acesso: ubiquaRes.data?.nivel_acesso,
       onboarding_completado:
         usuariosRes.data?.onboarding_completado || ubiquaRes.data?.onboarding_completado,
     })
@@ -70,6 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             ...ubiquaRes.data,
             ...usuariosRes.data,
             role: usuariosRes.data?.role || ubiquaRes.data?.nivel_acesso,
+            nivel_acesso: ubiquaRes.data?.nivel_acesso,
             onboarding_completado:
               usuariosRes.data?.onboarding_completado || ubiquaRes.data?.onboarding_completado,
           })
@@ -96,6 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             ...ubiquaRes.data,
             ...usuariosRes.data,
             role: usuariosRes.data?.role || ubiquaRes.data?.nivel_acesso,
+            nivel_acesso: ubiquaRes.data?.nivel_acesso,
             onboarding_completado:
               usuariosRes.data?.onboarding_completado || ubiquaRes.data?.onboarding_completado,
           })

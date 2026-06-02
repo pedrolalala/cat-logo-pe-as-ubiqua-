@@ -15,6 +15,7 @@ import { OnboardingGuard } from './components/OnboardingGuard'
 import OnboardingPage from './pages/Onboarding'
 import CustomersPage from './pages/CustomersPage'
 import ProfilePage from './pages/ProfilePage'
+import { AdminGuard } from './components/AdminGuard'
 
 const App = () => (
   <AuthProvider>
@@ -50,8 +51,22 @@ const App = () => (
               <Route path="/carrinho" element={<NewQuote />} />
               <Route path="/clientes" element={<CustomersPage />} />
               <Route path="/perfil" element={<ProfilePage />} />
-              <Route path="/admin/*" element={<AdminPage />} />
-              <Route path="/dashboard" element={<AdminPage />} />
+              <Route
+                path="/admin/*"
+                element={
+                  <AdminGuard>
+                    <AdminPage />
+                  </AdminGuard>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <AdminGuard>
+                    <AdminPage />
+                  </AdminGuard>
+                }
+              />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
