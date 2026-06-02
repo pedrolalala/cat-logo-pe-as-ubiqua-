@@ -50,6 +50,16 @@ export default function ProductDetail() {
 
   const [modalVariant, setModalVariant] = useState<any | null>(null)
 
+  const mappedImageUrl = group ? getVariantImage(selectedVariant, group.imagemPrincipal) : ''
+
+  const [imageError, setImageError] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true)
+
+  useEffect(() => {
+    setImageError(false)
+    setImageLoading(true)
+  }, [mappedImageUrl])
+
   if (loading) {
     return (
       <div className="container mx-auto p-6 max-w-7xl animate-fade-in">
@@ -87,16 +97,6 @@ export default function ProductDetail() {
       </div>
     )
   }
-
-  const mappedImageUrl = getVariantImage(selectedVariant, group.imagemPrincipal)
-
-  const [imageError, setImageError] = useState(false)
-  const [imageLoading, setImageLoading] = useState(true)
-
-  useEffect(() => {
-    setImageError(false)
-    setImageLoading(true)
-  }, [mappedImageUrl])
 
   const displayPrice = selectedVariant?.valor_revenda ?? group.valorRevenda ?? 0
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
