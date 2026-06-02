@@ -49,6 +49,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
+import { cn } from '@/lib/utils'
 
 export default function NewQuote() {
   const {
@@ -541,30 +542,43 @@ export default function NewQuote() {
                       : 'Nenhum produto encontrado. Refine a busca.'}
                   </CommandEmpty>
                   <CommandGroup>
-                    {productResults.map((p) => (
-                      <CommandItem
-                        key={p.id}
-                        value={`${p.referencia} ${p.descricao}`}
-                        onSelect={() => {
-                          addToCart(p, 1)
-                          setOpenProductPopover(false)
-                          setProductSearch('')
-                          setProductResults([])
-                          toast.success('Produto adicionado ao orçamento!')
-                        }}
-                        className="flex items-center justify-between cursor-pointer py-2"
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-bold text-sm">{p.referencia}</span>
-                          <span className="text-xs text-muted-foreground truncate max-w-[280px] sm:max-w-[400px]">
-                            {p.descricao}
+                    {productResults.map((p) => {
+                      const isOutOfStock = (Number(p.disponivel) || 0) <= 0
+                      return (
+                        <CommandItem
+                          key={p.id}
+                          value={`${p.referencia} ${p.descricao}`}
+                          disabled={isOutOfStock}
+                          onSelect={() => {
+                            if (isOutOfStock) return
+                            addToCart(p, 1)
+                            setOpenProductPopover(false)
+                            setProductSearch('')
+                            setProductResults([])
+                            toast.success('Produto adicionado ao orçamento!')
+                          }}
+                          className={cn(
+                            'flex items-center justify-between py-2',
+                            isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+                          )}
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-bold text-sm">{p.referencia}</span>
+                            <span className="text-xs text-muted-foreground truncate max-w-[280px] sm:max-w-[400px]">
+                              {p.descricao}
+                            </span>
+                            {isOutOfStock && (
+                              <span className="text-xs font-semibold text-destructive mt-1">
+                                Não tem aquela peça em estoque
+                              </span>
+                            )}
+                          </div>
+                          <span className="font-semibold text-orange-600">
+                            {formatCurrency(p.valor_revenda || 0)}
                           </span>
-                        </div>
-                        <span className="font-semibold text-orange-600">
-                          {formatCurrency(p.valor_revenda || 0)}
-                        </span>
-                      </CommandItem>
-                    ))}
+                        </CommandItem>
+                      )
+                    })}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -647,9 +661,16 @@ export default function NewQuote() {
                         type="number"
                         inputMode="numeric"
                         min={1}
+                        max={Number(item.disponivel) || 1}
                         value={item.quantity}
                         onChange={(e) =>
-                          updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))
+                          updateQuantity(
+                            item.id,
+                            Math.min(
+                              Number(item.disponivel) || 1,
+                              Math.max(1, parseInt(e.target.value) || 1),
+                            ),
+                          )
                         }
                         className="w-16 text-center h-10 font-bold"
                       />
@@ -658,6 +679,7 @@ export default function NewQuote() {
                         size="icon"
                         className="h-10 w-10 shrink-0"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        disabled={item.quantity >= (Number(item.disponivel) || 0)}
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
@@ -716,9 +738,16 @@ export default function NewQuote() {
                           <Input
                             type="number"
                             min={1}
+                            max={Number(item.disponivel) || 1}
                             value={item.quantity}
                             onChange={(e) =>
-                              updateQuantity(item.id, Math.max(1, parseInt(e.target.value) || 1))
+                              updateQuantity(
+                                item.id,
+                                Math.min(
+                                  Number(item.disponivel) || 1,
+                                  Math.max(1, parseInt(e.target.value) || 1),
+                                ),
+                              )
                             }
                             className="w-14 text-center h-8 font-medium px-1"
                           />
@@ -727,6 +756,7 @@ export default function NewQuote() {
                             size="icon"
                             className="h-8 w-8 shrink-0"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            disabled={item.quantity >= (Number(item.disponivel) || 0)}
                           >
                             <Plus className="w-3 h-3" />
                           </Button>

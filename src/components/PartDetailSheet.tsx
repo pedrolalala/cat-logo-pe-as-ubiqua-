@@ -8,6 +8,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ShoppingCart, ImageOff } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface PartDetailSheetProps {
   variant: any
@@ -57,7 +58,9 @@ export function PartDetailSheet({
 
   const color = variant.cor || 'PADRÃO'
   const isOutOfStock = (Number(variant.disponivel) || 0) <= 0
-  const stockDisplay = isOutOfStock ? 'Sem estoque' : `${variant.disponivel} disponível`
+  const stockDisplay = isOutOfStock
+    ? 'Não tem aquela peça em estoque'
+    : `${variant.disponivel} disponível`
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -134,16 +137,22 @@ export function PartDetailSheet({
             </div>
 
             <Button
-              className="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg transition-all h-12 text-base font-semibold"
+              className={cn(
+                'w-full mt-4 shadow-md transition-all h-12 text-base font-semibold text-white',
+                !isOutOfStock
+                  ? 'bg-orange-500 hover:bg-orange-600 hover:shadow-lg'
+                  : 'bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed opacity-50',
+              )}
               size="lg"
               onClick={() => {
+                if (isOutOfStock) return
                 onClose()
                 onAddBudget(variant)
               }}
               disabled={isOutOfStock}
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
-              {isOutOfStock ? 'Indisponível' : 'Adicionar ao Orçamento'}
+              {isOutOfStock ? 'Não tem aquela peça em estoque' : 'Adicionar ao Orçamento'}
             </Button>
           </div>
         </div>

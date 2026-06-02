@@ -7386,6 +7386,8 @@ export const Constants = {
 // Table: revenda_ubiqua
 //   Policy "revenda_ubiqua_delete" (DELETE, PERMISSIVE) roles={authenticated}
 //     USING: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
+//   Policy "revenda_ubiqua_delete_admin_ubiqua" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((EXISTS ( SELECT 1    FROM usuarios_ubiqua u   WHERE ((u.id = auth.uid()) AND (u.nivel_acesso = 'admin'::nivel_acesso_tipo)))) OR (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role]))))))
 //   Policy "revenda_ubiqua_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: (EXISTS ( SELECT 1    FROM usuarios u   WHERE ((u.id = auth.uid()) AND (u.role = ANY (ARRAY['admin'::usuario_role, 'gerente'::usuario_role])))))
 //   Policy "revenda_ubiqua_select" (SELECT, PERMISSIVE) roles={authenticated}

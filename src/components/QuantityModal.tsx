@@ -46,7 +46,10 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
     onClose()
   }
 
-  const increment = () => setQuantity((q) => q + 1)
+  const disponivel = part ? Number((part as any).disponivel) || 0 : 0
+  const isOutOfStock = disponivel <= 0
+
+  const increment = () => setQuantity((q) => Math.min(disponivel, q + 1))
   const decrement = () => setQuantity((q) => Math.max(1, q - 1))
 
   const handleOpenChange = (open: boolean) => {
@@ -78,7 +81,7 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
                   size="icon"
                   className="h-12 w-12 shrink-0"
                   onClick={decrement}
-                  disabled={quantity <= 1}
+                  disabled={quantity <= 1 || isOutOfStock}
                 >
                   <Minus className="h-5 w-5" />
                 </Button>
@@ -87,15 +90,20 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
                   type="number"
                   inputMode="numeric"
                   min={1}
+                  max={disponivel || 1}
                   value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={(e) =>
+                    setQuantity(Math.min(disponivel, Math.max(1, parseInt(e.target.value) || 1)))
+                  }
                   className="w-20 text-center text-lg font-semibold h-12"
+                  disabled={isOutOfStock}
                 />
                 <Button
                   variant="outline"
                   size="icon"
                   className="h-12 w-12 shrink-0"
                   onClick={increment}
+                  disabled={quantity >= disponivel || isOutOfStock}
                 >
                   <Plus className="h-5 w-5" />
                 </Button>
@@ -104,11 +112,19 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
           </div>
         )}
 
+        {isOutOfStock && (
+          <div className="px-6 pb-2">
+            <p className="text-sm font-semibold text-destructive text-center">
+              Não tem aquela peça em estoque
+            </p>
+          </div>
+        )}
+
         <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto h-12">
             Cancelar
           </Button>
-          <Button onClick={handleConfirm} className="w-full sm:w-auto h-12">
+          <Button onClick={handleConfirm} disabled={isOutOfStock} className="w-full sm:w-auto h-12">
             Confirmar
           </Button>
         </DialogFooter>
