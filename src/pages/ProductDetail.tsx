@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { useParts, getVariantImage, colorMap } from '@/hooks/use-parts'
+import { useProductDetail, getVariantImage, colorMap } from '@/hooks/use-parts'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ShoppingCart, ImageOff, Tag, Layers, AlertCircle, Check } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
@@ -14,9 +14,7 @@ export default function ProductDetail() {
   const [searchParams, setSearchParams] = useSearchParams()
   const urlColor = searchParams.get('cor')
 
-  const { data, loading, error } = useParts()
-
-  const group = useMemo(() => data.find((g) => g.slug === slug), [data, slug])
+  const { data: group, loading, error } = useProductDetail(slug)
 
   const uniqueColors = useMemo(() => {
     if (!group) return []

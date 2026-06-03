@@ -115,6 +115,61 @@ export function groupCatalogItems(items: any[]): GroupedPart[] {
   })
 }
 
+export function useProductDetail(slug: string | undefined) {
+  const [data, setData] = useState<GroupedPart | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    if (!slug) {
+      setLoading(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data: items, error: fetchError } = await supabase
+        .from('revenda_ubiqua')
+        .select('*, imagem_catalogo_url')
+        .eq('slug' as any, slug)
+        .order('ordem', { ascending: true, nullsFirst: false })
+        .order('id', { ascending: false })
+
+      if (fetchError) throw fetchError
+
+      if (!items || items.length === 0) {
+        const { data: allItems, error: allFetchError } = await supabase
+          .from('revenda_ubiqua')
+          .select('*, imagem_catalogo_url')
+          .order('ordem', { ascending: true, nullsFirst: false })
+          .order('id', { ascending: false })
+
+        if (allFetchError) throw allFetchError
+
+        const grouped = groupCatalogItems(allItems || [])
+        const matched = grouped.find((g) => g.slug === slug)
+        setData(matched || null)
+        return
+      }
+
+      const grouped = groupCatalogItems(items)
+      setData(grouped[0] || null)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error occurred'))
+    } finally {
+      setLoading(false)
+    }
+  }, [slug])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { data, loading, error, refetch: load }
+}
+
 export function useParts() {
   const [data, setData] = useState<GroupedPart[]>([])
   const [loading, setLoading] = useState(true)
@@ -127,7 +182,7 @@ export function useParts() {
 
       const { data: items, error: fetchError } = await supabase
         .from('revenda_ubiqua')
-        .select('*')
+        .select('*, imagem_catalogo_url')
         .order('ordem', { ascending: true, nullsFirst: false })
         .order('id', { ascending: false })
 
