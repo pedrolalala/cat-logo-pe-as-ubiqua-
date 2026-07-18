@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,6 +36,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
 
 export default function CustomersPage() {
+  const { user } = useAuth()
   const [customers, setCustomers] = useState<any[]>([])
   const [filteredCustomers, setFilteredCustomers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -134,7 +136,9 @@ export default function CustomersPage() {
         if (error) throw error
         toast.success('Cliente atualizado com sucesso!')
       } else {
-        const { error } = await supabase.from('informacoes_cliente_ubiqua').insert([payload])
+        const { error } = await supabase
+          .from('informacoes_cliente_ubiqua')
+          .insert([{ ...payload, cadastrado_por_usuario_id: user?.id }])
         if (error) throw error
         toast.success('Cliente criado com sucesso!')
       }

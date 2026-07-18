@@ -47,13 +47,19 @@ export default function Layout() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <Link
             to="/"
-            className="flex items-center gap-2 font-semibold text-lg text-primary shrink-0 hover:opacity-80 transition-opacity cursor-pointer"
+            className="flex flex-col items-start gap-0 font-semibold text-lg text-primary shrink-0 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <span className="hidden sm:inline-block font-extrabold text-2xl tracking-tighter uppercase text-primary">
+            <span className="hidden sm:inline-block font-extrabold text-2xl tracking-tighter uppercase text-primary leading-none">
               Ubìqua
             </span>
-            <span className="sm:hidden font-extrabold text-xl tracking-tighter uppercase text-primary">
+            <span className="sm:hidden font-extrabold text-xl tracking-tighter uppercase text-primary leading-none">
               Ubìqua
+            </span>
+            <span className="hidden sm:inline-block text-[10px] uppercase tracking-wide text-muted-foreground font-normal">
+              Ubiqua Representações
+            </span>
+            <span className="sm:hidden text-[9px] uppercase tracking-wide text-muted-foreground font-normal">
+              Representações
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium ml-4">
@@ -64,13 +70,13 @@ export default function Layout() {
               to="/clientes"
               className="hover:text-primary transition-colors text-muted-foreground"
             >
-              Clientes
+              Cadastro de Cliente
             </Link>
             <Link
               to="/perfil"
               className="hover:text-primary transition-colors text-muted-foreground"
             >
-              Meu Perfil
+              Cadastro de Representante
             </Link>
           </div>
           <div className="flex-1 flex justify-end items-center gap-4">
@@ -131,7 +137,7 @@ export default function Layout() {
             )}
           >
             <Users className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Clientes</span>
+            <span className="text-[10px] font-medium">Cadastro</span>
           </Link>
           <Link
             to="/novo-orcamento"
@@ -160,7 +166,7 @@ export default function Layout() {
 
       <footer className="hidden md:block py-6 mt-auto border-t bg-muted/20">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Ubiqua Peças. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} Ubiqua Representações. Todos os direitos reservados.</p>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-primary transition-colors">
               Suporte
