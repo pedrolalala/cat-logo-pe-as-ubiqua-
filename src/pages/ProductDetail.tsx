@@ -2,7 +2,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useProductDetail, getVariantImage, colorMap } from '@/hooks/use-parts'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ShoppingCart, ImageOff, Tag, Layers, AlertCircle, Check } from 'lucide-react'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { cn, getFinishColorHex } from '@/lib/utils'
 import { QuantityModal } from '@/components/QuantityModal'
@@ -52,10 +52,13 @@ export default function ProductDetail() {
 
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
+  const imgRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
     setImageError(false)
-    setImageLoading(true)
+    // Imagens já cacheadas pelo card do catálogo podem não disparar `onLoad`
+    // ao remontar em uma nova página, deixando o skeleton preso para sempre.
+    setImageLoading(!imgRef.current?.complete)
   }, [mappedImageUrl])
 
   if (loading) {
@@ -146,6 +149,7 @@ export default function ProductDetail() {
             {imageLoading && <Skeleton className="absolute inset-0 w-full h-full z-10" />}
 
             <img
+              ref={imgRef}
               src={
                 !imageError && mappedImageUrl
                   ? mappedImageUrl
