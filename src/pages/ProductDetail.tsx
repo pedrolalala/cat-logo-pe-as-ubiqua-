@@ -2,7 +2,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useProductDetail, getVariantImage, colorMap } from '@/hooks/use-parts'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ShoppingCart, ImageOff, Tag, Layers, AlertCircle, Check } from 'lucide-react'
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { cn, getFinishColorHex } from '@/lib/utils'
 import { QuantityModal } from '@/components/QuantityModal'
@@ -54,10 +54,12 @@ export default function ProductDetail() {
   const [imageLoading, setImageLoading] = useState(true)
   const imgRef = useRef<HTMLImageElement>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setImageError(false)
     // Imagens já cacheadas pelo card do catálogo podem não disparar `onLoad`
     // ao remontar em uma nova página, deixando o skeleton preso para sempre.
+    // useLayoutEffect (em vez de useEffect) evita um frame de skeleton antes
+    // da checagem, já que roda antes da pintura do navegador.
     setImageLoading(!imgRef.current?.complete)
   }, [mappedImageUrl])
 
