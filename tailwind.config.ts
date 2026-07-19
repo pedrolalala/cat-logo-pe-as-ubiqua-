@@ -2,7 +2,6 @@
 import type { Config } from 'tailwindcss'
 import animatePlugin from 'tailwindcss-animate'
 import typographyPlugin from '@tailwindcss/typography'
-import aspectRatioPlugin from '@tailwindcss/aspect-ratio'
 
 export default {
   darkMode: ['class'],
@@ -100,5 +99,5 @@ export default {
       },
     },
   },
-  plugins: [animatePlugin, typographyPlugin, aspectRatioPlugin],
+  plugins: [animatePlugin, typographyPlugin],
 } satisfies Config
