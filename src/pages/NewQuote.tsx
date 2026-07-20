@@ -219,7 +219,6 @@ export default function NewQuote() {
         referencia_snapshot: item.referencia,
         descricao_snapshot: item.descricao,
         marca_snapshot: item.desc_marca || null,
-        valor_total: item.valor_revenda * item.quantity,
         sem_estoque_no_pedido: (Number(item.disponivel) || 0) <= 0,
       }))
 
