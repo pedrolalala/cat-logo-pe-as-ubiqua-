@@ -133,7 +133,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
                 : 'bg-destructive text-destructive-foreground',
             )}
           >
-            {isOutOfStock ? 'Não tem aquela peça em estoque' : stockDisplay}
+            {isOutOfStock ? 'Sem estoque' : stockDisplay}
           </Badge>
         </div>
       </div>
@@ -188,21 +188,15 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-0">
         <Button
-          className={cn(
-            'w-full shadow-sm transition-transform active:scale-95 text-white',
-            !isOutOfStock
-              ? 'bg-orange-500 hover:bg-orange-600'
-              : 'bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed opacity-50',
-          )}
+          className="w-full shadow-sm transition-transform active:scale-95 text-white bg-orange-500 hover:bg-orange-600"
           onClick={() => {
-            if (isOutOfStock) return
             const variantToAdd = selectedVariant || detalhesPorCor[0]
             if (variantToAdd) onAddBudget(variantToAdd)
           }}
-          disabled={(!selectedVariant && detalhesPorCor.length === 0) || isOutOfStock}
+          disabled={!selectedVariant && detalhesPorCor.length === 0}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
-          {isOutOfStock ? 'Não tem aquela peça em estoque' : 'Adicionar ao Orçamento'}
+          Adicionar ao Orçamento
         </Button>
       </CardFooter>
     </Card>

@@ -21,14 +21,18 @@ interface QuantityModalProps {
   onClose: () => void
 }
 
+const BACKORDER_TECHNICAL_MAX = 999
+
 export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
   const [quantity, setQuantity] = useState(1)
+  const [backorderAck, setBackorderAck] = useState(false)
   const { addToCart } = useCart()
   const navigate = useNavigate()
 
   useEffect(() => {
     if (isOpen) {
       setQuantity(1)
+      setBackorderAck(false)
     }
   }, [isOpen])
 
@@ -48,8 +52,9 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
 
   const disponivel = part ? Number((part as any).disponivel) || 0 : 0
   const isOutOfStock = disponivel <= 0
+  const maxQty = isOutOfStock ? BACKORDER_TECHNICAL_MAX : disponivel
 
-  const increment = () => setQuantity((q) => Math.min(disponivel, q + 1))
+  const increment = () => setQuantity((q) => Math.min(maxQty, q + 1))
   const decrement = () => setQuantity((q) => Math.max(1, q - 1))
 
   const handleOpenChange = (open: boolean) => {
@@ -81,7 +86,7 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
                   size="icon"
                   className="h-12 w-12 shrink-0"
                   onClick={decrement}
-                  disabled={quantity <= 1 || isOutOfStock}
+                  disabled={quantity <= 1}
                 >
                   <Minus className="h-5 w-5" />
                 </Button>
@@ -90,20 +95,19 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
                   type="number"
                   inputMode="numeric"
                   min={1}
-                  max={disponivel || 1}
+                  max={maxQty || 1}
                   value={quantity}
                   onChange={(e) =>
-                    setQuantity(Math.min(disponivel, Math.max(1, parseInt(e.target.value) || 1)))
+                    setQuantity(Math.min(maxQty, Math.max(1, parseInt(e.target.value) || 1)))
                   }
                   className="w-20 text-center text-lg font-semibold h-12"
-                  disabled={isOutOfStock}
                 />
                 <Button
                   variant="outline"
                   size="icon"
                   className="h-12 w-12 shrink-0"
                   onClick={increment}
-                  disabled={quantity >= disponivel || isOutOfStock}
+                  disabled={quantity >= maxQty}
                 >
                   <Plus className="h-5 w-5" />
                 </Button>
@@ -114,9 +118,29 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
 
         {isOutOfStock && (
           <div className="px-6 pb-2">
-            <p className="text-sm font-semibold text-destructive text-center">
-              Não tem aquela peça em estoque
-            </p>
+            <div className="rounded-xl border border-orange-200 bg-orange-50 overflow-hidden">
+              <div className="flex items-center justify-center bg-white py-4 border-b border-orange-100">
+                <img src="/og-image.png" alt="Ubiqua" className="h-6 w-auto" />
+              </div>
+              <div className="p-4 space-y-3">
+                <p className="text-sm text-orange-900 leading-relaxed">
+                  Esta peça está sem estoque no momento. Peças Ubiqua são importadas — o prazo
+                  estimado de entrega é de até <strong>3 meses</strong>. Você pode confirmar o
+                  pedido mesmo assim.
+                </p>
+                <label className="flex items-start gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={backorderAck}
+                    onChange={(e) => setBackorderAck(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-orange-300 text-orange-600 focus:ring-orange-500"
+                  />
+                  <span className="text-sm font-medium text-orange-900">
+                    Estou ciente do prazo de importação e quero confirmar o pedido.
+                  </span>
+                </label>
+              </div>
+            </div>
           </div>
         )}
 
@@ -124,7 +148,11 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto h-12">
             Cancelar
           </Button>
-          <Button onClick={handleConfirm} disabled={isOutOfStock} className="w-full sm:w-auto h-12">
+          <Button
+            onClick={handleConfirm}
+            disabled={isOutOfStock ? !backorderAck : false}
+            className="w-full sm:w-auto h-12"
+          >
             Confirmar
           </Button>
         </DialogFooter>

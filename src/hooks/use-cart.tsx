@@ -54,19 +54,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (part: PartVariant, quantity: number) => {
     const disponivel = Number((part as any).disponivel) || 0
-    if (disponivel <= 0) return
+    const clamp = (q: number) => (disponivel > 0 ? Math.min(disponivel, q) : q)
 
     setItems((current) => {
       const existing = current.find((item) => item.id === part.id)
       if (existing) {
         return current.map((item) => {
           if (item.id === part.id) {
-            return { ...item, quantity: Math.min(disponivel, item.quantity + quantity) }
+            return { ...item, quantity: clamp(item.quantity + quantity) }
           }
           return item
         })
       }
-      return [...current, { ...part, quantity: Math.min(disponivel, quantity) }]
+      return [...current, { ...part, quantity: clamp(quantity) }]
     })
   }
 

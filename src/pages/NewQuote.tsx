@@ -189,6 +189,8 @@ export default function NewQuote() {
     try {
       if (!selectedCustomerId || !activeQuoteId) throw new Error('Dados do orçamento ausentes.')
 
+      const hasBackorderItem = items.some((item) => (Number(item.disponivel) || 0) <= 0)
+
       const { error: quoteError } = await supabase
         .from('orcamentos_revenda_ubiqua')
         .update({
@@ -197,6 +199,9 @@ export default function NewQuote() {
           valor_desconto: descontoGlobal,
           valor_total: totalGeral,
           status: 'rascunho',
+          ...(hasBackorderItem
+            ? { prazo_entrega: 'Contém item(ns) sem estoque — prazo estimado de até 90 dias para importação' }
+            : {}),
         })
         .eq('id', activeQuoteId)
 
@@ -215,6 +220,7 @@ export default function NewQuote() {
         descricao_snapshot: item.descricao,
         marca_snapshot: item.desc_marca || null,
         valor_total: item.valor_revenda * item.quantity,
+        sem_estoque_no_pedido: (Number(item.disponivel) || 0) <= 0,
       }))
 
       if (itemsToInsert.length > 0) {
@@ -548,19 +554,14 @@ export default function NewQuote() {
                         <CommandItem
                           key={p.id}
                           value={`${p.referencia} ${p.descricao}`}
-                          disabled={isOutOfStock}
                           onSelect={() => {
-                            if (isOutOfStock) return
                             addToCart(p, 1)
                             setOpenProductPopover(false)
                             setProductSearch('')
                             setProductResults([])
                             toast.success('Produto adicionado ao orçamento!')
                           }}
-                          className={cn(
-                            'flex items-center justify-between py-2',
-                            isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
-                          )}
+                          className="flex items-center justify-between py-2 cursor-pointer"
                         >
                           <div className="flex flex-col">
                             <span className="font-bold text-sm">{p.referencia}</span>
@@ -568,8 +569,8 @@ export default function NewQuote() {
                               {p.descricao}
                             </span>
                             {isOutOfStock && (
-                              <span className="text-xs font-semibold text-destructive mt-1">
-                                Não tem aquela peça em estoque
+                              <span className="text-xs font-semibold text-orange-600 mt-1">
+                                Sem estoque
                               </span>
                             )}
                           </div>
@@ -595,7 +596,10 @@ export default function NewQuote() {
         <>
           {/* Mobile Cart Items (Cards) */}
           <div className="md:hidden space-y-4">
-            {items.map((item) => (
+            {items.map((item) => {
+              const itemDisponivel = Number(item.disponivel) || 0
+              const itemMaxQty = itemDisponivel > 0 ? itemDisponivel : 999
+              return (
               <Card key={item.id} className="overflow-hidden">
                 <CardContent className="p-4 space-y-4">
                   <div className="flex justify-between items-start gap-2">
@@ -661,15 +665,12 @@ export default function NewQuote() {
                         type="number"
                         inputMode="numeric"
                         min={1}
-                        max={Number(item.disponivel) || 1}
+                        max={itemMaxQty}
                         value={item.quantity}
                         onChange={(e) =>
                           updateQuantity(
                             item.id,
-                            Math.min(
-                              Number(item.disponivel) || 1,
-                              Math.max(1, parseInt(e.target.value) || 1),
-                            ),
+                            Math.min(itemMaxQty, Math.max(1, parseInt(e.target.value) || 1)),
                           )
                         }
                         className="w-16 text-center h-10 font-bold"
@@ -679,7 +680,7 @@ export default function NewQuote() {
                         size="icon"
                         className="h-10 w-10 shrink-0"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        disabled={item.quantity >= (Number(item.disponivel) || 0)}
+                        disabled={item.quantity >= itemMaxQty}
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
@@ -687,7 +688,8 @@ export default function NewQuote() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              )
+            })}
           </div>
 
           {/* Desktop Cart Items (Table) */}
@@ -705,7 +707,10 @@ export default function NewQuote() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((item) => (
+                  {items.map((item) => {
+                    const itemDisponivel = Number(item.disponivel) || 0
+                    const itemMaxQty = itemDisponivel > 0 ? itemDisponivel : 999
+                    return (
                     <TableRow key={item.id} className="group">
                       <TableCell className="font-mono font-medium text-xs">
                         {item.referencia}
@@ -738,15 +743,12 @@ export default function NewQuote() {
                           <Input
                             type="number"
                             min={1}
-                            max={Number(item.disponivel) || 1}
+                            max={itemMaxQty}
                             value={item.quantity}
                             onChange={(e) =>
                               updateQuantity(
                                 item.id,
-                                Math.min(
-                                  Number(item.disponivel) || 1,
-                                  Math.max(1, parseInt(e.target.value) || 1),
-                                ),
+                                Math.min(itemMaxQty, Math.max(1, parseInt(e.target.value) || 1)),
                               )
                             }
                             className="w-14 text-center h-8 font-medium px-1"
@@ -756,7 +758,7 @@ export default function NewQuote() {
                             size="icon"
                             className="h-8 w-8 shrink-0"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            disabled={item.quantity >= (Number(item.disponivel) || 0)}
+                            disabled={item.quantity >= itemMaxQty}
                           >
                             <Plus className="w-3 h-3" />
                           </Button>
@@ -786,7 +788,8 @@ export default function NewQuote() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
