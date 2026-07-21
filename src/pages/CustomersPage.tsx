@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
-import { formatCNPJ, isValidCNPJ } from '@/lib/utils'
+import { formatCPFOuCNPJ, isValidCPFOuCNPJ } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -111,12 +111,12 @@ export default function CustomersPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!formData.nome || !formData.email || !formData.telefone || !formData.cpf_cnpj) {
-      toast.error('Nome, Email, Telefone e CNPJ são obrigatórios.')
+      toast.error('Nome, Email, Telefone e CPF/CNPJ são obrigatórios.')
       return
     }
 
-    if (!isValidCNPJ(formData.cpf_cnpj)) {
-      toast.error('CNPJ inválido. Verifique o formato.')
+    if (!isValidCPFOuCNPJ(formData.cpf_cnpj)) {
+      toast.error('CPF/CNPJ inválido. Verifique o formato.')
       return
     }
 
@@ -270,7 +270,7 @@ export default function CustomersPage() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Telefone</TableHead>
-                  <TableHead>CNPJ</TableHead>
+                  <TableHead>CPF/CNPJ</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -361,7 +361,7 @@ export default function CustomersPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cpf_cnpj">
-                  CNPJ <span className="text-destructive">*</span>
+                  CPF/CNPJ <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="cpf_cnpj"
@@ -370,10 +370,10 @@ export default function CustomersPage() {
                   className="h-12"
                   required
                   maxLength={18}
-                  placeholder="00.000.000/0000-00"
+                  placeholder="CPF ou CNPJ"
                   value={formData.cpf_cnpj}
                   onChange={(e) =>
-                    setFormData({ ...formData, cpf_cnpj: formatCNPJ(e.target.value) })
+                    setFormData({ ...formData, cpf_cnpj: formatCPFOuCNPJ(e.target.value) })
                   }
                 />
               </div>

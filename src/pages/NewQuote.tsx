@@ -248,7 +248,7 @@ export default function NewQuote() {
         .eq('id', activeQuoteId)
         .single()
 
-      setSavedQuote(savedData as QuoteData)
+      setSavedQuote({ ...savedData, items } as QuoteData)
       clearCart()
     } catch (e: any) {
       console.error(e)

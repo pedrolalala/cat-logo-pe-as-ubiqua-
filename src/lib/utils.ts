@@ -57,6 +57,56 @@ export function formatCNPJ(value: string): string {
   return v
 }
 
+export function isValidCPF(cpf: string): boolean {
+  const c = cpf.replace(/[^\d]+/g, '')
+  if (c === '' || c.length !== 11) return false
+
+  if (/^(\d)\1+$/.test(c)) return false
+
+  let soma = 0
+  for (let i = 0; i < 9; i++) soma += parseInt(c.charAt(i)) * (10 - i)
+  let resto = 11 - (soma % 11)
+  let digito1 = resto >= 10 ? 0 : resto
+  if (digito1 !== parseInt(c.charAt(9))) return false
+
+  soma = 0
+  for (let i = 0; i < 10; i++) soma += parseInt(c.charAt(i)) * (11 - i)
+  resto = 11 - (soma % 11)
+  let digito2 = resto >= 10 ? 0 : resto
+  if (digito2 !== parseInt(c.charAt(10))) return false
+
+  return true
+}
+
+export function formatCPF(value: string): string {
+  let v = value.replace(/\D/g, '')
+  if (v.length > 11) v = v.slice(0, 11)
+  v = v.replace(/(\d{3})(\d)/, '$1.$2')
+  v = v.replace(/(\d{3})(\d)/, '$1.$2')
+  v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+  return v
+}
+
+/**
+ * Formata como CPF (até 11 dígitos) ou CNPJ (12-14 dígitos), detectando
+ * automaticamente pela quantidade de dígitos já digitados.
+ */
+export function formatCPFOuCNPJ(value: string): string {
+  const digits = value.replace(/\D/g, '')
+  return digits.length > 11 ? formatCNPJ(value) : formatCPF(value)
+}
+
+/**
+ * Valida como CPF (11 dígitos) ou CNPJ (14 dígitos), detectando
+ * automaticamente pela quantidade de dígitos.
+ */
+export function isValidCPFOuCNPJ(value: string): boolean {
+  const digits = value.replace(/\D/g, '')
+  if (digits.length === 11) return isValidCPF(value)
+  if (digits.length === 14) return isValidCNPJ(value)
+  return false
+}
+
 /**
  * Maps a finish color name to its corresponding HEX code.
  * Normalizes strings to handle accents and casing.
