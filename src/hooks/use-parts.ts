@@ -80,6 +80,41 @@ function isIslightReferencia(referencia: unknown): boolean {
   return /-IS$/i.test(String(referencia || '').trim())
 }
 
+function isV2Referencia(referencia: unknown): boolean {
+  return /-V2(-|$)/i.test(String(referencia || '').trim())
+}
+
+// Palavras que sempre aparecem depois do nome/forma do produto na convenção de
+// texto da Ubiqua (ex.: "TORUS DESK LUMINÁRIA LED DE MESA BATERIA..."). Tudo
+// que vem ANTES da primeira dessas palavras identifica o produto (nome + forma,
+// como "TORUS DESK" vs "TORUS" vs "TORUS GLASS" vs "FLORA MINI" vs "FLORA");
+// tudo que vem depois é specs/variação de texto entre as duas empresas que não
+// deve interferir no agrupamento (ex.: uma fonte escreve "LUMINÁRIA LED" e a
+// outra só "LUMINÁRIA", mas ambas representam a mesma peça).
+const FAMILY_BOUNDARY_WORDS = new Set(['LUMINARIA', 'LUMINARARIA', 'LUM', 'LED', 'BATERIA'])
+
+/**
+ * Identidade de família do produto (independente de cor e de empresa), extraída
+ * da descrição. Retorna `null` quando a descrição não contém nenhuma das
+ * palavras de fronteira (itens que não são luminárias, como cabo/carregador) —
+ * nesse caso o chamador deve cair de volta pro agrupamento por referência, pra
+ * não arriscar juntar acessórios genéricos ("IS - CABO CARREGADOR") que não têm
+ * texto suficiente pra se distinguir de um produto pro outro.
+ */
+function extractFamilyIdentity(desc: string): string | null {
+  const normalized = desc
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toUpperCase()
+    .replace(/^IS[\s-]+/, '')
+
+  const tokens = normalized.split(/[^A-Z0-9]+/).filter(Boolean)
+  const boundaryIndex = tokens.findIndex((t) => FAMILY_BOUNDARY_WORDS.has(t))
+
+  if (boundaryIndex <= 0) return null
+  return tokens.slice(0, boundaryIndex).join(' ')
+}
+
 export function groupCatalogItems(items: any[]): GroupedPart[] {
   // Peças órfãs (SPEC-147): linha sem sufixo `-IS`, sem estoque (disponivel <= 0
   // ou nulo) e sem nenhuma irmã `-IS` no mesmo grupo de referência somem do
@@ -107,10 +142,17 @@ export function groupCatalogItems(items: any[]): GroupedPart[] {
   const groups = new Map<string, GroupedPart>()
 
   filteredItems.forEach((item) => {
+    // Usa a descrição mais "limpa" disponível pra extrair a família (a
+    // `descricao` costuma ter menos texto de cor embutido incorretamente do
+    // que `desc_produto`, que às vezes vem copiado errado entre cores).
+    const descForFamily = (item.descricao || item.desc_produto || '').trim()
     const desc = (item.desc_produto || item.descricao || 'Sem nome').trim()
     const price = Number(item.valor_revenda) || 0
     const normalizedRef = normalizeReferencia(item.referencia)
-    const key = normalizedRef || `${desc.toLowerCase()}_${price.toFixed(2)}`
+    const familyIdentity = descForFamily ? extractFamilyIdentity(descForFamily) : null
+    const key = familyIdentity
+      ? `${familyIdentity}${isV2Referencia(item.referencia) ? '_V2' : ''}`
+      : normalizedRef || `${desc.toLowerCase()}_${price.toFixed(2)}`
 
     if (!groups.has(key)) {
       const slugBase = key
