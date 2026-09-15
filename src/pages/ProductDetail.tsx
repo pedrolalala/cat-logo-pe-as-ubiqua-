@@ -107,6 +107,17 @@ export default function ProductDetail() {
     currency: 'BRL',
   }).format(displayPrice)
 
+  const suggestedPriceRaw =
+    selectedVariant?.vl_venda_produto != null
+      ? Number(selectedVariant.vl_venda_produto)
+      : group.precoSugerido
+  const formattedSuggestedPrice =
+    suggestedPriceRaw != null && suggestedPriceRaw > 0
+      ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+          suggestedPriceRaw,
+        )
+      : null
+
   const lampName = group.nomeExibicao || 'Peça'
   const cleanDescription = selectedVariant?.descricao
     ? selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim()
@@ -213,8 +224,15 @@ export default function ProductDetail() {
             {lampName}
           </h1>
 
-          <div className="text-4xl font-bold text-orange-600 mb-8 tracking-tight">
-            {formattedPrice}
+          <div className="mb-8">
+            <div className="text-4xl font-bold text-orange-600 tracking-tight">
+              {formattedPrice}
+            </div>
+            {formattedSuggestedPrice && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Preço sugerido: {formattedSuggestedPrice}
+              </p>
+            )}
           </div>
 
           <div className="space-y-8 mb-8 flex-1">

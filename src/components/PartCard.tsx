@@ -20,6 +20,7 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     totalAvailable,
     nomeExibicao,
     valorRevenda,
+    precoSugerido,
     detalhesPorCor,
   } = group
 
@@ -56,6 +57,17 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
     style: 'currency',
     currency: 'BRL',
   }).format(displayPrice)
+
+  const suggestedPriceRaw =
+    selectedVariant?.vl_venda_produto != null
+      ? Number(selectedVariant.vl_venda_produto)
+      : precoSugerido
+  const formattedSuggestedPrice =
+    suggestedPriceRaw != null && suggestedPriceRaw > 0
+      ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+          suggestedPriceRaw,
+        )
+      : null
 
   const lampName = nomeExibicao || 'Peça'
 
@@ -182,8 +194,13 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-2">
+        <div className="flex flex-col gap-0.5 mt-2">
           <p className="text-2xl font-bold text-orange-600">{formattedPrice}</p>
+          {formattedSuggestedPrice && (
+            <p className="text-xs text-muted-foreground">
+              Preço sugerido: {formattedSuggestedPrice}
+            </p>
+          )}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-0">

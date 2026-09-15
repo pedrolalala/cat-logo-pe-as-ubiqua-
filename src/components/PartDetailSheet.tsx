@@ -35,6 +35,15 @@ export function PartDetailSheet({
     currency: 'BRL',
   }).format(displayPrice)
 
+  const suggestedPriceRaw =
+    variant.vl_venda_produto != null ? Number(variant.vl_venda_produto) : null
+  const formattedSuggestedPrice =
+    suggestedPriceRaw != null && suggestedPriceRaw > 0
+      ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+          suggestedPriceRaw,
+        )
+      : null
+
   const getSixDigits = (ref: string | null) => {
     if (!ref) return null
     const match = ref.match(/^[0-9]{6}/)
@@ -134,6 +143,11 @@ export function PartDetailSheet({
               <p className="text-4xl font-extrabold text-orange-600 tracking-tight">
                 {formattedPrice}
               </p>
+              {formattedSuggestedPrice && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Preço sugerido: {formattedSuggestedPrice}
+                </p>
+              )}
             </div>
 
             <Button

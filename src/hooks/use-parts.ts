@@ -9,6 +9,8 @@ export type GroupedPart = {
   coresDisponiveis: string[]
   imagemPrincipal: string | null
   valorRevenda: number
+  /** Preço sugerido (vl_venda_produto), só informativo para o representante. Null quando nenhuma linha do grupo tem o campo preenchido. */
+  precoSugerido: number | null
   detalhesPorCor: any[]
   ordem: number
 }
@@ -60,22 +62,62 @@ export const colorMap: Record<string, string> = {
   CHUMBO: '#5A5A5A',
 }
 
+/**
+ * Referência normalizada (SPEC-147): mesma peça vendida pela Manoella (sem sufixo)
+ * e pela Islight (sufixo `-IS`) deve cair na mesma chave de agrupamento. Variantes
+ * V2 (`-V2-IS`) continuam separadas automaticamente porque o código numérico de
+ * referência delas já é diferente da versão normal (ex.: `339104` vs `339204-V2-IS`)
+ * — não precisa tratamento especial, só não remover o `-V2`, só o `-IS`.
+ */
+function normalizeReferencia(referencia: unknown): string {
+  return String(referencia || '')
+    .trim()
+    .toUpperCase()
+    .replace(/-IS$/i, '')
+}
+
+function isIslightReferencia(referencia: unknown): boolean {
+  return /-IS$/i.test(String(referencia || '').trim())
+}
+
 export function groupCatalogItems(items: any[]): GroupedPart[] {
+  // Peças órfãs (SPEC-147): linha sem sufixo `-IS`, sem estoque (disponivel <= 0
+  // ou nulo) e sem nenhuma irmã `-IS` no mesmo grupo de referência somem do
+  // catálogo (nunca mais foram repostas). Primeiro mapeia quais grupos têm ao
+  // menos uma linha `-IS`, pra decidir quais linhas remover antes de agrupar.
+  const hasIslightSibling = new Map<string, boolean>()
+  items.forEach((item) => {
+    const key = normalizeReferencia(item.referencia)
+    if (isIslightReferencia(item.referencia)) {
+      hasIslightSibling.set(key, true)
+    } else if (!hasIslightSibling.has(key)) {
+      hasIslightSibling.set(key, false)
+    }
+  })
+
+  const filteredItems = items.filter((item) => {
+    if (isIslightReferencia(item.referencia)) return true
+    const disponivel = Number(item.disponivel) || 0
+    if (disponivel > 0) return true
+    const key = normalizeReferencia(item.referencia)
+    // Some do catálogo só quando não há estoque nenhum E não existe irmã -IS.
+    return hasIslightSibling.get(key) === true
+  })
+
   const groups = new Map<string, GroupedPart>()
 
-  items.forEach((item) => {
+  filteredItems.forEach((item) => {
     const desc = (item.desc_produto || item.descricao || 'Sem nome').trim()
     const price = Number(item.valor_revenda) || 0
-    const key = `${desc.toLowerCase()}_${price.toFixed(2)}`
+    const normalizedRef = normalizeReferencia(item.referencia)
+    const key = normalizedRef || `${desc.toLowerCase()}_${price.toFixed(2)}`
 
     if (!groups.has(key)) {
-      const slugBase = desc
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
+      const slugBase = key
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
-      const slug = `${slugBase}-${price.toFixed(2).replace('.', '-')}`
+      const slug = slugBase || `item-${price.toFixed(2).replace('.', '-')}`
 
       groups.set(key, {
         id: key,
@@ -85,6 +127,7 @@ export function groupCatalogItems(items: any[]): GroupedPart[] {
         coresDisponiveis: [],
         imagemPrincipal: null,
         valorRevenda: price,
+        precoSugerido: null,
         detalhesPorCor: [],
         ordem: item.ordem ?? 999999,
       })
@@ -107,6 +150,23 @@ export function groupCatalogItems(items: any[]): GroupedPart[] {
     }
 
     group.detalhesPorCor.push(item)
+  })
+
+  // Preço de revenda e preço sugerido do card unificado: quando as linhas do
+  // grupo divergem em valor (caso raro — 3 dos 13 pares hoje), usa o MENOR
+  // valor, mesmo critério que a view `vw_catalogo_unificado` já usa.
+  groups.forEach((group) => {
+    const prices = group.detalhesPorCor
+      .map((item) => Number(item.valor_revenda) || 0)
+      .filter((p) => p > 0)
+    if (prices.length > 0) {
+      group.valorRevenda = Math.min(...prices)
+    }
+
+    const suggestedPrices = group.detalhesPorCor
+      .map((item) => (item.vl_venda_produto != null ? Number(item.vl_venda_produto) : null))
+      .filter((p): p is number => p != null && !Number.isNaN(p) && p > 0)
+    group.precoSugerido = suggestedPrices.length > 0 ? Math.min(...suggestedPrices) : null
   })
 
   return Array.from(groups.values()).sort((a, b) => {
