@@ -11,9 +11,16 @@ import { Separator } from '@/components/ui/separator'
 import { formatCNPJ, isValidCNPJ } from '@/lib/utils'
 
 export default function ProfilePage() {
-  const { user } = useAuth()
+  const { user, updatePassword } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
 
   const [profile, setProfile] = useState({
     nome: '',
@@ -147,6 +154,44 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault()
+    const { currentPassword, newPassword, confirmPassword } = passwordForm
+
+    if (!currentPassword) {
+      toast.error('Informe a senha atual.')
+      return
+    }
+    if (newPassword.length < 6) {
+      toast.error('A nova senha deve ter no mínimo 6 caracteres.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('A nova senha e a confirmação não coincidem.')
+      return
+    }
+    if (newPassword === currentPassword) {
+      toast.error('A nova senha deve ser diferente da senha atual.')
+      return
+    }
+
+    setChangingPassword(true)
+    try {
+      const { error } = await updatePassword(currentPassword, newPassword)
+      if (error) {
+        toast.error('Erro ao alterar senha: ' + error.message)
+        return
+      }
+      toast.success('Senha alterada com sucesso!')
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (error: any) {
+      console.error(error)
+      toast.error('Erro ao alterar senha: ' + error.message)
+    } finally {
+      setChangingPassword(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-20">
@@ -275,6 +320,65 @@ export default function ProfilePage() {
           <Button type="submit" disabled={saving} size="lg">
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Salvar Alterações
+          </Button>
+        </div>
+      </form>
+
+      <form
+        onSubmit={handleChangePassword}
+        className="space-y-4 bg-card border rounded-xl p-6 shadow-sm"
+      >
+        <h2 className="text-xl font-semibold">Alterar Senha</h2>
+        <Separator />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="currentPassword">
+              Senha Atual <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="currentPassword"
+              type="password"
+              required
+              value={passwordForm.currentPassword}
+              onChange={(e) =>
+                setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">
+              Nova Senha <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="newPassword"
+              type="password"
+              required
+              minLength={6}
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmNewPassword">
+              Confirmar Nova Senha <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="confirmNewPassword"
+              type="password"
+              required
+              minLength={6}
+              value={passwordForm.confirmPassword}
+              onChange={(e) =>
+                setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+              }
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <Button type="submit" disabled={changingPassword} size="lg">
+            {changingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Alterar Senha
           </Button>
         </div>
       </form>

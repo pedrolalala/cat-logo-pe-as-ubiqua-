@@ -9,6 +9,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: any; hasSession: boolean }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<{ error: any }>
   refreshProfile: () => Promise<void>
   loading: boolean
 }
@@ -128,10 +129,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.signOut()
     return { error }
   }
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    if (!user?.email) return { error: new Error('Usuário não identificado.') }
+    const { error: reauthError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    })
+    if (reauthError) return { error: reauthError }
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    return { error }
+  }
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, signUp, signIn, signOut, refreshProfile, loading }}
+      value={{
+        user,
+        session,
+        profile,
+        signUp,
+        signIn,
+        signOut,
+        updatePassword,
+        refreshProfile,
+        loading,
+      }}
     >
       {children}
     </AuthContext.Provider>
