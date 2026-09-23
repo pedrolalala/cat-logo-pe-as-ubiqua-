@@ -16,6 +16,8 @@ import OnboardingPage from './pages/Onboarding'
 import CustomersPage from './pages/CustomersPage'
 import ProfilePage from './pages/ProfilePage'
 import { AdminGuard } from './components/AdminGuard'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 const App = () => (
   <AuthProvider>
@@ -25,6 +27,8 @@ const App = () => (
           <Toaster />
           <Sonner position="bottom-right" richColors />
           <Routes>
+            <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
+            <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
             <Route
               path="/onboarding"
               element={

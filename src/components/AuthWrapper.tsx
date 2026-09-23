@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 type AuthMode = 'login' | 'signup'
 
@@ -122,6 +123,14 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
             {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
             {isSignUp ? 'Criar Conta' : 'Entrar'}
           </Button>
+          {!isSignUp ? (
+            <Link
+              to="/esqueci-senha"
+              className="block w-full text-center text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"
+            >
+              Esqueci minha senha
+            </Link>
+          ) : null}
           <button
             type="button"
             onClick={toggleMode}
