@@ -52,11 +52,13 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       const { error, hasSession } = await signUp(email, password)
       setIsSubmitting(false)
       if (error) {
-        toast.error('Falha ao criar conta. Verifique os dados e tente novamente.')
+        toast.error(error.message || 'Falha ao criar conta. Verifique os dados e tente novamente.')
       } else if (hasSession) {
         toast.success('Conta criada! Você já está conectado.')
       } else {
-        toast.success('Conta criada! Verifique sua caixa de entrada para confirmar o e-mail antes de entrar.')
+        toast.success(
+          'Conta criada! Verifique sua caixa de entrada para confirmar o e-mail antes de entrar.',
+        )
         resetPasswordFields()
         setMode('login')
       }

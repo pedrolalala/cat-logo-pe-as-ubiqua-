@@ -113,13 +113,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe()
   }, [])
 
+  // SPEC-169: cadastro sem confirmação de e-mail, só no Catálogo Ubiqua. A Edge Function cria a
+  // conta já confirmada (a confirmação segue ligada no Supabase para os outros sistemas) e em
+  // seguida entramos com a mesma senha, então o site abre direto.
   const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.functions.invoke('cadastro-ubiqua', {
+      body: { email, password },
+    })
+    if (error || data?.error) {
+      let msg = data?.error as string | undefined
+      if (!msg && error && 'context' in error && error.context instanceof Response) {
+        msg = (await error.context.json().catch(() => null))?.error
+      }
+      return { error: new Error(msg || 'Falha ao criar conta.'), hasSession: false }
+    }
+    const { data: login, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/` },
     })
-    return { error, hasSession: !!data.session }
+    return { error: loginError, hasSession: !!login.session }
   }
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })

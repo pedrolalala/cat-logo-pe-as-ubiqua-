@@ -161,15 +161,35 @@ function AdminPartCard({
         )}
         <p className="text-xl font-bold text-primary mt-auto">{formattedPrice}</p>
       </CardContent>
-      <CardFooter className="pt-0">
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => selectedVariant && onEdit(group, selectedVariant)}
-        >
-          <Edit className="w-4 h-4 mr-2" />
-          Editar Variante
-        </Button>
+      {/* SPEC-168: uma linha por variante do grupo. Antes o card só abria a variante com mais
+          estoque de cada cor, e as outras referências do grupo (ex.: Manoella vs -IS) não
+          tinham como receber foto. */}
+      <CardFooter className="pt-0 flex-col items-stretch gap-1">
+        {detalhesPorCor.map((v) => (
+          <button
+            key={v.id}
+            type="button"
+            onClick={() => onEdit(group, v)}
+            className={cn(
+              'flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted',
+              v.id === selectedVariant?.id ? 'border-primary/50' : 'border-border/60',
+            )}
+          >
+            <span
+              className={cn(
+                'h-2 w-2 shrink-0 rounded-full',
+                v.imagem_catalogo_url ? 'bg-emerald-500' : 'bg-red-500',
+              )}
+              title={v.imagem_catalogo_url ? 'Com foto' : 'Sem foto'}
+            />
+            <span className="font-mono font-semibold">{v.referencia || 'N/A'}</span>
+            <span className="truncate text-muted-foreground">{v.cor || 'PADRÃO'}</span>
+            <span className="ml-auto shrink-0 text-muted-foreground">
+              {Number(v.disponivel) || 0} un.
+            </span>
+            <Edit className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          </button>
+        ))}
       </CardFooter>
     </Card>
   )
