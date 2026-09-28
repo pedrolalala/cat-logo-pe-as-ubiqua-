@@ -2,10 +2,11 @@
  * SPEC-170: o representante do Catálogo Ubiqua exclui a própria conta.
  *
  * Só apaga a conta de quem chama (identificada pelo token da sessão). Recusa conta da equipe
- * Lucenera (`usuarios`: apagar em cascata levaria o acesso a todos os sistemas e a Memória
- * Lucenera), admin do Ubiqua e representante com clientes cadastrados. Apaga também a empresa
- * criada no onboarding quando nenhum outro representante está ligado a ela. Orçamentos
- * já enviados não têm FK para o usuário e ficam guardados.
+ * Lucenera (apagar em cascata levaria o acesso a todos os sistemas e a Memória Lucenera),
+ * admin do Ubiqua e representante com clientes cadastrados. Apaga também o funcionário vazio
+ * criado pelo gatilho handle_new_user e a empresa do onboarding quando nenhum outro
+ * representante está ligado a ela. Orçamentos já enviados não têm FK para o usuário e ficam
+ * guardados.
  */
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
@@ -43,13 +44,42 @@ Deno.serve(async (req) => {
     // Toda checagem falha fechada: se a consulta der erro, não exclui.
     const falhaChecagem = () => json({ error: 'Não foi possível verificar a conta.' }, 500)
 
-    const { data: equipe, error: equipeError } = await admin
+    // O gatilho handle_new_user põe TODA conta nova em `usuarios` (role 'viewer') e cria uma
+    // linha vazia em `funcionarios`. Equipe de verdade = role acima de viewer, papel no Hub ou
+    // funcionário com dados de RH preenchidos.
+    const { data: usuario, error: usuarioError } = await admin
       .from('usuarios')
-      .select('id')
+      .select('role')
       .eq('id', userId)
       .maybeSingle()
-    if (equipeError) return falhaChecagem()
-    if (equipe) {
+    if (usuarioError) return falhaChecagem()
+
+    const { count: papeis, error: papeisError } = await admin
+      .from('usuario_papeis')
+      .select('*', { count: 'exact', head: true })
+      .eq('usuario_id', userId)
+    if (papeisError) return falhaChecagem()
+
+    const { data: funcionarios, error: funcError } = await admin
+      .from('funcionarios')
+      .select(
+        'id, cargo, departamento_id, data_admissao, tipo_contratacao, empresa_id, codigo_legado',
+      )
+      .eq('usuario_id', userId)
+    if (funcError) return falhaChecagem()
+    const funcionarioReal = (funcionarios ?? []).some(
+      (f) =>
+        f.cargo ||
+        f.departamento_id ||
+        f.data_admissao ||
+        f.tipo_contratacao ||
+        f.empresa_id ||
+        f.codigo_legado,
+    )
+
+    const ehEquipe =
+      (usuario != null && usuario.role !== 'viewer') || (papeis ?? 0) > 0 || funcionarioReal
+    if (ehEquipe) {
       return json(
         { error: 'Contas da equipe Lucenera não podem ser excluídas por aqui.', code: 'equipe' },
         403,
@@ -89,6 +119,14 @@ Deno.serve(async (req) => {
     if (delError) {
       console.error('excluir-conta-ubiqua deleteUser:', delError.message)
       return json({ error: 'Falha ao excluir a conta.' }, 500)
+    }
+
+    // Funcionário vazio criado pelo gatilho: a FK vira NULL ao apagar o usuário, então sobraria
+    // um "funcionário Ativo" fantasma no RH. Só chega aqui se nenhum tiver dado real.
+    const idsFuncionarios = (funcionarios ?? []).map((f) => f.id)
+    if (idsFuncionarios.length > 0) {
+      const { error: fError } = await admin.from('funcionarios').delete().in('id', idsFuncionarios)
+      if (fError) console.error('excluir-conta-ubiqua funcionarios:', fError.message)
     }
 
     if (rep?.empresa_id) {
