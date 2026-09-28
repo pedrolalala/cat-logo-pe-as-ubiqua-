@@ -10,6 +10,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
   updatePassword: (currentPassword: string, newPassword: string) => Promise<{ error: any }>
+  deleteAccount: () => Promise<{ error: Error | null }>
   refreshProfile: () => Promise<void>
   loading: boolean
 }
@@ -152,6 +153,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error }
   }
 
+  // SPEC-170: exclui a própria conta pela Edge Function (que recusa equipe Lucenera, admin e
+  // quem tem clientes). Depois limpa a sessão local — o usuário já não existe no servidor.
+  const deleteAccount = async () => {
+    const { data, error } = await supabase.functions.invoke('excluir-conta-ubiqua', { body: {} })
+    if (error || data?.error) {
+      let msg = data?.error as string | undefined
+      if (!msg && error && 'context' in error && error.context instanceof Response) {
+        msg = (await error.context.json().catch(() => null))?.error
+      }
+      return { error: new Error(msg || 'Falha ao excluir a conta.') }
+    }
+    await supabase.auth.signOut({ scope: 'local' })
+    return { error: null }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -162,6 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signIn,
         signOut,
         updatePassword,
+        deleteAccount,
         refreshProfile,
         loading,
       }}

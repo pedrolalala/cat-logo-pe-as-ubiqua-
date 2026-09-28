@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { Loader2, ArrowRight, Building2, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { formatCNPJ, isValidCNPJ } from '@/lib/utils'
+import { ExcluirContaButton, SairButton } from '@/components/ContaAcoes'
 
 export default function OnboardingPage() {
   const { user, profile, refreshProfile } = useAuth()
@@ -93,7 +94,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-muted/30">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4 bg-muted/30">
       <Card className="max-w-xl w-full shadow-lg border-muted">
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-3xl font-extrabold text-primary uppercase tracking-tighter">
@@ -244,6 +245,12 @@ export default function OnboardingPage() {
           )}
         </CardFooter>
       </Card>
+      {/* SPEC-170: conta nova fica presa aqui até terminar o cadastro, então sair/excluir
+          também precisam estar nesta tela. */}
+      <div className="flex max-w-xl w-full flex-wrap justify-end gap-2">
+        <SairButton />
+        <ExcluirContaButton />
+      </div>
     </div>
   )
 }

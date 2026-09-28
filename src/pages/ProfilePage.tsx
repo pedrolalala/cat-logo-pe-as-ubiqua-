@@ -9,6 +9,7 @@ import { Loader2, ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Separator } from '@/components/ui/separator'
 import { formatCNPJ, isValidCNPJ } from '@/lib/utils'
+import { ExcluirContaButton, SairButton } from '@/components/ContaAcoes'
 
 export default function ProfilePage() {
   const { user, updatePassword } = useAuth()
@@ -382,6 +383,19 @@ export default function ProfilePage() {
           </Button>
         </div>
       </form>
+
+      {/* SPEC-170 */}
+      <div className="space-y-4 bg-card border rounded-xl p-6 shadow-sm">
+        <h2 className="text-xl font-semibold">Conta</h2>
+        <Separator />
+        <p className="text-sm text-muted-foreground">
+          Excluir a conta apaga seu login e seu cadastro de representante. Não dá para desfazer.
+        </p>
+        <div className="flex flex-wrap justify-end gap-2">
+          <SairButton />
+          <ExcluirContaButton />
+        </div>
+      </div>
     </div>
   )
 }

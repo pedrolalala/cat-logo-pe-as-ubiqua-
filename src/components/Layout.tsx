@@ -1,8 +1,9 @@
 import { Outlet, useSearchParams, Link, useLocation } from 'react-router-dom'
-import { Search, ShoppingCart, LayoutDashboard, Home, Users, User } from 'lucide-react'
+import { Search, ShoppingCart, LayoutDashboard, Home, Users, User, LogOut } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
 import { useCart } from '@/hooks/use-cart'
+import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 
 function CartButton() {
@@ -29,6 +30,7 @@ export default function Layout() {
   const query = searchParams.get('q') || ''
   const [localQuery, setLocalQuery] = useState(query)
   const location = useLocation()
+  const { signOut } = useAuth()
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -98,6 +100,16 @@ export default function Layout() {
                 <LayoutDashboard className="w-5 h-5" />
               </Link>
               <CartButton />
+              {/* SPEC-170: sair da conta */}
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
+                title="Sair"
+                aria-label="Sair"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
@@ -166,7 +178,9 @@ export default function Layout() {
 
       <footer className="hidden md:block py-6 mt-auto border-t bg-muted/20">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Ubiqua Representações. Todos os direitos reservados.</p>
+          <p>
+            &copy; {new Date().getFullYear()} Ubiqua Representações. Todos os direitos reservados.
+          </p>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-primary transition-colors">
               Suporte
