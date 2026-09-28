@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { aplicarEstoqueAtual } from '@/lib/estoque-atual'
 
 export type GroupedPart = {
   id: string
@@ -250,13 +251,13 @@ export function useProductDetail(slug: string | undefined) {
 
         if (allFetchError) throw allFetchError
 
-        const grouped = groupCatalogItems(allItems || [])
+        const grouped = groupCatalogItems(await aplicarEstoqueAtual(allItems || []))
         const matched = grouped.find((g) => g.slug === slug)
         setData(matched || null)
         return
       }
 
-      const grouped = groupCatalogItems(items)
+      const grouped = groupCatalogItems(await aplicarEstoqueAtual(items))
       setData(grouped[0] || null)
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error occurred'))
@@ -290,7 +291,8 @@ export function useParts() {
 
       if (fetchError) throw fetchError
 
-      const grouped = groupCatalogItems(items || [])
+      // SPEC-171: estoque atual de produtos, não a cópia de junho em revenda_ubiqua
+      const grouped = groupCatalogItems(await aplicarEstoqueAtual(items || []))
       setData(grouped)
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error occurred'))

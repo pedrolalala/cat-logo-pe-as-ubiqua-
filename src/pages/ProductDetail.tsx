@@ -324,6 +324,7 @@ export default function ProductDetail() {
       {modalVariant && (
         <QuantityModal
           part={modalVariant}
+          group={group}
           isOpen={!!modalVariant}
           onClose={() => setModalVariant(null)}
         />

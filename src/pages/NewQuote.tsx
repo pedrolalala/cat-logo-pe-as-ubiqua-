@@ -2,6 +2,7 @@ import { useCart } from '@/hooks/use-cart'
 import { useAuth } from '@/hooks/use-auth'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { aplicarEstoqueAtual } from '@/lib/estoque-atual'
 import {
   Table,
   TableBody,
@@ -121,7 +122,7 @@ export default function NewQuote() {
         .select('*')
         .or(`descricao.ilike.%${productSearch}%,referencia.ilike.%${productSearch}%`)
         .limit(20)
-      setProductResults(data || [])
+      setProductResults(await aplicarEstoqueAtual(data || []))
       setIsSearchingProducts(false)
     }
     const delayDebounceFn = setTimeout(() => {

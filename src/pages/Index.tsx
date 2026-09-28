@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
-import { useParts } from '@/hooks/use-parts'
+import { useParts, type GroupedPart } from '@/hooks/use-parts'
 import { PartCard } from '@/components/PartCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ export default function Index() {
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q')?.toLowerCase() || ''
   const { data, loading, error, refetch } = useParts()
-  const [selectedVariant, setSelectedVariant] = useState<any | null>(null)
+  const [selecionado, setSelecionado] = useState<{ variant: any; group: GroupedPart } | null>(null)
   const isSuccess = searchParams.get('success') === 'true'
 
   const filteredData = useMemo(() => {
@@ -105,16 +105,17 @@ export default function Index() {
             className="animate-fade-in-up"
             style={{ animationDelay: `${i * 50}ms` }}
           >
-            <PartCard group={group} onAddBudget={(variant) => setSelectedVariant(variant)} />
+            <PartCard group={group} onAddBudget={(variant) => setSelecionado({ variant, group })} />
           </div>
         ))}
       </div>
 
-      {selectedVariant && (
+      {selecionado && (
         <QuantityModal
-          part={selectedVariant}
-          isOpen={!!selectedVariant}
-          onClose={() => setSelectedVariant(null)}
+          part={selecionado.variant}
+          group={selecionado.group}
+          isOpen={!!selecionado}
+          onClose={() => setSelecionado(null)}
         />
       )}
     </div>

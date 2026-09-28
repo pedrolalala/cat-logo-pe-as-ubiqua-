@@ -10,24 +10,37 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Minus, Plus } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
 import { useCart } from '@/hooks/use-cart'
 import { useNavigate } from 'react-router-dom'
+import type { GroupedPart } from '@/hooks/use-parts'
 
 interface QuantityModalProps {
   part: Part | null
+  /** SPEC-171: grupo do card, para somar o estoque de todas as referências da mesma cor. */
+  group?: GroupedPart | null
   isOpen: boolean
   onClose: () => void
 }
 
 const BACKORDER_TECHNICAL_MAX = 999
 
-export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
+const corDe = (v: any) => (v?.cor || 'PADRÃO').toUpperCase().trim()
+
+export function QuantityModal({ part, group, isOpen, onClose }: QuantityModalProps) {
   const [quantity, setQuantity] = useState(1)
   const [backorderAck, setBackorderAck] = useState(false)
-  const { addToCart } = useCart()
+  const { addToCart, items: carrinho } = useCart()
   const navigate = useNavigate()
+
+  // SPEC-171: mesma cor pode ter 2 referências (Manoella e -IS). O limite é a soma, e o pedido
+  // é dividido entre elas: primeiro a de maior estoque, o resto na outra.
+  const irmas = useMemo(() => {
+    if (!part) return []
+    const mesmaCor = group ? group.detalhesPorCor.filter((v) => corDe(v) === corDe(part)) : []
+    return mesmaCor.length > 0 ? mesmaCor : [part]
+  }, [part, group])
 
   useEffect(() => {
     if (isOpen) {
@@ -36,21 +49,57 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
     }
   }, [isOpen])
 
+  const dividirPedido = (total: number) => {
+    const partes: { variante: any; qtd: number }[] = []
+    let falta = total
+    const ordenadas = [...irmas].sort(
+      (a, b) => (Number(b.disponivel) || 0) - (Number(a.disponivel) || 0),
+    )
+    for (const v of ordenadas) {
+      const noCarrinho = carrinho.find((i) => i.id === v.id)?.quantity ?? 0
+      const livre = Math.max(0, (Number(v.disponivel) || 0) - noCarrinho)
+      const qtd = Math.min(falta, livre)
+      if (qtd > 0) {
+        partes.push({ variante: v, qtd })
+        falta -= qtd
+      }
+      if (falta === 0) break
+    }
+    return { partes, falta }
+  }
+
   const handleConfirm = () => {
     if (part) {
-      addToCart(part, quantity)
-      toast.success('Item adicionado ao orçamento!', {
-        description: `${quantity}x ${part.referencia} adicionado ao carrinho.`,
-        action: {
-          label: 'Ver Carrinho',
-          onClick: () => navigate('/novo-orcamento'),
-        },
-      })
+      const avisoCarrinho = {
+        label: 'Ver Carrinho',
+        onClick: () => navigate('/novo-orcamento'),
+      }
+      if (isOutOfStock) {
+        addToCart(part, quantity)
+        toast.success('Item adicionado ao orçamento!', {
+          description: `${quantity}x ${part.referencia} adicionado ao carrinho.`,
+          action: avisoCarrinho,
+        })
+      } else {
+        const { partes, falta } = dividirPedido(quantity)
+        if (partes.length === 0) {
+          toast.error('Todo o estoque desta cor já está no orçamento.')
+          return
+        }
+        partes.forEach(({ variante, qtd }) => addToCart(variante, qtd))
+        toast.success('Item adicionado ao orçamento!', {
+          description:
+            partes.map(({ variante, qtd }) => `${qtd}x ${variante.referencia}`).join(' + ') +
+            (falta > 0 ? ` (${falta} já estavam no orçamento)` : '') +
+            ' adicionado ao carrinho.',
+          action: avisoCarrinho,
+        })
+      }
     }
     onClose()
   }
 
-  const disponivel = part ? Number((part as any).disponivel) || 0 : 0
+  const disponivel = irmas.reduce((soma, v) => soma + (Number((v as any).disponivel) || 0), 0)
   const isOutOfStock = disponivel <= 0
   const maxQty = isOutOfStock ? BACKORDER_TECHNICAL_MAX : disponivel
 
@@ -74,6 +123,15 @@ export function QuantityModal({ part, isOpen, onClose }: QuantityModalProps) {
             <div className="mb-6 p-4 rounded-lg bg-muted/50 border">
               <p className="font-mono text-sm text-primary font-bold mb-1">{part.referencia}</p>
               <p className="font-medium text-foreground">{part.descricao}</p>
+              {irmas.length > 1 && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Estoque somado:{' '}
+                  {irmas
+                    .map((v: any) => `${v.referencia} (${Number(v.disponivel) || 0})`)
+                    .join(' + ')}
+                  . O pedido é dividido entre as referências.
+                </p>
+              )}
             </div>
 
             <div className="flex items-center justify-between gap-4">
