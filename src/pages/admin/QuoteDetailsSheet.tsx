@@ -112,6 +112,23 @@ export function QuoteDetailsSheet({
             </div>
           </div>
 
+          {Number(quote.valor_desconto) > 0 && (
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between text-muted-foreground">
+                <span>Subtotal</span>
+                <span>{formatCurrency(Number(quote.valor_subtotal) || 0)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Desconto ({Number(quote.desconto_percentual) || 0}%)</span>
+                <span>- {formatCurrency(Number(quote.valor_desconto))}</span>
+              </div>
+              <div className="flex justify-between font-semibold">
+                <span>Valor Total</span>
+                <span>{formatCurrency(quote.valor_total)}</span>
+              </div>
+            </div>
+          )}
+
           {quote.observacoes && (
             <div>
               <h4 className="text-sm font-semibold mb-2">Observações do Cliente</h4>

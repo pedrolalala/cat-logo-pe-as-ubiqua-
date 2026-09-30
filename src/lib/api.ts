@@ -126,17 +126,6 @@ export async function saveQuoteToSupabase(quoteData: any): Promise<QuoteData> {
   }
 }
 
-export async function sendQuoteEmail(payload: any): Promise<void> {
-  const { error } = await supabase.functions.invoke('enviar-confirmacao-email', {
-    body: payload,
-  })
-
-  if (error) {
-    console.error('Error sending quote email:', error)
-    throw error
-  }
-}
-
 // `fetchParts` foi preterido em favor do uso direto de `useParts` hook
 // mantido por compatibilidade
 export async function fetchParts(): Promise<PartGroup[]> {

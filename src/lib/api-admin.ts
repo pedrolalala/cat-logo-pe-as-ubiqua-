@@ -22,6 +22,9 @@ export interface Quote {
   created_at?: string
   data_criacao?: string
   valor_total: number
+  valor_subtotal?: number | null
+  desconto_percentual?: number | null
+  valor_desconto?: number | null
   status: string
   observacoes?: string
   items: QuoteItem[]
@@ -239,6 +242,9 @@ export async function fetchQuotes(): Promise<Quote[]> {
       id,
       numero_orcamento,
       created_at,
+      valor_subtotal,
+      desconto_percentual,
+      valor_desconto,
       valor_total,
       status,
       cliente:informacoes_cliente_ubiqua(nome),
@@ -273,6 +279,9 @@ export async function fetchQuotes(): Promise<Quote[]> {
       faturamento,
       created_at: q.created_at,
       data_criacao: q.created_at,
+      valor_subtotal: q.valor_subtotal,
+      desconto_percentual: q.desconto_percentual,
+      valor_desconto: q.valor_desconto,
       valor_total: q.valor_total,
       status: q.status,
       items: (q.itens || []).map((i: any) => {

@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
-import { formatCPFOuCNPJ, isValidCPFOuCNPJ } from '@/lib/utils'
+import {
+  ClienteFormData,
+  ClienteFormFields,
+  clienteFormDeRegistro,
+  clienteFormParaPayload,
+  clienteFormVazio,
+  validarClienteForm,
+} from '@/components/ClienteForm'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -48,12 +54,7 @@ export default function CustomersPage() {
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState({
-    nome: '',
-    email: '',
-    telefone: '',
-    cpf_cnpj: '',
-  })
+  const [formData, setFormData] = useState<ClienteFormData>(clienteFormVazio())
 
   useEffect(() => {
     loadCustomers()
@@ -92,42 +93,28 @@ export default function CustomersPage() {
   }
 
   function openNew() {
-    setFormData({ nome: '', email: '', telefone: '', cpf_cnpj: '' })
+    setFormData(clienteFormVazio())
     setEditingId(null)
     setIsModalOpen(true)
   }
 
   function openEdit(customer: any) {
-    setFormData({
-      nome: customer.nome || '',
-      email: customer.email || '',
-      telefone: customer.telefone || '',
-      cpf_cnpj: customer.cpf_cnpj || '',
-    })
+    setFormData(clienteFormDeRegistro(customer))
     setEditingId(customer.id)
     setIsModalOpen(true)
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!formData.nome || !formData.email || !formData.telefone || !formData.cpf_cnpj) {
-      toast.error('Nome, Email, Telefone e CPF/CNPJ são obrigatórios.')
-      return
-    }
-
-    if (!isValidCPFOuCNPJ(formData.cpf_cnpj)) {
-      toast.error('CPF/CNPJ inválido. Verifique o formato.')
+    const erro = validarClienteForm(formData)
+    if (erro) {
+      toast.error(erro)
       return
     }
 
     setSaving(true)
     try {
-      const payload = {
-        nome: formData.nome,
-        email: formData.email,
-        telefone: formData.telefone,
-        cpf_cnpj: formData.cpf_cnpj,
-      }
+      const payload = clienteFormParaPayload(formData) as any
 
       if (editingId) {
         const { error } = await supabase
@@ -316,67 +303,13 @@ export default function CustomersPage() {
       )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <form onSubmit={handleSave}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <form onSubmit={handleSave} noValidate>
             <DialogHeader>
               <DialogTitle>{editingId ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome">
-                  Nome Completo <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="nome"
-                  required
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">
-                  Email <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="telefone">
-                  Telefone <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="telefone"
-                  type="tel"
-                  inputMode="numeric"
-                  className="h-12"
-                  required
-                  value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cpf_cnpj">
-                  CPF/CNPJ <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="cpf_cnpj"
-                  type="tel"
-                  inputMode="numeric"
-                  className="h-12"
-                  required
-                  maxLength={18}
-                  placeholder="CPF ou CNPJ"
-                  value={formData.cpf_cnpj}
-                  onChange={(e) =>
-                    setFormData({ ...formData, cpf_cnpj: formatCPFOuCNPJ(e.target.value) })
-                  }
-                />
-              </div>
+            <div className="py-4">
+              <ClienteFormFields value={formData} onChange={setFormData} disabled={saving} />
             </div>
             <DialogFooter>
               <Button

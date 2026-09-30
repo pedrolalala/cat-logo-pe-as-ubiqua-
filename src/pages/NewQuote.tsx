@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
-import { sendQuoteEmail, QuoteData } from '@/lib/api'
+import { QuoteData } from '@/lib/api'
 import { toast } from 'sonner'
 import {
   Trash2,
@@ -31,15 +31,8 @@ import {
   Minus,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { generateQuotePDFBase64, downloadMockPDF } from '@/lib/pdf'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { downloadQuotePdf } from '@/lib/pdf'
+import { abrirEmailOrcamento } from '@/lib/email-orcamento'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -68,7 +61,9 @@ export default function NewQuote() {
 
   const { user } = useAuth()
   const [observacoes, setObservacoes] = useState('')
-  const [descontoGlobal, setDescontoGlobal] = useState<number>(0)
+  // SPEC-172: desconto global em percentual (0 a 100) sobre o subtotal.
+  const [descontoPercentual, setDescontoPercentual] = useState<number>(0)
+  const [descontoInput, setDescontoInput] = useState('')
 
   const [isSaving, setIsSaving] = useState(false)
   const [savingStatus, setSavingStatus] = useState('')
@@ -85,9 +80,9 @@ export default function NewQuote() {
   const [isSearchingProducts, setIsSearchingProducts] = useState(false)
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
-  const [emailRecipient, setEmailRecipient] = useState('')
-  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  // Cliente e dados da Ubiqua do orçamento salvo, carregados ao finalizar para
+  // que o "Enviar por E-mail" (mailto) não precise de nenhuma chamada de rede.
+  const [emailCtx, setEmailCtx] = useState<{ cliente: any; empresa: any } | null>(null)
 
   const colorMap: Record<string, string> = {
     'UV BRONZE': '#A87932',
@@ -132,12 +127,43 @@ export default function NewQuote() {
   }, [productSearch])
 
   const subtotalItems = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
-  const totalGeral = Math.max(0, subtotalItems - descontoGlobal)
+  const valorDesconto = Math.round(subtotalItems * descontoPercentual) / 100
+  const totalGeral = Math.max(0, subtotalItems - valorDesconto)
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
   const selectedClient = customers.find((c) => c.id === selectedCustomerId)
+
+  const handleDescontoChange = (raw: string) => {
+    if (raw === '') {
+      setDescontoInput('')
+      setDescontoPercentual(0)
+      return
+    }
+    const valor = parseFloat(raw.replace(',', '.'))
+    if (Number.isNaN(valor) || valor < 0 || valor > 100) {
+      toast.error('O desconto deve ser um percentual entre 0 e 100.')
+      return
+    }
+    setDescontoInput(raw)
+    setDescontoPercentual(Math.round(valor * 100) / 100)
+  }
+
+  // Retomando um orçamento em andamento: recupera o desconto já gravado.
+  useEffect(() => {
+    if (!activeQuoteId) return
+    supabase
+      .from('orcamentos_revenda_ubiqua')
+      .select('desconto_percentual')
+      .eq('id', activeQuoteId)
+      .maybeSingle()
+      .then(({ data }) => {
+        const pct = Number(data?.desconto_percentual) || 0
+        setDescontoPercentual(pct)
+        setDescontoInput(pct ? String(pct) : '')
+      })
+  }, [activeQuoteId])
 
   const handleStartQuote = async () => {
     if (!selectedCustomerId) {
@@ -155,6 +181,7 @@ export default function NewQuote() {
           numero_orcamento: '',
           valor_subtotal: 0,
           valor_total: 0,
+          desconto_percentual: 0,
           valor_desconto: 0,
         })
         .select()
@@ -197,7 +224,8 @@ export default function NewQuote() {
         .update({
           observacoes: observacoes,
           valor_subtotal: subtotalItems,
-          valor_desconto: descontoGlobal,
+          desconto_percentual: descontoPercentual,
+          valor_desconto: valorDesconto,
           valor_total: totalGeral,
           status: 'rascunho',
           ...(hasBackorderItem
@@ -249,6 +277,12 @@ export default function NewQuote() {
         .eq('id', activeQuoteId)
         .single()
 
+      const [{ data: clienteData }, { data: empresaData }] = await Promise.all([
+        supabase.from('informacoes_cliente_ubiqua').select('*').eq('id', selectedCustomerId).maybeSingle(),
+        supabase.from('configuracao_empresa_ubiqua' as any).select('*').eq('id', 1).maybeSingle(),
+      ])
+      setEmailCtx({ cliente: clienteData || selectedClient || null, empresa: empresaData || null })
+
       setSavedQuote({ ...savedData, items } as QuoteData)
       clearCart()
     } catch (e: any) {
@@ -267,28 +301,34 @@ export default function NewQuote() {
     if (!savedQuote) return
     setIsGeneratingPDF(true)
     try {
-      await downloadMockPDF(savedQuote)
-      toast.success('Documento gerado com sucesso.')
-    } catch (error) {
-      toast.error('Erro ao gerar o documento.')
+      await downloadQuotePdf(savedQuote)
+      toast.success('PDF gerado com sucesso.')
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao gerar o PDF.')
     } finally {
       setIsGeneratingPDF(false)
     }
   }
 
+  // SPEC-172 (item 5): abre o cliente de e-mail do computador (mailto:), sem
+  // envio pelo sistema. Nenhuma chamada de rede aqui.
   const handleSendEmail = async () => {
-    if (!savedQuote || !emailRecipient) return
-    setIsSendingEmail(true)
+    if (!savedQuote) return
     try {
-      const pdfBase64 = await generateQuotePDFBase64(savedQuote)
-      await sendQuoteEmail(emailRecipient, pdfBase64, savedQuote)
-      toast.success('PDF enviado com sucesso')
-      setIsEmailModalOpen(false)
-      setEmailRecipient('')
-    } catch (error) {
-      toast.error('Falha ao enviar o e-mail. Tente novamente.')
-    } finally {
-      setIsSendingEmail(false)
+      const resultado = await abrirEmailOrcamento({
+        orcamento: savedQuote,
+        itens: savedQuote.items || [],
+        cliente: emailCtx?.cliente,
+        empresa: emailCtx?.empresa,
+      })
+      toast.success(
+        resultado === 'copiado'
+          ? 'Abrindo seu e-mail. O orçamento também foi copiado: se o texto vier cortado, cole com Ctrl+V.'
+          : 'Abrindo seu programa de e-mail com o orçamento preenchido.',
+      )
+    } catch (error: any) {
+      console.error('Erro ao abrir o e-mail do orçamento:', error)
+      toast.error('Não foi possível abrir o programa de e-mail deste computador.')
     }
   }
 
@@ -326,7 +366,7 @@ export default function NewQuote() {
           </Button>
           <Button
             size="lg"
-            onClick={() => setIsEmailModalOpen(true)}
+            onClick={handleSendEmail}
             className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white"
           >
             <Mail className="w-4 h-4 mr-2" />
@@ -342,53 +382,6 @@ export default function NewQuote() {
         >
           Novo Orçamento
         </Button>
-
-        <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Enviar por E-mail</DialogTitle>
-              <DialogDescription>
-                Insira o endereço de e-mail do destinatário para enviar este orçamento com o PDF em
-                anexo.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">E-mail do destinatário</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="cliente@exemplo.com"
-                  value={emailRecipient}
-                  onChange={(e) => setEmailRecipient(e.target.value)}
-                  disabled={isSendingEmail}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsEmailModalOpen(false)}
-                disabled={isSendingEmail}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleSendEmail}
-                disabled={isSendingEmail || !emailRecipient}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                {isSendingEmail ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...
-                  </>
-                ) : (
-                  'Enviar E-mail'
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     )
   }
@@ -821,16 +814,29 @@ export default function NewQuote() {
             </div>
 
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Desconto Global (R$)</span>
-              <Input
-                type="number"
-                min={0}
-                step="0.01"
-                value={descontoGlobal || ''}
-                onChange={(e) => setDescontoGlobal(parseFloat(e.target.value) || 0)}
-                className="w-28 text-right h-8"
-              />
+              <span className="text-muted-foreground">Desconto Global (%)</span>
+              <div className="flex items-center gap-1">
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  max={100}
+                  step="0.01"
+                  placeholder="0"
+                  value={descontoInput}
+                  onChange={(e) => handleDescontoChange(e.target.value)}
+                  className="w-24 text-right h-8"
+                />
+                <span className="text-muted-foreground">%</span>
+              </div>
             </div>
+
+            {valorDesconto > 0 && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Desconto ({descontoPercentual}%)</span>
+                <span className="font-medium text-destructive">- {formatCurrency(valorDesconto)}</span>
+              </div>
+            )}
 
             <div className="flex justify-between items-center font-bold text-xl pt-4 border-t mt-4">
               <span>Valor Total</span>

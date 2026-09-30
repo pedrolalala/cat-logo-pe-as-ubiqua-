@@ -101,11 +101,17 @@ Se uma informação não existir, retorne null ou string vazia.`
     const base64Data = pdfBase64.replace(/^data:.*?;base64,/, '')
 
     if (!base64Data) {
-      throw new Error('O arquivo PDF base64 está vazio ou inválido.')
+      return new Response(
+        JSON.stringify({ error: 'O arquivo PDF base64 está vazio ou inválido.' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
