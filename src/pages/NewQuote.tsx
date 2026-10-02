@@ -31,7 +31,7 @@ import {
   Minus,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { downloadQuotePdf } from '@/lib/pdf'
+import { downloadQuotePdf, nomeArquivoPdf } from '@/lib/pdf'
 import { abrirEmailOrcamento } from '@/lib/email-orcamento'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -311,8 +311,8 @@ export default function NewQuote() {
   }
 
   // SPEC-172 (item 5): abre o cliente de e-mail do computador (mailto:), sem
-  // envio pelo sistema. Nenhuma chamada de rede aqui.
-  const handleSendEmail = async () => {
+  // envio pelo sistema.
+  const abrirEmail = async () => {
     if (!savedQuote) return
     try {
       const resultado = await abrirEmailOrcamento({
@@ -321,15 +321,50 @@ export default function NewQuote() {
         cliente: emailCtx?.cliente,
         empresa: emailCtx?.empresa,
       })
+      const anexar = ` Anexe o arquivo ${nomeArquivoPdf(savedQuote)} que acabou de ser baixado.`
       toast.success(
-        resultado === 'copiado'
+        (resultado === 'copiado'
           ? 'Abrindo seu e-mail. O orçamento também foi copiado: se o texto vier cortado, cole com Ctrl+V.'
-          : 'Abrindo seu programa de e-mail com o orçamento preenchido.',
+          : 'Abrindo seu programa de e-mail com o orçamento preenchido.') + anexar,
+        { duration: 10000 },
       )
     } catch (error: any) {
       console.error('Erro ao abrir o e-mail do orçamento:', error)
       toast.error('Não foi possível abrir o programa de e-mail deste computador.')
     }
+  }
+
+  // "Enviar por E-mail" = baixar o PDF + abrir o mailto:. `mailto:` não aceita
+  // anexo e o envio por SMTP/backend foi descartado (decisão do usuário em
+  // 30/09 e reconfirmada em 02/10), então o PDF é baixado primeiro, pela mesma
+  // função do "Baixar PDF", e o usuário arrasta o arquivo para o e-mail.
+  //
+  // Erro na geração do PDF: o e-mail NÃO é aberto. Aparece o erro e o usuário
+  // tenta de novo — abrir o e-mail sem o PDF faria o cliente receber o
+  // orçamento sem o documento oficial.
+  const handleSendEmail = async () => {
+    if (!savedQuote) return
+    setIsGeneratingPDF(true)
+    try {
+      await downloadQuotePdf(savedQuote)
+    } catch (error: any) {
+      toast.error(`${error?.message || 'Erro ao gerar o PDF.'} O e-mail não foi aberto; tente novamente.`)
+      return
+    } finally {
+      setIsGeneratingPDF(false)
+    }
+
+    // O navegador só deixa abrir o mailto: logo depois do clique. Se o PDF
+    // demorou e essa janela passou, pede um clique novo em vez de falhar calado.
+    const ativacao = (navigator as any).userActivation
+    if (ativacao && !ativacao.isActive) {
+      toast.success(`PDF ${nomeArquivoPdf(savedQuote)} baixado.`, {
+        duration: 30000,
+        action: { label: 'Abrir e-mail', onClick: () => void abrirEmail() },
+      })
+      return
+    }
+    await abrirEmail()
   }
 
   if (savedQuote) {
@@ -367,6 +402,7 @@ export default function NewQuote() {
           <Button
             size="lg"
             onClick={handleSendEmail}
+            disabled={isGeneratingPDF}
             className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white"
           >
             <Mail className="w-4 h-4 mr-2" />
