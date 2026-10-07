@@ -41,7 +41,12 @@ export interface EmailOrcamentoDados {
 }
 
 export function numeroDoOrcamento(orcamento: any): string {
-  return orcamento?.numero_orcamento || String(orcamento?.id || '').split('-')[0].toUpperCase()
+  return (
+    orcamento?.numero_orcamento ||
+    String(orcamento?.id || '')
+      .split('-')[0]
+      .toUpperCase()
+  )
 }
 
 export function montarEmailOrcamento({ orcamento, itens, cliente, empresa }: EmailOrcamentoDados) {
@@ -101,7 +106,9 @@ export function montarEmailOrcamento({ orcamento, itens, cliente, empresa }: Ema
   const subtotal = orcamento?.valor_subtotal != null ? Number(orcamento.valor_subtotal) : somaItens
   const pct = Number(orcamento?.desconto_percentual) || 0
   const desconto =
-    orcamento?.valor_desconto != null ? Number(orcamento.valor_desconto) : Math.round(subtotal * pct) / 100
+    orcamento?.valor_desconto != null
+      ? Number(orcamento.valor_desconto)
+      : Math.round(subtotal * pct) / 100
   const total = orcamento?.valor_total != null ? Number(orcamento.valor_total) : subtotal - desconto
   const pctFmt = pct.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 
@@ -111,7 +118,8 @@ export function montarEmailOrcamento({ orcamento, itens, cliente, empresa }: Ema
   add(`TOTAL GERAL: ${brl(total)}`)
   add('')
 
-  if (orcamento?.condicoes_pagamento) add(`Condições de pagamento: ${orcamento.condicoes_pagamento}`)
+  if (orcamento?.condicoes_pagamento)
+    add(`Condições de pagamento: ${orcamento.condicoes_pagamento}`)
   if (orcamento?.prazo_entrega) add(`Prazo de entrega: ${orcamento.prazo_entrega}`)
   if (orcamento?.observacoes) add(`Observações: ${orcamento.observacoes}`)
   if (orcamento?.condicoes_pagamento || orcamento?.prazo_entrega || orcamento?.observacoes) add('')

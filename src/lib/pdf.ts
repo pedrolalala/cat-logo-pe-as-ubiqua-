@@ -49,4 +49,3 @@ export async function downloadQuotePdf(quote: QuoteData): Promise<void> {
   a.remove()
   URL.revokeObjectURL(url)
 }
-

@@ -229,7 +229,10 @@ export default function NewQuote() {
           valor_total: totalGeral,
           status: 'rascunho',
           ...(hasBackorderItem
-            ? { prazo_entrega: 'Contém item(ns) sem estoque — prazo estimado de até 90 dias para importação' }
+            ? {
+                prazo_entrega:
+                  'Contém item(ns) sem estoque — prazo estimado de até 90 dias para importação',
+              }
             : {}),
         })
         .eq('id', activeQuoteId)
@@ -278,8 +281,16 @@ export default function NewQuote() {
         .single()
 
       const [{ data: clienteData }, { data: empresaData }] = await Promise.all([
-        supabase.from('informacoes_cliente_ubiqua').select('*').eq('id', selectedCustomerId).maybeSingle(),
-        supabase.from('configuracao_empresa_ubiqua' as any).select('*').eq('id', 1).maybeSingle(),
+        supabase
+          .from('informacoes_cliente_ubiqua')
+          .select('*')
+          .eq('id', selectedCustomerId)
+          .maybeSingle(),
+        supabase
+          .from('configuracao_empresa_ubiqua' as any)
+          .select('*')
+          .eq('id', 1)
+          .maybeSingle(),
       ])
       setEmailCtx({ cliente: clienteData || selectedClient || null, empresa: empresaData || null })
 
@@ -348,7 +359,9 @@ export default function NewQuote() {
     try {
       await downloadQuotePdf(savedQuote)
     } catch (error: any) {
-      toast.error(`${error?.message || 'Erro ao gerar o PDF.'} O e-mail não foi aberto; tente novamente.`)
+      toast.error(
+        `${error?.message || 'Erro ao gerar o PDF.'} O e-mail não foi aberto; tente novamente.`,
+      )
       return
     } finally {
       setIsGeneratingPDF(false)
@@ -629,94 +642,96 @@ export default function NewQuote() {
               const itemDisponivel = Number(item.disponivel) || 0
               const itemMaxQty = itemDisponivel > 0 ? itemDisponivel : 999
               return (
-              <Card key={item.id} className="overflow-hidden">
-                <CardContent className="p-4 space-y-4">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="space-y-1">
-                      <div className="font-mono font-bold text-sm text-primary">
-                        {item.referencia}
-                      </div>
-                      <div className="font-medium text-sm leading-tight">{item.descricao}</div>
-                      {item.cor && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                          <span
-                            className="w-3 h-3 rounded-full inline-block border border-black/10 shadow-sm"
-                            style={{ backgroundColor: colorMap[item.cor.toUpperCase()] || '#ccc' }}
-                          />
-                          {item.cor}
+                <Card key={item.id} className="overflow-hidden">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="space-y-1">
+                        <div className="font-mono font-bold text-sm text-primary">
+                          {item.referencia}
                         </div>
-                      )}
+                        <div className="font-medium text-sm leading-tight">{item.descricao}</div>
+                        {item.cor && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                            <span
+                              className="w-3 h-3 rounded-full inline-block border border-black/10 shadow-sm"
+                              style={{
+                                backgroundColor: colorMap[item.cor.toUpperCase()] || '#ccc',
+                              }}
+                            />
+                            {item.cor}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:bg-destructive/10 h-10 w-10 shrink-0"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:bg-destructive/10 h-10 w-10 shrink-0"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Preço Unit.</Label>
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        step="0.01"
-                        value={item.valor_revenda}
-                        onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
-                        className="h-11 font-medium"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Subtotal</Label>
-                      <div className="flex items-center h-11 font-bold text-orange-600">
-                        {formatCurrency(item.valor_revenda * item.quantity)}
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Preço Unit.</Label>
+                        <Input
+                          type="number"
+                          inputMode="decimal"
+                          min={0}
+                          step="0.01"
+                          value={item.valor_revenda}
+                          onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
+                          className="h-11 font-medium"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Subtotal</Label>
+                        <div className="flex items-center h-11 font-bold text-orange-600">
+                          {formatCurrency(item.valor_revenda * item.quantity)}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-between bg-muted/30 p-2 rounded-lg border">
-                    <span className="text-sm font-semibold pl-2">Quantidade</span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 shrink-0"
-                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                        disabled={item.quantity <= 1}
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <Input
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        max={itemMaxQty}
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateQuantity(
-                            item.id,
-                            Math.min(itemMaxQty, Math.max(1, parseInt(e.target.value) || 1)),
-                          )
-                        }
-                        className="w-16 text-center h-10 font-bold"
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 shrink-0"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        disabled={item.quantity >= itemMaxQty}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
+                    <div className="flex items-center justify-between bg-muted/30 p-2 rounded-lg border">
+                      <span className="text-sm font-semibold pl-2">Quantidade</span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 shrink-0"
+                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          max={itemMaxQty}
+                          value={item.quantity}
+                          onChange={(e) =>
+                            updateQuantity(
+                              item.id,
+                              Math.min(itemMaxQty, Math.max(1, parseInt(e.target.value) || 1)),
+                            )
+                          }
+                          className="w-16 text-center h-10 font-bold"
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 shrink-0"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          disabled={item.quantity >= itemMaxQty}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
               )
             })}
           </div>
@@ -740,83 +755,85 @@ export default function NewQuote() {
                     const itemDisponivel = Number(item.disponivel) || 0
                     const itemMaxQty = itemDisponivel > 0 ? itemDisponivel : 999
                     return (
-                    <TableRow key={item.id} className="group">
-                      <TableCell className="font-mono font-medium text-xs">
-                        {item.referencia}
-                      </TableCell>
-                      <TableCell className="font-medium text-sm">
-                        {item.descricao}
-                        {item.cor && (
-                          <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                            <span
-                              className="w-3 h-3 rounded-full inline-block border border-black/10"
-                              style={{
-                                backgroundColor: colorMap[item.cor.toUpperCase()] || '#ccc',
-                              }}
+                      <TableRow key={item.id} className="group">
+                        <TableCell className="font-mono font-medium text-xs">
+                          {item.referencia}
+                        </TableCell>
+                        <TableCell className="font-medium text-sm">
+                          {item.descricao}
+                          {item.cor && (
+                            <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                              <span
+                                className="w-3 h-3 rounded-full inline-block border border-black/10"
+                                style={{
+                                  backgroundColor: colorMap[item.cor.toUpperCase()] || '#ccc',
+                                }}
+                              />
+                              {item.cor}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8 shrink-0"
+                              onClick={() =>
+                                updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                              }
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={itemMaxQty}
+                              value={item.quantity}
+                              onChange={(e) =>
+                                updateQuantity(
+                                  item.id,
+                                  Math.min(itemMaxQty, Math.max(1, parseInt(e.target.value) || 1)),
+                                )
+                              }
+                              className="w-14 text-center h-8 font-medium px-1"
                             />
-                            {item.cor}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-1">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 shrink-0"
-                            onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8 shrink-0"
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              disabled={item.quantity >= itemMaxQty}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
                           <Input
                             type="number"
-                            min={1}
-                            max={itemMaxQty}
-                            value={item.quantity}
-                            onChange={(e) =>
-                              updateQuantity(
-                                item.id,
-                                Math.min(itemMaxQty, Math.max(1, parseInt(e.target.value) || 1)),
-                              )
-                            }
-                            className="w-14 text-center h-8 font-medium px-1"
+                            min={0}
+                            step="0.01"
+                            value={item.valor_revenda}
+                            onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
+                            className="w-full text-right h-8 font-medium"
                           />
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-orange-600">
+                          {formatCurrency(item.valor_revenda * item.quantity)}
+                        </TableCell>
+                        <TableCell className="text-center">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="icon"
-                            className="h-8 w-8 shrink-0"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            disabled={item.quantity >= itemMaxQty}
+                            className="text-muted-foreground hover:text-destructive h-8 w-8"
+                            onClick={() => removeFromCart(item.id)}
                           >
-                            <Plus className="w-3 h-3" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          value={item.valor_revenda}
-                          onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
-                          className="w-full text-right h-8 font-medium"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-orange-600">
-                        {formatCurrency(item.valor_revenda * item.quantity)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-destructive h-8 w-8"
-                          onClick={() => removeFromCart(item.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                        </TableCell>
+                      </TableRow>
                     )
                   })}
                 </TableBody>
@@ -870,7 +887,9 @@ export default function NewQuote() {
             {valorDesconto > 0 && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Desconto ({descontoPercentual}%)</span>
-                <span className="font-medium text-destructive">- {formatCurrency(valorDesconto)}</span>
+                <span className="font-medium text-destructive">
+                  - {formatCurrency(valorDesconto)}
+                </span>
               </div>
             )}
 

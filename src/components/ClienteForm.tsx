@@ -25,7 +25,15 @@ export const REGIMES_TRIBUTARIOS = [
   { value: 'outro', label: 'Outro' },
 ]
 
-const CAMPOS_ENDERECO = ['cep', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'] as const
+const CAMPOS_ENDERECO = [
+  'cep',
+  'endereco',
+  'numero',
+  'complemento',
+  'bairro',
+  'cidade',
+  'estado',
+] as const
 type CampoEndereco = (typeof CAMPOS_ENDERECO)[number]
 type Sufixo = '' | '_entrega' | '_cobranca'
 
@@ -139,7 +147,7 @@ export function clienteFormParaPayload(f: ClienteFormData) {
     telefone: String(f.telefone).trim(),
     cpf_cnpj: String(f.cpf_cnpj).trim(),
     tipo_pessoa: pj ? 'PJ' : 'PF',
-    inscricao_estadual: pj ? t(f.inscricao_estadual)?.toUpperCase() ?? null : null,
+    inscricao_estadual: pj ? (t(f.inscricao_estadual)?.toUpperCase() ?? null) : null,
     regime_tributario: pj ? t(f.regime_tributario) : null,
     email_comercial: t(f.email_comercial),
     email_financeiro: t(f.email_financeiro),
@@ -148,11 +156,12 @@ export function clienteFormParaPayload(f: ClienteFormData) {
     cobranca_igual_principal: !!f.cobranca_igual_principal,
   }
   for (const c of CAMPOS_ENDERECO) {
-    const principal = c === 'estado' ? t(f[c])?.toUpperCase() ?? null : t(f[c])
+    const principal = c === 'estado' ? (t(f[c])?.toUpperCase() ?? null) : t(f[c])
     payload[c] = principal
     for (const suf of ['_entrega', '_cobranca'] as Sufixo[]) {
       const igual = suf === '_entrega' ? f.entrega_igual_principal : f.cobranca_igual_principal
-      const proprio = c === 'estado' ? t(f[`${c}${suf}`])?.toUpperCase() ?? null : t(f[`${c}${suf}`])
+      const proprio =
+        c === 'estado' ? (t(f[`${c}${suf}`])?.toUpperCase() ?? null) : t(f[`${c}${suf}`])
       payload[`${c}${suf}`] = igual ? principal : proprio
     }
   }
@@ -217,7 +226,12 @@ export function ClienteFormFields({ value: f, onChange, disabled }: Props) {
 
   const blocoEndereco = (suf: Sufixo, obrigatorio: boolean) => (
     <div className="grid grid-cols-6 gap-3">
-      <Campo id={`cep${suf}`} label="CEP" obrigatorio={obrigatorio} className="col-span-3 sm:col-span-2">
+      <Campo
+        id={`cep${suf}`}
+        label="CEP"
+        obrigatorio={obrigatorio}
+        className="col-span-3 sm:col-span-2"
+      >
         <div className="relative">
           <Input
             id={`cep${suf}`}
@@ -233,7 +247,12 @@ export function ClienteFormFields({ value: f, onChange, disabled }: Props) {
           )}
         </div>
       </Campo>
-      <Campo id={`endereco${suf}`} label="Logradouro" obrigatorio={obrigatorio} className="col-span-6 sm:col-span-4">
+      <Campo
+        id={`endereco${suf}`}
+        label="Logradouro"
+        obrigatorio={obrigatorio}
+        className="col-span-6 sm:col-span-4"
+      >
         <Input
           id={`endereco${suf}`}
           value={String(f[`endereco${suf}`])}
@@ -257,7 +276,12 @@ export function ClienteFormFields({ value: f, onChange, disabled }: Props) {
           disabled={disabled}
         />
       </Campo>
-      <Campo id={`bairro${suf}`} label="Bairro" obrigatorio={obrigatorio} className="col-span-6 sm:col-span-2">
+      <Campo
+        id={`bairro${suf}`}
+        label="Bairro"
+        obrigatorio={obrigatorio}
+        className="col-span-6 sm:col-span-2"
+      >
         <Input
           id={`bairro${suf}`}
           value={String(f[`bairro${suf}`])}
@@ -265,7 +289,12 @@ export function ClienteFormFields({ value: f, onChange, disabled }: Props) {
           disabled={disabled}
         />
       </Campo>
-      <Campo id={`cidade${suf}`} label="Cidade" obrigatorio={obrigatorio} className="col-span-4 sm:col-span-3">
+      <Campo
+        id={`cidade${suf}`}
+        label="Cidade"
+        obrigatorio={obrigatorio}
+        className="col-span-4 sm:col-span-3"
+      >
         <Input
           id={`cidade${suf}`}
           value={String(f[`cidade${suf}`])}
@@ -273,12 +302,19 @@ export function ClienteFormFields({ value: f, onChange, disabled }: Props) {
           disabled={disabled}
         />
       </Campo>
-      <Campo id={`estado${suf}`} label="UF" obrigatorio={obrigatorio} className="col-span-2 sm:col-span-1">
+      <Campo
+        id={`estado${suf}`}
+        label="UF"
+        obrigatorio={obrigatorio}
+        className="col-span-2 sm:col-span-1"
+      >
         <Input
           id={`estado${suf}`}
           maxLength={2}
           value={String(f[`estado${suf}`])}
-          onChange={(e) => set({ [`estado${suf}`]: e.target.value.toUpperCase().replace(/[^A-Z]/g, '') })}
+          onChange={(e) =>
+            set({ [`estado${suf}`]: e.target.value.toUpperCase().replace(/[^A-Z]/g, '') })
+          }
           disabled={disabled}
         />
       </Campo>

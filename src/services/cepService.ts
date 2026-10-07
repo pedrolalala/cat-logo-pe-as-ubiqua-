@@ -49,9 +49,7 @@ async function buscarBrasilApiCep(digits: string): Promise<EnderecoCep | null> {
  * Cacheia em memória por CEP (8 dígitos) pra não repetir a mesma consulta
  * na mesma sessão. Retorna null se o CEP não existir em nenhuma das duas.
  */
-export async function buscarEnderecoPorCep(
-  cep: string,
-): Promise<EnderecoCep | null> {
+export async function buscarEnderecoPorCep(cep: string): Promise<EnderecoCep | null> {
   const digits = (cep || '').replace(/\D/g, '')
   if (digits.length !== 8) return null
 

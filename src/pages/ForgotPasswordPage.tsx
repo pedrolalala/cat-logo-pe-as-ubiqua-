@@ -44,8 +44,7 @@ export default function ForgotPasswordPage() {
               Verifique seu e-mail
             </h2>
             <p className="text-muted-foreground">
-              Se esse e-mail existir na nossa base, você vai receber um link para redefinir a
-              senha.
+              Se esse e-mail existir na nossa base, você vai receber um link para redefinir a senha.
             </p>
             <Link
               to="/"
