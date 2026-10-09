@@ -52,8 +52,8 @@ export function PartDetailSheet({
   }
 
   const sixDigits = getSixDigits(variant.referencia)
-  const storageBaseUrl =
-    'https://vcvcwzmbiftcawncibke.supabase.co/storage/v1/object/public/revenda-ubiqua-images/catalogos/'
+  // SPEC-192: endereço do Supabase vem da configuração (migração Ohio -> São Paulo).
+  const storageBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/revenda-ubiqua-images/catalogos/`
 
   const mappedImageUrl =
     variant.imagem_catalogo_url ||

@@ -24,8 +24,8 @@ export function getVariantImage(variant: any, fallbackImage: string | null) {
     return null
   }
   const sixDigits = variant ? getSixDigits(variant.referencia) : null
-  const storageBaseUrl =
-    'https://vcvcwzmbiftcawncibke.supabase.co/storage/v1/object/public/revenda-ubiqua-images/catalogos/'
+  // SPEC-192: endereço do Supabase vem da configuração (migração Ohio -> São Paulo).
+  const storageBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/revenda-ubiqua-images/catalogos/`
 
   return (
     variant?.imagem_catalogo_url ||
