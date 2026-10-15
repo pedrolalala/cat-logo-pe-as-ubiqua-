@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { PartVariant } from '@/lib/api'
+import { dividirQuantidade } from '@/lib/origem-peca'
 
 export interface CartItem extends PartVariant {
   quantity: number
@@ -16,6 +17,8 @@ interface CartContextType {
   clearCart: () => void
   updateQuantity: (partId: string | number, quantity: number) => void
   updatePrice: (partId: string | number, price: number) => void
+  /** Quantidade total da peça, dividida entre as referências (Manoella e -IS) pelo estoque. */
+  setQuantidadePeca: (variantes: PartVariant[], total: number) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -92,6 +95,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
     )
   }
 
+  const setQuantidadePeca = (variantes: PartVariant[], total: number) => {
+    if (variantes.length === 0) return
+    setItems((current) => {
+      const ids = new Set(variantes.map((v) => v.id))
+      const existentes = current.filter((i) => ids.has(i.id))
+      const partes = dividirQuantidade(
+        variantes,
+        total,
+        existentes.map((i) => i.id),
+      )
+      // Preço editado no orçamento vale para a peça inteira, inclusive a referência nova.
+      const precoAtual = existentes[0]?.valor_revenda
+      const novas: CartItem[] = partes.map(({ variante, qtd }) => {
+        const atual = existentes.find((i) => i.id === variante.id)
+        return {
+          ...(atual ?? variante),
+          disponivel: variante.disponivel,
+          valor_revenda: atual?.valor_revenda ?? precoAtual ?? variante.valor_revenda,
+          quantity: qtd,
+        }
+      })
+      const posicao = current.findIndex((i) => ids.has(i.id))
+      const resto = current.filter((i) => !ids.has(i.id))
+      const em = posicao === -1 ? resto.length : posicao
+      return [...resto.slice(0, em), ...novas, ...resto.slice(em)]
+    })
+  }
+
   return (
     <CartContext.Provider
       value={{
@@ -105,6 +136,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         updateQuantity,
         updatePrice,
+        setQuantidadePeca,
       }}
     >
       {children}

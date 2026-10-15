@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { useCart } from '@/hooks/use-cart'
 import { useNavigate } from 'react-router-dom'
 import type { GroupedPart } from '@/hooks/use-parts'
+import { origemPeca } from '@/lib/origem-peca'
 
 interface QuantityModalProps {
   part: Part | null
@@ -31,11 +32,11 @@ const corDe = (v: any) => (v?.cor || 'PADRÃO').toUpperCase().trim()
 export function QuantityModal({ part, group, isOpen, onClose }: QuantityModalProps) {
   const [quantity, setQuantity] = useState(1)
   const [backorderAck, setBackorderAck] = useState(false)
-  const { addToCart, items: carrinho } = useCart()
+  const { setQuantidadePeca, items: carrinho } = useCart()
   const navigate = useNavigate()
 
   // SPEC-171: mesma cor pode ter 2 referências (Manoella e -IS). O limite é a soma, e o pedido
-  // é dividido entre elas: primeiro a de maior estoque, o resto na outra.
+  // é dividido entre elas no carrinho (setQuantidadePeca): primeiro a de maior estoque.
   const irmas = useMemo(() => {
     if (!part) return []
     const mesmaCor = group ? group.detalhesPorCor.filter((v) => corDe(v) === corDe(part)) : []
@@ -49,52 +50,30 @@ export function QuantityModal({ part, group, isOpen, onClose }: QuantityModalPro
     }
   }, [isOpen])
 
-  const dividirPedido = (total: number) => {
-    const partes: { variante: any; qtd: number }[] = []
-    let falta = total
-    const ordenadas = [...irmas].sort(
-      (a, b) => (Number(b.disponivel) || 0) - (Number(a.disponivel) || 0),
-    )
-    for (const v of ordenadas) {
-      const noCarrinho = carrinho.find((i) => i.id === v.id)?.quantity ?? 0
-      const livre = Math.max(0, (Number(v.disponivel) || 0) - noCarrinho)
-      const qtd = Math.min(falta, livre)
-      if (qtd > 0) {
-        partes.push({ variante: v, qtd })
-        falta -= qtd
-      }
-      if (falta === 0) break
-    }
-    return { partes, falta }
-  }
-
   const handleConfirm = () => {
     if (part) {
       const avisoCarrinho = {
         label: 'Ver Carrinho',
         onClick: () => navigate('/novo-orcamento'),
       }
-      if (isOutOfStock) {
-        addToCart(part, quantity)
-        toast.success('Item adicionado ao orçamento!', {
-          description: `${quantity}x ${part.referencia} adicionado ao carrinho.`,
-          action: avisoCarrinho,
-        })
-      } else {
-        const { partes, falta } = dividirPedido(quantity)
-        if (partes.length === 0) {
-          toast.error('Todo o estoque desta cor já está no orçamento.')
-          return
-        }
-        partes.forEach(({ variante, qtd }) => addToCart(variante, qtd))
-        toast.success('Item adicionado ao orçamento!', {
-          description:
-            partes.map(({ variante, qtd }) => `${qtd}x ${variante.referencia}`).join(' + ') +
-            (falta > 0 ? ` (${falta} já estavam no orçamento)` : '') +
-            ' adicionado ao carrinho.',
-          action: avisoCarrinho,
-        })
+      const noCarrinho = irmas.reduce(
+        (soma, v) => soma + (carrinho.find((i) => i.id === v.id)?.quantity ?? 0),
+        0,
+      )
+      const total = isOutOfStock
+        ? noCarrinho + quantity
+        : Math.min(disponivel, noCarrinho + quantity)
+      if (total <= noCarrinho) {
+        toast.error('Todo o estoque desta cor já está no orçamento.')
+        return
       }
+      setQuantidadePeca(irmas as any[], total)
+      toast.success('Item adicionado ao orçamento!', {
+        description:
+          `${total - noCarrinho}x ${part.referencia.replace(/-IS$/i, '')} adicionado ao carrinho` +
+          (total - noCarrinho < quantity ? ' (limitado ao estoque somado).' : '.'),
+        action: avisoCarrinho,
+      })
     }
     onClose()
   }
@@ -127,9 +106,12 @@ export function QuantityModal({ part, group, isOpen, onClose }: QuantityModalPro
                 <p className="mt-2 text-xs text-muted-foreground">
                   Estoque somado:{' '}
                   {irmas
-                    .map((v: any) => `${v.referencia} (${Number(v.disponivel) || 0})`)
+                    .map(
+                      (v: any) =>
+                        `${origemPeca(v.referencia)} ${v.referencia} (${Number(v.disponivel) || 0})`,
+                    )
                     .join(' + ')}
-                  . O pedido é dividido entre as referências.
+                  . O pedido é dividido entre as importações.
                 </p>
               )}
             </div>

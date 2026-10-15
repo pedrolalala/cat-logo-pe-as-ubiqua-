@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { aplicarEstoqueAtual } from '@/lib/estoque-atual'
+import { chavePeca, origemPeca } from '@/lib/origem-peca'
 import {
   Table,
   TableBody,
@@ -50,13 +51,12 @@ export default function NewQuote() {
     items,
     clearCart,
     removeFromCart,
-    updateQuantity,
     updatePrice,
     activeQuoteId,
     setActiveQuoteId,
     selectedCustomerId,
     setSelectedCustomerId,
-    addToCart,
+    setQuantidadePeca,
   } = useCart()
 
   const { user } = useAuth()
@@ -125,6 +125,76 @@ export default function NewQuote() {
     }, 500)
     return () => clearTimeout(delayDebounceFn)
   }, [productSearch])
+
+  // Todas as referências do catálogo com o estoque atual, para somar as duas importações
+  // (Manoella e -IS) da mesma peça mesmo quando só uma delas está no orçamento.
+  const [variantesPorPeca, setVariantesPorPeca] = useState<Map<string, any[]>>(new Map())
+  useEffect(() => {
+    supabase
+      .from('revenda_ubiqua')
+      .select('*')
+      .then(async ({ data }) => {
+        const mapa = new Map<string, any[]>()
+        for (const v of await aplicarEstoqueAtual(data || [])) {
+          const chave = chavePeca(v.referencia)
+          mapa.set(chave, [...(mapa.get(chave) ?? []), v])
+        }
+        setVariantesPorPeca(mapa)
+      })
+  }, [])
+
+  const variantesDa = (referencia: unknown, fallback: any[]) => {
+    const variantes = variantesPorPeca.get(chavePeca(referencia))
+    return variantes && variantes.length > 0 ? variantes : fallback
+  }
+
+  // Uma linha por peça; por baixo, uma linha do carrinho por importação.
+  const linhas = (() => {
+    const grupos = new Map<string, typeof items>()
+    items.forEach((item) => {
+      const chave = chavePeca(item.referencia)
+      grupos.set(chave, [...(grupos.get(chave) ?? []), item])
+    })
+    return Array.from(grupos.entries()).map(([chave, itens]) => {
+      const doCatalogo = variantesDa(chave, [])
+      // Item antigo do carrinho que não está mais no catálogo continua na conta da peça.
+      const variantes = [
+        ...doCatalogo,
+        ...itens.filter((i) => !doCatalogo.some((v) => v.id === i.id)),
+      ]
+      return {
+        ...itens[0],
+        id: chave,
+        referencia: itens.length > 1 ? chave : itens[0].referencia,
+        quantity: itens.reduce((soma, i) => soma + i.quantity, 0),
+        disponivel: variantes.reduce((soma, v) => soma + (Number(v.disponivel) || 0), 0),
+        itens,
+        variantes,
+      }
+    })
+  })()
+  type Linha = (typeof linhas)[number]
+
+  const quantidadePeca = (linha: Linha, total: number) => setQuantidadePeca(linha.variantes, total)
+  const precoPeca = (linha: Linha, preco: number) =>
+    linha.itens.forEach((i) => updatePrice(i.id, preco))
+  const removerPeca = (linha: Linha) => linha.itens.forEach((i) => removeFromCart(i.id))
+  const origemLinha = (linha: Linha) =>
+    linha.itens.map((i) => `${origemPeca(i.referencia)} (${i.quantity})`).join(' + ')
+
+  const adicionarDaBusca = (p: any) => {
+    const variantes = variantesDa(p.referencia, [p])
+    const noOrcamento = items
+      .filter((i) => chavePeca(i.referencia) === chavePeca(p.referencia))
+      .reduce((soma, i) => soma + i.quantity, 0)
+    const estoque = variantes.reduce((soma, v) => soma + (Number(v.disponivel) || 0), 0)
+    if (estoque > 0 && noOrcamento >= estoque) {
+      toast.error('Todo o estoque desta peça já está no orçamento.')
+      return false
+    }
+    setQuantidadePeca(variantes, noOrcamento + 1)
+    return true
+  }
 
   const subtotalItems = items.reduce((acc, item) => acc + item.valor_revenda * item.quantity, 0)
   const valorDesconto = Math.round(subtotalItems * descontoPercentual) / 100
@@ -597,7 +667,7 @@ export default function NewQuote() {
                           key={p.id}
                           value={`${p.referencia} ${p.descricao}`}
                           onSelect={() => {
-                            addToCart(p, 1)
+                            if (!adicionarDaBusca(p)) return
                             setOpenProductPopover(false)
                             setProductSearch('')
                             setProductResults([])
@@ -638,7 +708,7 @@ export default function NewQuote() {
         <>
           {/* Mobile Cart Items (Cards) */}
           <div className="md:hidden space-y-4">
-            {items.map((item) => {
+            {linhas.map((item) => {
               const itemDisponivel = Number(item.disponivel) || 0
               const itemMaxQty = itemDisponivel > 0 ? itemDisponivel : 999
               return (
@@ -661,12 +731,15 @@ export default function NewQuote() {
                             {item.cor}
                           </div>
                         )}
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Importado por: {origemLinha(item)}
+                        </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="text-destructive hover:bg-destructive/10 h-10 w-10 shrink-0"
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removerPeca(item)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -681,7 +754,7 @@ export default function NewQuote() {
                           min={0}
                           step="0.01"
                           value={item.valor_revenda}
-                          onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
+                          onChange={(e) => precoPeca(item, parseFloat(e.target.value) || 0)}
                           className="h-11 font-medium"
                         />
                       </div>
@@ -700,7 +773,7 @@ export default function NewQuote() {
                           variant="outline"
                           size="icon"
                           className="h-10 w-10 shrink-0"
-                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          onClick={() => quantidadePeca(item, Math.max(1, item.quantity - 1))}
                           disabled={item.quantity <= 1}
                         >
                           <Minus className="w-4 h-4" />
@@ -712,8 +785,8 @@ export default function NewQuote() {
                           max={itemMaxQty}
                           value={item.quantity}
                           onChange={(e) =>
-                            updateQuantity(
-                              item.id,
+                            quantidadePeca(
+                              item,
                               Math.min(itemMaxQty, Math.max(1, parseInt(e.target.value) || 1)),
                             )
                           }
@@ -723,7 +796,7 @@ export default function NewQuote() {
                           variant="outline"
                           size="icon"
                           className="h-10 w-10 shrink-0"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => quantidadePeca(item, item.quantity + 1)}
                           disabled={item.quantity >= itemMaxQty}
                         >
                           <Plus className="w-4 h-4" />
@@ -751,7 +824,7 @@ export default function NewQuote() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((item) => {
+                  {linhas.map((item) => {
                     const itemDisponivel = Number(item.disponivel) || 0
                     const itemMaxQty = itemDisponivel > 0 ? itemDisponivel : 999
                     return (
@@ -772,6 +845,9 @@ export default function NewQuote() {
                               {item.cor}
                             </span>
                           )}
+                          <span className="block text-xs text-muted-foreground mt-1">
+                            Importado por: {origemLinha(item)}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-1">
@@ -779,9 +855,7 @@ export default function NewQuote() {
                               variant="outline"
                               size="icon"
                               className="h-8 w-8 shrink-0"
-                              onClick={() =>
-                                updateQuantity(item.id, Math.max(1, item.quantity - 1))
-                              }
+                              onClick={() => quantidadePeca(item, Math.max(1, item.quantity - 1))}
                               disabled={item.quantity <= 1}
                             >
                               <Minus className="w-3 h-3" />
@@ -792,8 +866,8 @@ export default function NewQuote() {
                               max={itemMaxQty}
                               value={item.quantity}
                               onChange={(e) =>
-                                updateQuantity(
-                                  item.id,
+                                quantidadePeca(
+                                  item,
                                   Math.min(itemMaxQty, Math.max(1, parseInt(e.target.value) || 1)),
                                 )
                               }
@@ -803,7 +877,7 @@ export default function NewQuote() {
                               variant="outline"
                               size="icon"
                               className="h-8 w-8 shrink-0"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => quantidadePeca(item, item.quantity + 1)}
                               disabled={item.quantity >= itemMaxQty}
                             >
                               <Plus className="w-3 h-3" />
@@ -816,7 +890,7 @@ export default function NewQuote() {
                             min={0}
                             step="0.01"
                             value={item.valor_revenda}
-                            onChange={(e) => updatePrice(item.id, parseFloat(e.target.value) || 0)}
+                            onChange={(e) => precoPeca(item, parseFloat(e.target.value) || 0)}
                             className="w-full text-right h-8 font-medium"
                           />
                         </TableCell>
@@ -828,7 +902,7 @@ export default function NewQuote() {
                             variant="ghost"
                             size="icon"
                             className="text-muted-foreground hover:text-destructive h-8 w-8"
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removerPeca(item)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -862,7 +936,7 @@ export default function NewQuote() {
             <h3 className="text-lg font-semibold border-b pb-3 mb-2">Resumo Financeiro</h3>
 
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Subtotal ({items.length} itens)</span>
+              <span className="text-muted-foreground">Subtotal ({linhas.length} itens)</span>
               <span className="font-medium">{formatCurrency(subtotalItems)}</span>
             </div>
 
