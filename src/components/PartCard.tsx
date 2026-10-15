@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { descricaoComCor } from '@/lib/descricao-peca'
 import { useNavigate } from 'react-router-dom'
 import { GroupedPart, getVariantImage, colorMap } from '@/hooks/use-parts'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -69,10 +70,13 @@ export function PartCard({ group, onAddBudget }: PartCardProps) {
         )
       : null
 
-  const lampName = nomeExibicao || 'Peça'
+  const lampName = descricaoComCor(nomeExibicao || 'Peça', selectedVariant?.cor)
 
   const cleanDescription = selectedVariant?.descricao
-    ? selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim()
+    ? descricaoComCor(
+        selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim(),
+        selectedVariant.cor,
+      )
     : lampName
 
   const mappedImageUrl = getVariantImage(selectedVariant, imagemPrincipal)

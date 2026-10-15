@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { aplicarEstoqueAtual } from '@/lib/estoque-atual'
+import { descricaoSemCor } from '@/lib/descricao-peca'
 
 export type GroupedPart = {
   id: string
@@ -147,7 +148,8 @@ export function groupCatalogItems(items: any[]): GroupedPart[] {
     // `descricao` costuma ter menos texto de cor embutido incorretamente do
     // que `desc_produto`, que às vezes vem copiado errado entre cores).
     const descForFamily = (item.descricao || item.desc_produto || '').trim()
-    const desc = (item.desc_produto || item.descricao || 'Sem nome').trim()
+    // Nome do card sem a cor do fim: ela vem errada no cadastro; a tela põe a da cor escolhida.
+    const desc = descricaoSemCor(item.desc_produto || item.descricao || 'Sem nome')
     const price = Number(item.valor_revenda) || 0
     const normalizedRef = normalizeReferencia(item.referencia)
     const familyIdentity = descForFamily ? extractFamilyIdentity(descForFamily) : null

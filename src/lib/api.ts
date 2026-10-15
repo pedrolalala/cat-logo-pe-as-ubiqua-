@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
+import { descricaoComCor } from '@/lib/descricao-peca'
 
 export interface PartVariant {
   id: number
@@ -106,7 +107,7 @@ export async function saveQuoteToSupabase(quoteData: any): Promise<QuoteData> {
       quantidade: item.quantity,
       valor_unitario: item.valor_revenda,
       referencia_snapshot: item.referencia,
-      descricao_snapshot: item.descricao,
+      descricao_snapshot: descricaoComCor(item.descricao, item.cor),
       ordem: idx,
     }))
 

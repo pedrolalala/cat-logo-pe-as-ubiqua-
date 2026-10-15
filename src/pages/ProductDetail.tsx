@@ -1,4 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { descricaoComCor } from '@/lib/descricao-peca'
 import { useProductDetail, getVariantImage, colorMap } from '@/hooks/use-parts'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ShoppingCart, ImageOff, Tag, Layers, AlertCircle, Check } from 'lucide-react'
@@ -118,9 +119,12 @@ export default function ProductDetail() {
         )
       : null
 
-  const lampName = group.nomeExibicao || 'Peça'
+  const lampName = descricaoComCor(group.nomeExibicao || 'Peça', selectedVariant?.cor)
   const cleanDescription = selectedVariant?.descricao
-    ? selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim()
+    ? descricaoComCor(
+        selectedVariant.descricao.replace(/-\s*(ISLIGHT|MANOELLA)\s*$/i, '').trim(),
+        selectedVariant.cor,
+      )
     : lampName
 
   const getVariantStockForColor = (colorName: string) => {

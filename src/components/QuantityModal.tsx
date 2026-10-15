@@ -16,6 +16,7 @@ import { useCart } from '@/hooks/use-cart'
 import { useNavigate } from 'react-router-dom'
 import type { GroupedPart } from '@/hooks/use-parts'
 import { origemPeca } from '@/lib/origem-peca'
+import { descricaoComCor } from '@/lib/descricao-peca'
 
 interface QuantityModalProps {
   part: Part | null
@@ -101,7 +102,9 @@ export function QuantityModal({ part, group, isOpen, onClose }: QuantityModalPro
           <div className="py-4">
             <div className="mb-6 p-4 rounded-lg bg-muted/50 border">
               <p className="font-mono text-sm text-primary font-bold mb-1">{part.referencia}</p>
-              <p className="font-medium text-foreground">{part.descricao}</p>
+              <p className="font-medium text-foreground">
+                {descricaoComCor(part.descricao, part.cor)}
+              </p>
               {irmas.length > 1 && (
                 <p className="mt-2 text-xs text-muted-foreground">
                   Estoque somado:{' '}

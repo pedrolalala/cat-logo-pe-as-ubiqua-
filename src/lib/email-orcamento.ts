@@ -5,6 +5,8 @@
 // backend, sem chamada de rede no clique. `mailto:` não aceita anexo, então
 // todo o conteúdo do orçamento vai no corpo, em texto.
 
+import { descricaoComCor } from '@/lib/descricao-peca'
+
 const CRLF = '\r\n'
 
 // Intl usa espaço não separável depois de "R$"; troca por espaço comum para
@@ -35,7 +37,13 @@ function endereco(o: any): string {
 
 export interface EmailOrcamentoDados {
   orcamento: any // linha de orcamentos_revenda_ubiqua
-  itens: { referencia?: string; descricao?: string; quantity?: number; valor_revenda?: number }[]
+  itens: {
+    referencia?: string
+    descricao?: string
+    cor?: string | null
+    quantity?: number
+    valor_revenda?: number
+  }[]
   cliente: any // linha de informacoes_cliente_ubiqua
   empresa: any // linha de configuracao_empresa_ubiqua (dados da própria Ubiqua)
 }
@@ -98,7 +106,7 @@ export function montarEmailOrcamento({ orcamento, itens, cliente, empresa }: Ema
     const unit = Number(item.valor_revenda) || 0
     const sub = qtd * unit
     somaItens += sub
-    add(`${i + 1}. ${juntar([item.referencia, item.descricao], ' - ')}`)
+    add(`${i + 1}. ${juntar([item.referencia, descricaoComCor(item.descricao, item.cor)], ' - ')}`)
     add(`   Qtd: ${qtd}  |  Preço unit.: ${brl(unit)}  |  Subtotal: ${brl(sub)}`)
   })
   add('')

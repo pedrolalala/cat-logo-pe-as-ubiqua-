@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { aplicarEstoqueAtual } from '@/lib/estoque-atual'
 import { chavePeca, origemPeca } from '@/lib/origem-peca'
+import { descricaoComCor } from '@/lib/descricao-peca'
 import {
   Table,
   TableBody,
@@ -319,7 +320,7 @@ export default function NewQuote() {
         desconto_item: 0,
         ordem: idx,
         referencia_snapshot: item.referencia,
-        descricao_snapshot: item.descricao,
+        descricao_snapshot: descricaoComCor(item.descricao, item.cor),
         marca_snapshot: item.desc_marca || null,
         sem_estoque_no_pedido: (Number(item.disponivel) || 0) <= 0,
       }))
@@ -678,7 +679,7 @@ export default function NewQuote() {
                           <div className="flex flex-col">
                             <span className="font-bold text-sm">{p.referencia}</span>
                             <span className="text-xs text-muted-foreground truncate max-w-[280px] sm:max-w-[400px]">
-                              {p.descricao}
+                              {descricaoComCor(p.descricao, p.cor)}
                             </span>
                             {isOutOfStock && (
                               <span className="text-xs font-semibold text-orange-600 mt-1">
@@ -719,7 +720,9 @@ export default function NewQuote() {
                         <div className="font-mono font-bold text-sm text-primary">
                           {item.referencia}
                         </div>
-                        <div className="font-medium text-sm leading-tight">{item.descricao}</div>
+                        <div className="font-medium text-sm leading-tight">
+                          {descricaoComCor(item.descricao, item.cor)}
+                        </div>
                         {item.cor && (
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                             <span
@@ -833,7 +836,7 @@ export default function NewQuote() {
                           {item.referencia}
                         </TableCell>
                         <TableCell className="font-medium text-sm">
-                          {item.descricao}
+                          {descricaoComCor(item.descricao, item.cor)}
                           {item.cor && (
                             <span className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                               <span
