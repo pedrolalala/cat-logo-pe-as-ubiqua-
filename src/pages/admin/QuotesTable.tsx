@@ -1,4 +1,4 @@
-import { Quote } from '@/lib/api-admin'
+import { Quote, rotuloStatus } from '@/lib/api-admin'
 import {
   Table,
   TableHeader,
@@ -104,8 +104,11 @@ export function QuotesTable({ quotes, onSelectQuote }: QuotesTableProps) {
                       variant={quote.status === 'aprovado' ? 'default' : 'secondary'}
                       className="shrink-0"
                     >
-                      {quote.status}
+                      {rotuloStatus(quote.status)}
                     </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Representante: {quote.representante || '—'}
                   </div>
 
                   <div className="flex items-center justify-between text-sm pt-2 border-t">
@@ -147,6 +150,7 @@ export function QuotesTable({ quotes, onSelectQuote }: QuotesTableProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Número / Cliente</TableHead>
+                  <TableHead>Representante</TableHead>
                   <TableHead>Faturamento</TableHead>
                   <TableHead>Data de Criação</TableHead>
                   <TableHead>Valor Total</TableHead>
@@ -170,6 +174,7 @@ export function QuotesTable({ quotes, onSelectQuote }: QuotesTableProps) {
                         {quote.numero_orcamento || `#${quote.id.split('-')[0]}`}
                       </div>
                     </TableCell>
+                    <TableCell className="text-sm">{quote.representante || '—'}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="font-mono text-xs">
                         {quote.faturamento}
@@ -183,7 +188,7 @@ export function QuotesTable({ quotes, onSelectQuote }: QuotesTableProps) {
                     </TableCell>
                     <TableCell>
                       <Badge variant={quote.status === 'aprovado' ? 'default' : 'secondary'}>
-                        {quote.status}
+                        {rotuloStatus(quote.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

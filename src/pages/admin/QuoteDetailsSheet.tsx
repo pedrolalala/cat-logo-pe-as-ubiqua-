@@ -1,4 +1,4 @@
-import { Quote } from '@/lib/api-admin'
+import { Quote, rotuloStatus } from '@/lib/api-admin'
 import {
   Sheet,
   SheetContent,
@@ -36,15 +36,16 @@ const formatDate = (dateString?: string) => {
 interface QuoteDetailsSheetProps {
   quote: Quote | null
   onClose: () => void
-  onApprove: () => void
-  isApproving: boolean
+  /** Sem `onApprove` o painel é só de consulta (tela Meus Orçamentos do representante). */
+  onApprove?: () => void
+  isApproving?: boolean
 }
 
 export function QuoteDetailsSheet({
   quote,
   onClose,
   onApprove,
-  isApproving,
+  isApproving = false,
 }: QuoteDetailsSheetProps) {
   if (!quote) return null
 
@@ -52,11 +53,16 @@ export function QuoteDetailsSheet({
     <Sheet open={!!quote} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="sm:max-w-xl w-full overflow-y-auto">
         <SheetHeader className="mb-6">
-          <SheetTitle>Analisar Orçamento</SheetTitle>
+          <SheetTitle>
+            {onApprove ? 'Analisar Orçamento' : `Orçamento ${quote.numero_orcamento || ''}`}
+          </SheetTitle>
           <SheetDescription>
             Solicitado por{' '}
             <strong className="text-foreground">{quote.empresa || 'Não informada'}</strong> em{' '}
             {formatDate(quote.created_at || quote.data_criacao)}.
+            {quote.representante && <> Representante: {quote.representante}.</>} Status:{' '}
+            <strong className="text-foreground">{rotuloStatus(quote.status)}</strong>
+            {quote.data_aprovacao && <> em {formatDate(quote.data_aprovacao)}</>}.
           </SheetDescription>
         </SheetHeader>
 
@@ -146,16 +152,18 @@ export function QuoteDetailsSheet({
             onClick={onClose}
             disabled={isApproving}
           >
-            Cancelar
+            {onApprove ? 'Cancelar' : 'Fechar'}
           </Button>
-          <Button className="w-full sm:w-auto" onClick={onApprove} disabled={isApproving}>
-            {isApproving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <CheckCircle className="w-4 h-4 mr-2" />
-            )}
-            Aprovar Compra
-          </Button>
+          {onApprove && (
+            <Button className="w-full sm:w-auto" onClick={onApprove} disabled={isApproving}>
+              {isApproving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <CheckCircle className="w-4 h-4 mr-2" />
+              )}
+              Aprovar Compra
+            </Button>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>

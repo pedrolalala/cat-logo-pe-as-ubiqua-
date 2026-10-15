@@ -15,6 +15,7 @@ import { OnboardingGuard } from './components/OnboardingGuard'
 import OnboardingPage from './pages/Onboarding'
 import CustomersPage from './pages/CustomersPage'
 import ProfilePage from './pages/ProfilePage'
+import MyQuotesPage from './pages/MyQuotesPage'
 import { AdminGuard } from './components/AdminGuard'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/carrinho" element={<NewQuote />} />
               <Route path="/clientes" element={<CustomersPage />} />
               <Route path="/perfil" element={<ProfilePage />} />
+              <Route path="/meus-orcamentos" element={<MyQuotesPage />} />
               <Route
                 path="/admin/*"
                 element={

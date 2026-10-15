@@ -1,5 +1,14 @@
 import { Outlet, useSearchParams, Link, useLocation } from 'react-router-dom'
-import { Search, ShoppingCart, LayoutDashboard, Home, Users, User, LogOut } from 'lucide-react'
+import {
+  Search,
+  ShoppingCart,
+  LayoutDashboard,
+  Home,
+  Users,
+  User,
+  LogOut,
+  ClipboardList,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
 import { useCart } from '@/hooks/use-cart'
@@ -73,6 +82,12 @@ export default function Layout() {
               className="hover:text-primary transition-colors text-muted-foreground"
             >
               Cadastro de Cliente
+            </Link>
+            <Link
+              to="/meus-orcamentos"
+              className="hover:text-primary transition-colors text-muted-foreground"
+            >
+              Meus Orçamentos
             </Link>
             <Link
               to="/perfil"
@@ -150,6 +165,16 @@ export default function Layout() {
           >
             <Users className="w-5 h-5" />
             <span className="text-[10px] font-medium">Cadastro</span>
+          </Link>
+          <Link
+            to="/meus-orcamentos"
+            className={cn(
+              'flex flex-col items-center justify-center w-full h-full space-y-1 text-muted-foreground hover:text-primary transition-colors',
+              location.pathname.startsWith('/meus-orcamentos') && 'text-primary',
+            )}
+          >
+            <ClipboardList className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Orçamentos</span>
           </Link>
           <Link
             to="/novo-orcamento"

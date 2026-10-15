@@ -29,6 +29,16 @@ export interface Quote {
   observacoes?: string
   items: QuoteItem[]
   data_aprovacao?: string
+  /** Representante = quem cadastrou o cliente do orçamento. */
+  representante_id?: string | null
+  representante?: string | null
+}
+
+/** "rascunho" é o orçamento ainda em andamento (só vira "aprovado" pelo admin). */
+export function rotuloStatus(status?: string) {
+  if (status === 'aprovado') return 'Aprovado'
+  if (status === 'rascunho' || !status) return 'Em andamento'
+  return status.charAt(0).toUpperCase() + status.slice(1)
 }
 
 export async function checkAdminRole(): Promise<boolean> {
@@ -235,8 +245,15 @@ export async function uploadCatalogImageExact(file: File, referencia: string): P
   return data.publicUrl
 }
 
-export async function fetchQuotes(): Promise<Quote[]> {
-  const { data, error } = await supabase
+/**
+ * Sem `representanteId`: todos os orçamentos que o usuário pode ver (admin). Com ele: só os
+ * dos clientes cadastrados por esse representante (tela Meus Orçamentos).
+ */
+export async function fetchQuotes(representanteId?: string): Promise<Quote[]> {
+  const cliente = representanteId
+    ? 'informacoes_cliente_ubiqua!inner'
+    : 'informacoes_cliente_ubiqua'
+  let query = supabase
     .from('orcamentos_revenda_ubiqua')
     .select(`
       id,
@@ -247,15 +264,30 @@ export async function fetchQuotes(): Promise<Quote[]> {
       valor_desconto,
       valor_total,
       status,
-      cliente:informacoes_cliente_ubiqua(nome),
+      observacoes,
+      aprovado_em,
+      cliente:${cliente}(
+        nome,
+        cadastrado_por_usuario_id,
+        representante:usuarios_ubiqua(nome)
+      ),
       itens:itens_orcamento_ubiqua(
+        produto_id,
+        referencia_snapshot,
+        descricao_snapshot,
+        quantidade,
+        valor_unitario,
+        valor_total,
+        ordem,
         produto:revenda_ubiqua(
           empresa:empresas(nome)
         )
       )
     `)
     .order('created_at', { ascending: false })
+  if (representanteId) query = query.eq('cliente.cadastrado_por_usuario_id', representanteId)
 
+  const { data, error } = await query
   if (error) throw error
 
   return (data || []).map((q: any) => {
@@ -284,26 +316,32 @@ export async function fetchQuotes(): Promise<Quote[]> {
       valor_desconto: q.valor_desconto,
       valor_total: q.valor_total,
       status: q.status,
-      items: (q.itens || []).map((i: any) => {
-        let empName = i.produto?.empresa?.nome
-        if (!empName) {
-          const ref = i.referencia_snapshot || ''
-          empName = ref.toUpperCase().endsWith('-IS') ? 'Islight' : 'Manoella'
-        }
-        return {
-          produto_id: i.produto_id,
-          referencia_snapshot: i.referencia_snapshot,
-          descricao_snapshot: i.descricao_snapshot,
-          referencia: i.referencia_snapshot || '',
-          descricao: i.descricao_snapshot || '',
-          quantidade: i.quantidade,
-          valor_unitario: i.valor_unitario,
-          valor_total: i.valor_total,
-          preco_unitario: i.valor_unitario,
-          subtotal: i.valor_total,
-          empresa: empName,
-        }
-      }),
+      observacoes: q.observacoes || undefined,
+      data_aprovacao: q.aprovado_em || undefined,
+      representante_id: q.cliente?.cadastrado_por_usuario_id ?? null,
+      representante: q.cliente?.representante?.nome ?? null,
+      items: [...(q.itens || [])]
+        .sort((a: any, b: any) => (a.ordem ?? 0) - (b.ordem ?? 0))
+        .map((i: any) => {
+          let empName = i.produto?.empresa?.nome
+          if (!empName) {
+            const ref = i.referencia_snapshot || ''
+            empName = ref.toUpperCase().endsWith('-IS') ? 'Islight' : 'Manoella'
+          }
+          return {
+            produto_id: i.produto_id,
+            referencia_snapshot: i.referencia_snapshot,
+            descricao_snapshot: i.descricao_snapshot,
+            referencia: i.referencia_snapshot || '',
+            descricao: i.descricao_snapshot || '',
+            quantidade: i.quantidade,
+            valor_unitario: i.valor_unitario,
+            valor_total: i.valor_total,
+            preco_unitario: i.valor_unitario,
+            subtotal: i.valor_total,
+            empresa: empName,
+          }
+        }),
     } as Quote
   })
 }

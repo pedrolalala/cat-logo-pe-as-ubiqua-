@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { checkAdminRole, fetchQuotes, approvePurchase, Quote } from '@/lib/api-admin'
+import { ResumoRepresentantes } from './ResumoRepresentantes'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -27,6 +28,7 @@ export default function AdminPage() {
   const [error, setError] = useState(false)
   const [statusFilter, setStatusFilter] = useState('todos')
   const [empresaFilter, setEmpresaFilter] = useState('')
+  const [representanteFilter, setRepresentanteFilter] = useState('todos')
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
   const [approving, setApproving] = useState(false)
 
@@ -83,8 +85,15 @@ export default function AdminPage() {
     )
   }
 
+  const nomeRepresentante = (q: Quote) => q.representante || 'Sem representante'
+  const representantes = Array.from(new Set(quotes.map(nomeRepresentante))).sort()
+
   const filteredQuotes = quotes.filter((q) => {
-    const matchStatus = statusFilter === 'todos' || q.status === statusFilter
+    const matchStatus =
+      statusFilter === 'todos' ||
+      (statusFilter === 'andamento' ? q.status !== 'aprovado' : q.status === statusFilter)
+    if (representanteFilter !== 'todos' && nomeRepresentante(q) !== representanteFilter)
+      return false
     const nomeEmpresa = q.empresa || 'Empresa não informada'
     const matchEmpresa = nomeEmpresa.toLowerCase().includes(empresaFilter.toLowerCase())
     return matchStatus && matchEmpresa
@@ -126,6 +135,21 @@ export default function AdminPage() {
                   className="bg-background"
                 />
               </div>
+              <div className="w-full sm:w-56">
+                <Select value={representanteFilter} onValueChange={setRepresentanteFilter}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Representante" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os representantes</SelectItem>
+                    {representantes.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="w-full sm:w-48">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="bg-background">
@@ -133,7 +157,7 @@ export default function AdminPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todos os status</SelectItem>
-                    <SelectItem value="aberto">Aberto</SelectItem>
+                    <SelectItem value="andamento">Em andamento</SelectItem>
                     <SelectItem value="aprovado">Aprovado</SelectItem>
                   </SelectContent>
                 </Select>
@@ -174,7 +198,18 @@ export default function AdminPage() {
                 <Skeleton key={i} className="h-16 w-full rounded-lg" />
               ))}
             </div>
-          ) : filteredQuotes.length === 0 ? (
+          ) : null}
+
+          {!error && !loading && (
+            <ResumoRepresentantes
+              quotes={quotes}
+              nomeRepresentante={nomeRepresentante}
+              selecionado={representanteFilter}
+              onSelecionar={setRepresentanteFilter}
+            />
+          )}
+
+          {error || loading ? null : filteredQuotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 bg-muted/30 rounded-lg border border-dashed text-center space-y-2">
               <p className="text-muted-foreground font-medium">Nenhum orçamento encontrado.</p>
               <p className="text-sm text-muted-foreground/70">
